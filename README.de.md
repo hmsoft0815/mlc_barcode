@@ -103,3 +103,6 @@ Das MCP-Tool `generate_barcode` hat zusätzliche Parameter:
 
 Copyright (c) 2026 Michael Lechner.
 Lizenziert unter der MIT-Lizenz.
+
+---
+**Hinweis:** Aktuell sind keine weiteren Erweiterungen oder größeren Änderungen geplant, da sich die Werkzeuge im Alltag – insbesondere auch in Verbindung mit Large Language Models (LLMs) – bestens bewährt haben.
