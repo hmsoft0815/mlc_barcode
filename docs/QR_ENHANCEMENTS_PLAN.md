@@ -10,7 +10,7 @@ Das CLI-Tool und der MCP-Server sollen Vorlagen erhalten, mit denen komplexe QR-
 ### 1. Internes Format-Paket (`internal/qrformats`)
 Entwicklung einer Bibliothek zur Validierung und Formatierung der spezifischen Inhalts-Strings.
 - [ ] **WIFI**: Generator für `WIFI:T:WPA;S:SSID;P:PASSWORD;;`
-- [ ] **vCard**: Generator für Kontaktinformationen (vCard 3.0).
+- [ ] **vCard**: Generator für Kontaktinformationen (vCard 3.0 / [RFC 6350](https://www.rfc-editor.org/rfc/rfc6350.html)).
 - [ ] **vCalendar**: Generator für Event-Einladungen (iCalendar 2.0 / [RFC 5545](https://datatracker.ietf.org/doc/html/rfc5545)).
 
 ### 2. CLI-Erweiterung (`cmd/barcode`)

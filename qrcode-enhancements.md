@@ -12,7 +12,7 @@ Dies ist das einfachste Format. Es enthält lediglich die vollständige Adresse.
 
 ## 2. vCard (Digitale Visitenkarte)
 
-Dieses Format ist komplexer, da es viele Felder (Name, Tel, E-Mail) in einem Block speichert. Meist wird der vCard 3.0 Standard genutzt.
+Dieses Format ist komplexer, da es viele Felder (Name, Tel, E-Mail) in einem Block speichert. Meist wird der vCard 3.0 Standard genutzt, basierend auf den Grundlagen von [RFC 6350 (vCard 4.0)](https://www.rfc-editor.org/rfc/rfc6350.html).
 
 **Struktur:**
 ```text

@@ -38,7 +38,7 @@ Generates a QR code for WIFI access.
 - **Optional**: `password`, `encryption` (WPA/WEP/nopass), `hidden`.
 
 ### 3. `generate_vcard_qr`
-Generates a QR code for a vCard 3.0 contact.
+Generates a QR code for a vCard 3.0 contact (referencing [RFC 6350](https://www.rfc-editor.org/rfc/rfc6350.html)).
 - **Required**: `first_name`, `last_name`.
 - **Optional**: `org`, `title`, `phone`, `email`, `address`, `city`, `zip`, `country`, `url`.
 

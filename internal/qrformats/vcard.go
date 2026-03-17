@@ -20,7 +20,7 @@ type VCardOptions struct {
 	URL          string
 }
 
-// FormatVCard returns a formatted vCard 3.0 string
+// FormatVCard returns a formatted vCard 3.0 string (referencing RFC 6350 for vCard 4.0 standards)
 func FormatVCard(opts VCardOptions) string {
 	var sb strings.Builder
 	sb.WriteString("BEGIN:VCARD\n")
