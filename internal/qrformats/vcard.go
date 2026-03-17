@@ -27,32 +27,32 @@ func FormatVCard(opts VCardOptions) string {
 	sb.WriteString("VERSION:3.0\n")
 	
 	if opts.LastName != "" || opts.FirstName != "" {
-		sb.WriteString(fmt.Sprintf("N:%s;%s\n", opts.LastName, opts.FirstName))
-		sb.WriteString(fmt.Sprintf("FN:%s %s\n", opts.FirstName, opts.LastName))
+		fmt.Fprintf(&sb, "N:%s;%s\n", opts.LastName, opts.FirstName)
+		fmt.Fprintf(&sb, "FN:%s %s\n", opts.FirstName, opts.LastName)
 	}
 	
 	if opts.Organization != "" {
-		sb.WriteString(fmt.Sprintf("ORG:%s\n", opts.Organization))
+		fmt.Fprintf(&sb, "ORG:%s\n", opts.Organization)
 	}
 	
 	if opts.Title != "" {
-		sb.WriteString(fmt.Sprintf("TITLE:%s\n", opts.Title))
+		fmt.Fprintf(&sb, "TITLE:%s\n", opts.Title)
 	}
 	
 	if opts.Phone != "" {
-		sb.WriteString(fmt.Sprintf("TEL;TYPE=WORK,VOICE:%s\n", opts.Phone))
+		fmt.Fprintf(&sb, "TEL;TYPE=WORK,VOICE:%s\n", opts.Phone)
 	}
 	
 	if opts.Email != "" {
-		sb.WriteString(fmt.Sprintf("EMAIL:%s\n", opts.Email))
+		fmt.Fprintf(&sb, "EMAIL:%s\n", opts.Email)
 	}
 	
 	if opts.Address != "" || opts.City != "" || opts.Zip != "" || opts.Country != "" {
-		sb.WriteString(fmt.Sprintf("ADR;TYPE=WORK:;;%s;%s;;%s;%s\n", opts.Address, opts.City, opts.Zip, opts.Country))
+		fmt.Fprintf(&sb, "ADR;TYPE=WORK:;;%s;%s;;%s;%s\n", opts.Address, opts.City, opts.Zip, opts.Country)
 	}
 	
 	if opts.URL != "" {
-		sb.WriteString(fmt.Sprintf("URL:%s\n", opts.URL))
+		fmt.Fprintf(&sb, "URL:%s\n", opts.URL)
 	}
 	
 	sb.WriteString("END:VCARD")
