@@ -76,22 +76,19 @@ Diese Beispiele nutzen die neuen Formatierungs-Vorlagen für gängige Aufgaben w
 
 ### WLAN-Zugang
 ```bash
-# Daten-Format: WIFI:T:WPA;S:ShowcaseNet;P:password123;;
-./bin/barcode -type qr -data "WIFI:T:WPA;S:ShowcaseNet;P:password123;;" -out showcase/assets/qr_wifi.png
+./bin/barcode -wifi-ssid "ShowcaseNet" -wifi-pass "password123" -out showcase/assets/qr_wifi.png
 ```
 ![WLAN QR](assets/qr_wifi.png)
 
 ### vCard 3.0 (Kontakt)
 ```bash
-# Daten-Format: BEGIN:VCARD...
-./bin/barcode -type qr -data "BEGIN:VCARD..." -out showcase/assets/qr_vcard.png
+./bin/barcode -vcard-first "Max" -vcard-last "Mustermann" -vcard-email "max.mustermann@example.com" -out showcase/assets/qr_vcard.png
 ```
 ![vCard QR](assets/qr_vcard.png)
 
 ### iCalendar (Termin)
 ```bash
-# Daten-Format: BEGIN:VCALENDAR...
-./bin/barcode -type qr -data "BEGIN:VCALENDAR..." -out showcase/assets/qr_event.png
+./bin/barcode -event-summary "Showcase Event" -event-start "20260317T120000" -event-tz "Europe/Berlin" -out showcase/assets/qr_event.png
 ```
 ![Termin QR](assets/qr_event.png)
 
