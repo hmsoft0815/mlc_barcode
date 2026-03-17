@@ -44,7 +44,7 @@ Dieses Format wurde urspr체nglich von ZXing entwickelt und ist heute Standard f�
 
 ## 4. Einladungen (vCalendar / iCalendar)
 
-F체r Einladungen mit Ort und Zeit nutzt man das vCalendar-Format. Dein Smartphone erkennt dies und schl채gt vor, den Termin im Kalender zu speichern.
+F체r Einladungen mit Ort und Zeit nutzt man das vCalendar-Format. Dein Smartphone erkennt dies und schl채gt vor, den Termin im Kalender zu speichern. Dies basiert auf dem [RFC 5545 (iCalendar)](https://datatracker.ietf.org/doc/html/rfc5545) Standard.
 
 **Struktur:**
 ```text

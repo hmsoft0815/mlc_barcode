@@ -4,7 +4,7 @@ This document describes how to integrate and configure the MLC Barcode MCP Serve
 
 ## Overview
 
-The `mcp-barcode-server` provides a Model Context Protocol (MCP) interface for Large Language Models (LLMs) to generate various types of barcodes. It can be run in **stdio** mode (standard) or **SSE** mode.
+The `mcp-barcode-server` provides a Model Context Protocol (MCP) interface for Large Language Models (LLMs) to generate various types of barcodes and specialized QR codes.
 
 ## Installation
 
@@ -14,28 +14,38 @@ The `mcp-barcode-server` provides a Model Context Protocol (MCP) interface for L
    ```
 2. The binary will be located at `bin/mcp-barcode-server`.
 
-## Configuration
-
-### Parameters
+## Configuration Parameters
 
 - `-addr`: (Optional) Listen address for SSE (e.g., `:8080`). If empty, the server uses stdio.
 - `-artifact-addr`: (Optional) The gRPC address of the [mlcartifact server](https://github.com/hmsoft0815/mlcartifact) (e.g., `localhost:9590`).
 - `-version`: Show version and exit.
 
-### Tool: `generate_barcode`
+## Available Tools
 
-The server provides a single tool called `generate_barcode`.
-
-**Base Parameters:**
-- `type`: Barcode type (`qr`, `datamatrix`, `code128`, `code39`, `ean13`, `ean8`, `upca`, `itf`).
-- `data`: The string to encode.
+All tools share common optional parameters for formatting:
 - `format`: `svg` (default) or `png`.
 - `width` / `height`: Optional dimensions.
 - `fg_color` / `bg_color`: Colors (e.g., `black`, `#ff0000`, `transparent`).
+- `save_artifact` / `filename`: Only available if `-artifact-addr` is specified.
 
-**Artifact Parameters (Only available if `-artifact-addr` is specified):**
-- `save_artifact`: (Boolean) If true, the generated barcode will be sent to the artifact server.
-- `filename`: (String) Optional filename for the artifact storage.
+### 1. `generate_barcode`
+Generates a standard barcode.
+- **Required**: `type`, `data`.
+
+### 2. `generate_wifi_qr`
+Generates a QR code for WIFI access.
+- **Required**: `ssid`.
+- **Optional**: `password`, `encryption` (WPA/WEP/nopass), `hidden`.
+
+### 3. `generate_vcard_qr`
+Generates a QR code for a vCard 3.0 contact.
+- **Required**: `first_name`, `last_name`.
+- **Optional**: `org`, `title`, `phone`, `email`, `address`, `city`, `zip`, `country`, `url`.
+
+### 4. `generate_event_qr`
+Generates a QR code for an iCalendar (RFC 5545) event.
+- **Required**: `summary`, `start_time` (YYYYMMDDTHHMMSS).
+- **Optional**: `end_time`, `description`, `location`, `timezone` (e.g. Europe/Berlin), `latitude`, `longitude`.
 
 ## Integration Examples
 
@@ -54,15 +64,6 @@ Add the following to your `claude_desktop_config.json`:
 }
 ```
 
-### SSE Mode
-
-Run the server as a background process:
-```bash
-./bin/mcp-barcode-server -addr :8080 -artifact-addr localhost:9590
-```
-
 ## Dependency: MLC Artifact Server
 
-The artifact integration is **optional**. If you want to use the `save_artifact` feature, you must have an instance of the [MLC Artifact Server](https://github.com/hmsoft0815/mlcartifact) running and accessible via gRPC.
-
-If no `-artifact-addr` is provided at startup, the MCP server will **not** offer the artifact-related parameters in its tool schema to keep the interface clean.
+The artifact integration is **optional**. If no `-artifact-addr` is provided at startup, the MCP server will **not** offer the artifact-related parameters in its tool schema to keep the interface clean.
