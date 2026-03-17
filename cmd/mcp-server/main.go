@@ -71,59 +71,65 @@ func main() {
 }
 
 func registerBarcodeTools(s *mcp.Server) {
+	properties := map[string]any{
+		"type": map[string]any{
+			"type":        "string",
+			"description": "Barcode type (qr, datamatrix, code128, code39, ean13, ean8, upca, itf)",
+			"enum":        []string{"qr", "datamatrix", "code128", "code39", "ean13", "ean8", "upca", "itf"},
+		},
+		"data": map[string]any{
+			"type":        "string",
+			"description": "The data to encode in the barcode",
+		},
+		"format": map[string]any{
+			"type":        "string",
+			"description": "Output format (svg or png)",
+			"enum":        []string{"svg", "png"},
+			"default":     "svg",
+		},
+		"width": map[string]any{
+			"type":        "integer",
+			"description": "Width of the image (optional)",
+		},
+		"height": map[string]any{
+			"type":        "integer",
+			"description": "Height of the image (optional)",
+		},
+		"text": map[string]any{
+			"type":        "boolean",
+			"description": "Show text below barcode (if supported)",
+		},
+		"fg_color": map[string]any{
+			"type":        "string",
+			"description": "Foreground color (e.g. black, #ff0000)",
+			"default":     "black",
+		},
+		"bg_color": map[string]any{
+			"type":        "string",
+			"description": "Background color (e.g. white, transparent, #ffffff)",
+			"default":     "white",
+		},
+	}
+
+	// Only add artifact properties if client is available
+	if artifactClient != nil {
+		properties["save_artifact"] = map[string]any{
+			"type":        "boolean",
+			"description": "If true, saves the barcode to mlcartifact service",
+		}
+		properties["filename"] = map[string]any{
+			"type":        "string",
+			"description": "Optional filename for the artifact (e.g. 'mybarcode.png')",
+		}
+	}
+
 	mcp.AddTool(s, &mcp.Tool{
 		Name:        "generate_barcode",
 		Description: "Generates a barcode image (SVG or PNG) from data",
 		InputSchema: map[string]any{
-			"type": "object",
-			"properties": map[string]any{
-				"type": map[string]any{
-					"type":        "string",
-					"description": "Barcode type (qr, datamatrix, code128, code39, ean13, ean8, upca, itf)",
-					"enum":        []string{"qr", "datamatrix", "code128", "code39", "ean13", "ean8", "upca", "itf"},
-				},
-				"data": map[string]any{
-					"type":        "string",
-					"description": "The data to encode in the barcode",
-				},
-				"format": map[string]any{
-					"type":        "string",
-					"description": "Output format (svg or png)",
-					"enum":        []string{"svg", "png"},
-					"default":     "svg",
-				},
-				"width": map[string]any{
-					"type":        "integer",
-					"description": "Width of the image (optional)",
-				},
-				"height": map[string]any{
-					"type":        "integer",
-					"description": "Height of the image (optional)",
-				},
-				"text": map[string]any{
-					"type":        "boolean",
-					"description": "Show text below barcode (if supported)",
-				},
-				"fg_color": map[string]any{
-					"type":        "string",
-					"description": "Foreground color (e.g. black, #ff0000)",
-					"default":     "black",
-				},
-				"bg_color": map[string]any{
-					"type":        "string",
-					"description": "Background color (e.g. white, transparent, #ffffff)",
-					"default":     "white",
-				},
-				"save_artifact": map[string]any{
-					"type":        "boolean",
-					"description": "If true, saves the barcode to mlcartifact service (requires server connection)",
-				},
-				"filename": map[string]any{
-					"type":        "string",
-					"description": "Optional filename for the artifact (e.g. 'mybarcode.png')",
-				},
-			},
-			"required": []string{"type", "data"},
+			"type":       "object",
+			"properties": properties,
+			"required":   []string{"type", "data"},
 		},
 	}, func(ctx context.Context, request *mcp.CallToolRequest, args map[string]any) (*mcp.CallToolResult, any, error) {
 		btypeStr, _ := args["type"].(string)
