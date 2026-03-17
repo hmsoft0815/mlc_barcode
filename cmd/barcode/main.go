@@ -103,45 +103,44 @@ func main() {
 
 	switch ext {
 	case ".svg":
-		switch ext {
-		case ".svg":
-			var svg string
-			svg, err = barcodes.GenerateSVG(barcodeType, dataStr, opts)
-			content = []byte(svg)
-		case ".png":
-			content, err = barcodes.GeneratePNG(barcodeType, dataStr, opts)
-		default:
-			err = fmt.Errorf("unsupported output format: %s", ext)
-		}
+		var svg string
+		svg, err = barcodes.GenerateSVG(barcodeType, dataStr, opts)
+		content = []byte(svg)
+		mimeType = "image/svg+xml"
+	case ".png":
+		content, err = barcodes.GeneratePNG(barcodeType, dataStr, opts)
+		mimeType = "image/png"
+	default:
+		err = fmt.Errorf("unsupported output format: %s", ext)
+	}
 
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error generating barcode: %v\n", err)
+		os.Exit(1)
+	}
+
+	// Save to file
+	err = os.WriteFile(*output, content, 0644)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error writing file: %v\n", err)
+		os.Exit(1)
+	}
+
+	fmt.Printf("Successfully generated %s: %s\n", barcodeType, *output)
+
+	// Optional: Save to artifact service
+	if *saveArtifact {
+		addr := *artifactAddr
+		if addr == "" {
+			addr = ":9590" // default
+		}
+		c, err := client.NewClientWithAddr(addr)
 		if err != nil {
-			fmt.Fprintf(os.Stderr, "Error generating barcode: %v\n", err)
-			os.Exit(1)
-		}
-
-		// Save to file
-		err = os.WriteFile(*output, content, 0644)
-		if err != nil {
-			fmt.Fprintf(os.Stderr, "Error writing file: %v\n", err)
-			os.Exit(1)
-		}
-
-		fmt.Printf("Successfully generated %s: %s\n", barcodeType, *output)
-
-		// Optional: Save to artifact service
-		if *saveArtifact {
-			addr := *artifactAddr
-			if addr == "" {
-				addr = ":9590" // default
-			}
-			c, err := client.NewClientWithAddr(addr)
-			if err != nil {
-				fmt.Fprintf(os.Stderr, "Error: Could not connect to artifact server at %s: %v\n", addr, err)
-			} else {
-				resp, err := c.Write(context.Background(), *output, content,
-					client.WithMimeType(mimeType),
-					client.WithDescription(fmt.Sprintf("Generated %s barcode for: %s", barcodeType, dataStr)))
-
+			fmt.Fprintf(os.Stderr, "Error: Could not connect to artifact server at %s: %v\n", addr, err)
+		} else {
+			resp, err := c.Write(context.Background(), *output, content,
+				client.WithMimeType(mimeType),
+				client.WithDescription(fmt.Sprintf("Generated %s barcode for: %s", barcodeType, dataStr)))
 			if err != nil {
 				fmt.Fprintf(os.Stderr, "Error saving artifact: %v\n", err)
 			} else {
