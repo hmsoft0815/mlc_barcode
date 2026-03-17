@@ -5,7 +5,7 @@ Ein Werkzeug zur Generierung von Barcodes, das sowohl als Kommandozeilen-Tool (C
 <img src="assets/mlc_barcode_mpc3.png" >
 
 ## Version
-Aktuelle Version: **1.1.0**
+Aktuelle Version: **1.2.0**
 
 ## Funktionen
 - Unterstützt mehrere Barcode-Typen: QR, DataMatrix, Code128, Code39, EAN-13, EAN-8, UPC-A, ITF.

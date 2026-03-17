@@ -5,7 +5,7 @@ A tool for generating barcodes, usable as both a Command Line Interface (CLI) an
 <img src="assets/mlc_barcode_mpc3.png" >
 
 ## Version
-Current Version: **1.1.0**
+Current Version: **1.2.0**
 
 ## Features
 
