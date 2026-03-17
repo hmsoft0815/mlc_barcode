@@ -70,6 +70,33 @@ This document provides examples of the various barcode types and output formats 
 
 ---
 
+## 6. Specialized QR Codes
+
+These examples use the new formatting templates for common tasks like WIFI access, contact sharing, and event invitations.
+
+### WIFI Access
+```bash
+# Data format: WIFI:T:WPA;S:ShowcaseNet;P:password123;;
+./bin/barcode -type qr -data "WIFI:T:WPA;S:ShowcaseNet;P:password123;;" -out showcase/assets/qr_wifi.png
+```
+![WIFI QR](assets/qr_wifi.png)
+
+### vCard 3.0 (Contact)
+```bash
+# Data format: BEGIN:VCARD...
+./bin/barcode -type qr -data "BEGIN:VCARD..." -out showcase/assets/qr_vcard.png
+```
+![vCard QR](assets/qr_vcard.png)
+
+### iCalendar (Event)
+```bash
+# Data format: BEGIN:VCALENDAR...
+./bin/barcode -type qr -data "BEGIN:VCALENDAR..." -out showcase/assets/qr_event.png
+```
+![Event QR](assets/qr_event.png)
+
+---
+
 ## Summary of Parameters
 
 | Parameter | Description |
