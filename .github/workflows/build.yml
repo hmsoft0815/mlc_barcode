@@ -22,14 +22,19 @@ jobs:
         include:
           - goos: linux
             goarch: amd64
+            archive: tar.gz
           - goos: linux
             goarch: arm64
+            archive: tar.gz
           - goos: windows
             goarch: amd64
+            archive: zip
           - goos: darwin
             goarch: amd64
+            archive: zip
           - goos: darwin
             goarch: arm64
+            archive: zip
 
     steps:
     - uses: actions/checkout@v4
@@ -39,29 +44,41 @@ jobs:
       with:
         go-version: '1.23'
 
-    - name: Build CLI
+    - name: Build Binaries
       env:
         GOOS: ${{ matrix.goos }}
         GOARCH: ${{ matrix.goarch }}
       run: |
-        BINARY_NAME=barcode
-        if [ "${{ matrix.goos }}" = "windows" ]; then BINARY_NAME=${BINARY_NAME}.exe; fi
-        go build -v -o "dist/${BINARY_NAME}" ./cmd/barcode
+        mkdir -p dist
+        CLI_NAME=barcode
+        SERVER_NAME=mcp-barcode-server
+        if [ "${{ matrix.goos }}" = "windows" ]; then
+          CLI_NAME=${CLI_NAME}.exe
+          SERVER_NAME=${SERVER_NAME}.exe
+        fi
+        go build -v -o "dist/${CLI_NAME}" ./cmd/barcode
+        go build -v -o "dist/${SERVER_NAME}" ./cmd/mcp-server
 
-    - name: Build MCP Server
-      env:
-        GOOS: ${{ matrix.goos }}
-        GOARCH: ${{ matrix.goarch }}
+    - name: Create Archive
       run: |
-        BINARY_NAME=mcp-barcode-server
-        if [ "${{ matrix.goos }}" = "windows" ]; then BINARY_NAME=${BINARY_NAME}.exe; fi
-        go build -v -o "dist/${BINARY_NAME}" ./cmd/mcp-server
+        ARCHIVE_NAME=mlc-barcode-${{ matrix.goos }}-${{ matrix.goarch }}
+        # Prepare staging area
+        mkdir -p staging
+        cp dist/* staging/
+        cp README.md README.de.md MCP_INTEGRATION.md MCP_INTEGRATION.de.md staging/
+        cp -r assets staging/
+        
+        if [ "${{ matrix.archive }}" = "zip" ]; then
+          cd staging && zip -r "../${ARCHIVE_NAME}.zip" .
+        else
+          cd staging && tar -czvf "../${ARCHIVE_NAME}.tar.gz" .
+        fi
 
     - name: Upload artifacts
       uses: actions/upload-artifact@v4
       with:
         name: mlc-barcode-${{ matrix.goos }}-${{ matrix.goarch }}
-        path: dist/*
+        path: mlc-barcode-${{ matrix.goos }}-${{ matrix.goarch }}.${{ matrix.archive }}
 
   release:
     name: Create Release
@@ -73,10 +90,11 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           path: artifacts
+          merge-multiple: true
 
       - name: Create Release
         uses: softprops/action-gh-release@v2
         with:
-          files: artifacts/**/*
+          files: artifacts/*
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
