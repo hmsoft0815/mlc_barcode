@@ -55,9 +55,9 @@ The binaries are located in `bin/`:
 - `-version`: Show version and exit.
 
 #### Structured QR Flags (Automatic formatting)
-- **WIFI**: `-wifi-ssid`, `-wifi-pass`, `-wifi-enc` (WPA/WEP/nopass).
-- **vCard**: `-vcard-first`, `-vcard-last`, `-vcard-email`, `-vcard-tel`.
-- **Event**: `-event-summary`, `-event-start` (YYYYMMDDTHHMMSS), `-event-end`, `-event-tz`.
+- **WIFI**: `-wifi-ssid`, `-wifi-pass`, `-wifi-enc` (WPA/WEP/nopass). [Documentation](docs/qr-formats/wifi.md)
+- **vCard**: `-vcard-first`, `-vcard-last`, `-vcard-email`, `-vcard-tel`. [Documentation](docs/qr-formats/vcard.md)
+- **Event**: `-event-summary`, `-event-start` (YYYYMMDDTHHMMSS), `-event-end`, `-event-tz`. [Documentation](docs/qr-formats/event.md)
 
 ## Example output
 <img src="showcase/assets/qr.png" > <img src="showcase/assets/ean13.svg" >

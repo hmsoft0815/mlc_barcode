@@ -54,9 +54,9 @@ Die Binärdateien befinden sich in `bin/`:
 - `-version`: Version anzeigen und beenden.
 
 #### Strukturierte QR-Flags (Automatische Formatierung)
-- **WLAN**: `-wifi-ssid`, `-wifi-pass`, `-wifi-enc` (WPA/WEP/nopass).
-- **vCard**: `-vcard-first`, `-vcard-last`, `-vcard-email`, `-vcard-tel`.
-- **Termin**: `-event-summary`, `-event-start` (YYYYMMDDTHHMMSS), `-event-end`, `-event-tz`.
+- **WLAN**: `-wifi-ssid`, `-wifi-pass`, `-wifi-enc` (WPA/WEP/nopass). [Dokumentation](docs/qr-formats/wifi.de.md)
+- **vCard**: `-vcard-first`, `-vcard-last`, `-vcard-email`, `-vcard-tel`. [Dokumentation](docs/qr-formats/vcard.de.md)
+- **Termin**: `-event-summary`, `-event-start` (YYYYMMDDTHHMMSS), `-event-end`, `-event-tz`. [Dokumentation](docs/qr-formats/event.de.md)
 
 ## Beispielausgabe
 <img src="showcase/assets/qr.png" > <img src="showcase/assets/ean13.svg" >
