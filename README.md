@@ -46,12 +46,18 @@ The binaries are located in `bin/`:
 ### Parameters
 
 - `-type`: Barcode type (default: `qr`).
-- `-data`: Data to encode (required).
+- `-data`: Data to encode (required if no structured flags are used).
 - `-out`: Output file with `.svg` or `.png` extension (default: `barcode.svg`).
 - `-width`: Width in pixels.
 - `-height`: Height in pixels.
 - `-text`: Show text below barcode (default: `false`).
+- `-fg` / `-bg`: Foreground and Background colors (e.g., `red`, `#ff0000`, `transparent`).
 - `-version`: Show version and exit.
+
+#### Structured QR Flags (Automatic formatting)
+- **WIFI**: `-wifi-ssid`, `-wifi-pass`, `-wifi-enc` (WPA/WEP/nopass).
+- **vCard**: `-vcard-first`, `-vcard-last`, `-vcard-email`, `-vcard-tel`.
+- **Event**: `-event-summary`, `-event-start` (YYYYMMDDTHHMMSS), `-event-end`, `-event-tz`.
 
 ## Example output
 <img src="showcase/assets/qr.png" > <img src="showcase/assets/ean13.svg" >

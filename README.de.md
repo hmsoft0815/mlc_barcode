@@ -45,12 +45,18 @@ Die Binärdateien befinden sich in `bin/`:
 ### Parameter
 
 - `-type`: Barcode-Typ (Standard: `qr`).
-- `-data`: Der zu kodierende Inhalt (erforderlich).
+- `-data`: Der zu kodierende Inhalt (erforderlich, sofern keine strukturierten Flags genutzt werden).
 - `-out`: Ausgabedatei mit Endung `.svg` oder `.png` (Standard: `barcode.svg`).
 - `-width`: Breite in Pixeln.
 - `-height`: Höhe in Pixeln.
 - `-text`: Text unter dem Barcode anzeigen (Standard: `false`).
+- `-fg` / `-bg`: Vorder- und Hintergrundfarben (z. B. `red`, `#ff0000`, `transparent`).
 - `-version`: Version anzeigen und beenden.
+
+#### Strukturierte QR-Flags (Automatische Formatierung)
+- **WLAN**: `-wifi-ssid`, `-wifi-pass`, `-wifi-enc` (WPA/WEP/nopass).
+- **vCard**: `-vcard-first`, `-vcard-last`, `-vcard-email`, `-vcard-tel`.
+- **Termin**: `-event-summary`, `-event-start` (YYYYMMDDTHHMMSS), `-event-end`, `-event-tz`.
 
 ## Beispielausgabe
 <img src="showcase/assets/qr.png" > <img src="showcase/assets/ean13.svg" >
