@@ -1,0 +1,27 @@
+# Binaries
+bin/
+barcode
+mcp-barcode-server
+
+# Generated files
+*.svg
+*.png
+!assets/*.png
+!assets/*.svg
+!showcase/assets/*.png
+!showcase/assets/*.svg
+
+# Go
+vendor/
+go.work
+go.work.sum
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
