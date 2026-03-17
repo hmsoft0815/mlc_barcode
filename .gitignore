@@ -1,7 +1,8 @@
 # Binaries
-bin/
-barcode
-mcp-barcode-server
+/bin/
+/barcode
+/mcp-barcode-server
+/dist/
 
 # Generated files
 *.svg
