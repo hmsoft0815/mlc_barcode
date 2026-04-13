@@ -13,3 +13,38 @@ MLC Barcode is designed to seamlessly integrate barcode generation into your dai
 - **Artifact Integration**: Generated files can be directly saved to the `mlcartifact` service, keeping your local workspace clean.
 - **Smart QR Code Templates**: Built-in support for generating specialized QR codes, such as automatically formatted WiFi payloads, vCards, and Calendar events.
 - **High-Quality Output**: Render pixel-perfect vector graphics (`SVG`) or standard raster images (`PNG`) with adjustable sizing and transparent backgrounds.
+
+## Quick Setup
+
+### Claude Desktop
+Add the following to your `claude_desktop_config.json`:
+
+```json
+{
+  "mcpServers": {
+    "mlc-barcode": {
+      "command": "mlc_barcode"
+    }
+  }
+}
+```
+
+### Gemini-CLI
+Add to your `~/.gemini/settings.json`:
+
+```json
+{
+  "mcpServers": {
+    "mlc-barcode": {
+      "command": "mlc_barcode"
+    }
+  }
+}
+```
+
+### MCP-Tester
+Add a new profile:
+
+```bash
+mcp-tester profile add barcode -c "mlc_barcode"
+```
