@@ -12,7 +12,7 @@ This document provides examples of the various barcode types and output formats 
 
 ### PNG Format (Standard)
 ```bash
-./bin/barcode -type qr -data "Gemini CLI" -out showcase/assets/qr.png
+./bin/barcode -type qr -data "Michaels CLI" -out showcase/assets/qr.png
 ```
 ![QR Code PNG](assets/qr.png)
 
