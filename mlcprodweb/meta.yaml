@@ -2,7 +2,7 @@ id: "mlc-barcode"
 name: "MLC Barcode"
 version: "1.2.0"
 status: "stable"
-category: "Development Tools"
+category: "MCP Tools"
 license: "MIT"
 platforms: [Windows, macOS, Linux]
 slogan_en: "A versatile command-line tool and MCP Server for generating various types of barcodes."
