@@ -10,7 +10,7 @@ The `mcp-barcode-server` provides a Model Context Protocol (MCP) interface for L
 
 1. Build the project:
    ```bash
-   make build
+   task build
    ```
 2. The binary will be located at `bin/mcp-barcode-server`.
 
