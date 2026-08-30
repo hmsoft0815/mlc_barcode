@@ -1,0 +1,13 @@
+[Desktop Entry]
+Version=1.0
+Name=My Product
+Comment=A mlc-barcode application
+# The Exec line includes %u to pass the URL to the application
+Exec=/usr/local/bin/mlc-barcode %u
+Terminal=false
+Type=Application
+Icon=mlc-barcode
+Categories=Utility;
+StartupWMClass=mlc-barcode
+
+ 

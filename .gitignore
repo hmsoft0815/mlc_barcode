@@ -2,7 +2,13 @@
 /bin/
 /barcode
 /mcp-barcode-server
+/mlc-barcode-gui
 /dist/
+
+# Frontend
+frontend/node_modules/
+frontend/dist/
+.pnpm-store/
 
 # Generated files
 *.svg
@@ -11,6 +17,8 @@
 !assets/*.svg
 !showcase/assets/*.png
 !showcase/assets/*.svg
+!build/appicon.png
+!build/darwin/*.png
 
 # Reports
 reports/

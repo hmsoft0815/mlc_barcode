@@ -2,12 +2,12 @@ version: '3'
 
 # Replaces the previous Makefile. The house style asks for Taskfile v3 with
 # build / dev / test / lint, and for the version to live in a VERSION file
-# rather than in the source — keeping both build systems would have meant two
-# places to bump and one of them going stale.
+# rather than in the source.
 
 vars:
   CLI_BINARY: barcode
   SERVER_BINARY: mcp-barcode-server
+  GUI_BINARY: mlc-barcode-gui
   BIN_DIR: bin
   MODULE: github.com/mlcmcp/mlc_barcode
   VERSION:
@@ -15,8 +15,7 @@ vars:
   # Stamped into every binary, so `barcode --version` reports what VERSION
   # says and not the "dev" placeholder in the source.
   LDFLAGS: -X {{.MODULE}}/internal/version.Version={{.VERSION}}
-  # Where the product page expects the files. The names are not free: they are
-  # what mlcprodweb/meta.yaml links, and a mismatch is a 404 nobody notices.
+  # Where the product page expects the files.
   VPS_HOST: mlc@mlcgo.eu
   VPS_DIR: /var/www/html/downloads/mlc-barcode
 
@@ -27,29 +26,62 @@ tasks:
       - task --list
     silent: true
 
+  generate:bindings:
+    desc: Generate Wails v3 TypeScript bindings
+    cmds:
+      - wails3 generate bindings -ts -i
+
+  build:frontend:
+    desc: Build the Svelte TypeScript frontend
+    dir: frontend
+    cmds:
+      - pnpm run build
+
+  build:gui:
+    desc: Build the Wails v3 desktop GUI for Linux
+    deps: [build:frontend]
+    cmds:
+      - mkdir -p {{.BIN_DIR}}
+      - CGO_ENABLED=1 go build -tags gtk3,production -ldflags "{{.LDFLAGS}}" -o {{.BIN_DIR}}/{{.GUI_BINARY}} .
+
+  build:gui:windows:
+    desc: Cross-compile the Wails v3 desktop GUI for Windows
+    deps: [build:frontend]
+    cmds:
+      - mkdir -p {{.BIN_DIR}}
+      - GOOS=windows GOARCH=amd64 CGO_ENABLED=0 go build -tags production -trimpath -ldflags "{{.LDFLAGS}} -w -s -H windowsgui" -o {{.BIN_DIR}}/{{.GUI_BINARY}}-windows-amd64.exe .
+
+  package:windows:
+    desc: Build the Windows NSIS setup installer (.exe)
+    deps: [build:gui:windows]
+    cmds:
+      - makensis -V3 -NOCD -DAPP_VERSION={{.VERSION}} -DEXE_SRC={{.BIN_DIR}}/{{.GUI_BINARY}}-windows-amd64.exe build/windows/installer.nsi
+
   build:
-    desc: Build the CLI and the MCP server for this machine
+    desc: Build CLI, MCP server, and GUI for this machine
+    deps: [build:frontend]
     cmds:
       - mkdir -p {{.BIN_DIR}}
       - go build -ldflags "{{.LDFLAGS}}" -o {{.BIN_DIR}}/{{.CLI_BINARY}} ./cmd/barcode
       - go build -ldflags "{{.LDFLAGS}}" -o {{.BIN_DIR}}/{{.SERVER_BINARY}} ./cmd/mcp-server
+      - CGO_ENABLED=1 go build -tags gtk3,production -ldflags "{{.LDFLAGS}}" -o {{.BIN_DIR}}/{{.GUI_BINARY}} .
 
   build:linux:
-    desc: Cross-compile for Linux amd64
+    desc: Cross-compile CLI and MCP server for Linux amd64
     cmds:
       - mkdir -p {{.BIN_DIR}}
       - GOOS=linux GOARCH=amd64 go build -ldflags "{{.LDFLAGS}}" -o {{.BIN_DIR}}/{{.CLI_BINARY}}-linux-amd64 ./cmd/barcode
       - GOOS=linux GOARCH=amd64 go build -ldflags "{{.LDFLAGS}}" -o {{.BIN_DIR}}/{{.SERVER_BINARY}}-linux-amd64 ./cmd/mcp-server
 
   build:windows:
-    desc: Cross-compile for Windows amd64
+    desc: Cross-compile CLI and MCP server for Windows amd64
     cmds:
       - mkdir -p {{.BIN_DIR}}
       - GOOS=windows GOARCH=amd64 go build -ldflags "{{.LDFLAGS}}" -o {{.BIN_DIR}}/{{.CLI_BINARY}}-windows-amd64.exe ./cmd/barcode
       - GOOS=windows GOARCH=amd64 go build -ldflags "{{.LDFLAGS}}" -o {{.BIN_DIR}}/{{.SERVER_BINARY}}-windows-amd64.exe ./cmd/mcp-server
 
   build:macos:
-    desc: Cross-compile for macOS, both architectures
+    desc: Cross-compile CLI and MCP server for macOS, both architectures
     cmds:
       - mkdir -p {{.BIN_DIR}}
       - GOOS=darwin GOARCH=arm64 go build -ldflags "{{.LDFLAGS}}" -o {{.BIN_DIR}}/{{.CLI_BINARY}}-macos-arm64 ./cmd/barcode
@@ -58,8 +90,8 @@ tasks:
       - GOOS=darwin GOARCH=amd64 go build -ldflags "{{.LDFLAGS}}" -o {{.BIN_DIR}}/{{.SERVER_BINARY}}-macos-amd64 ./cmd/mcp-server
 
   build:all:
-    desc: Cross-compile every published target
-    deps: [build:linux, build:windows, build:macos]
+    desc: Cross-compile every published target and installers
+    deps: [build:linux, build:windows, build:macos, package:windows, build:gui]
 
   dev:
     desc: Build and run the CLI with CLI_ARGS
@@ -73,10 +105,15 @@ tasks:
       - task: build
       - ./{{.BIN_DIR}}/{{.SERVER_BINARY}}
 
+  dev:gui:
+    desc: Run the desktop GUI in Wails v3 dev mode
+    cmds:
+      - wails3 dev
+
   test:
     desc: Run the Go tests
     cmds:
-      - go test ./...
+      - go test -tags gtk3 ./...
 
   lint:
     desc: gofmt check and go vet
@@ -87,7 +124,7 @@ tasks:
           echo "gofmt would change:"; echo "$unformatted"; exit 1
         fi
         echo "gofmt: clean"
-      - go vet ./...
+      - go vet -tags gtk3 ./...
 
   semgrep:
     desc: 'Statische Sicherheitsprüfung: Bericht + Kurzfassung + Urteils-Abgleich.'
@@ -96,7 +133,6 @@ tasks:
         msg: "mlc-semgrep-* fehlen — in mlcintegration einmal `task install-all` laufen lassen."
     cmds:
       - mkdir -p reports
-      # atomar: ein abgebrochener Lauf darf keinen halben Bericht hinterlassen
       - semgrep scan --config {{.CONFIG | default "p/golang"}} --jobs 4 --json --quiet --output reports/.semgrep.tmp.json . || true
       - mv reports/.semgrep.tmp.json reports/semgrep.json
       - mlc-semgrep-summary reports/semgrep.json
@@ -121,20 +157,19 @@ tasks:
     desc: Remove build output and generated images
     cmds:
       - rm -rf {{.BIN_DIR}}
+      - rm -rf frontend/dist
       - rm -rf reports
       - rm -f ./*.svg ./*.png
 
   deploy:
-    desc: "PUBLISH: upload the four CLI binaries the product page links"
+    desc: "PUBLISH: upload CLI binaries and Windows installer"
     deps: [build:all]
     cmds:
-      # Only the CLI: the product page offers `barcode`, not the MCP server,
-      # and uploading a file nothing links to is how a downloads directory
-      # turns into a junk drawer.
       - |
         set -e
         for f in {{.CLI_BINARY}}-linux-amd64 {{.CLI_BINARY}}-windows-amd64.exe \
-                 {{.CLI_BINARY}}-macos-arm64 {{.CLI_BINARY}}-macos-amd64; do
+                 {{.CLI_BINARY}}-macos-arm64 {{.CLI_BINARY}}-macos-amd64 \
+                 mlc-barcode-{{.VERSION}}-windows-setup.exe; do
           if [ ! -f "{{.BIN_DIR}}/$f" ]; then echo "missing: {{.BIN_DIR}}/$f"; exit 1; fi
         done
         ssh -o BatchMode=yes {{.VPS_HOST}} "mkdir -p {{.VPS_DIR}}"
@@ -143,5 +178,6 @@ tasks:
           {{.BIN_DIR}}/{{.CLI_BINARY}}-windows-amd64.exe \
           {{.BIN_DIR}}/{{.CLI_BINARY}}-macos-arm64 \
           {{.BIN_DIR}}/{{.CLI_BINARY}}-macos-amd64 \
+          {{.BIN_DIR}}/mlc-barcode-{{.VERSION}}-windows-setup.exe \
           {{.VPS_HOST}}:{{.VPS_DIR}}/
         echo "✓ https://mlcgo.eu/downloads/mlc-barcode/"
