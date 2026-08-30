@@ -12,6 +12,9 @@
 !showcase/assets/*.png
 !showcase/assets/*.svg
 
+# Reports
+reports/
+
 # Go
 vendor/
 go.work

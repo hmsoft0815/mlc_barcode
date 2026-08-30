@@ -1,0 +1,10 @@
+bin/
+tmp/
+reports/
+assets/
+showcase/assets/
+mlcprodweb/
+.mlcai/
+*.png
+*.svg
+*.min.js

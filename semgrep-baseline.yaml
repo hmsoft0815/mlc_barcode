@@ -1,0 +1,21 @@
+# Urteile über semgrep-Befunde.
+#
+# Jeder Eintrag hält EINE Beurteilung fest, damit sie nicht zweimal getroffen
+# werden muss. verdict: real | false-positive — und reason sagt WARUM. Die
+# Begründung ist der eigentliche Wert: sie entscheidet, ob der nächste Leser die
+# Regel schärft oder den Code ändert. Eine Regel, die nur auf weniger Befunde
+# getrimmt wird, konvergiert gegen Schweigen.
+#
+# `task semgrep` bricht ab, solange ein Befund unbeurteilt ist oder häufiger
+# auftritt als hier vermerkt. `task semgrep:review` trägt neue nach.
+#
+# Schlüssel ist (rule, key=Dateipfad) + count — NICHT die Zeilennummer: die
+# wandert bei jedem Refactoring. Begruendung: brain/global/style_guide.md.
+findings:
+- key: cmd/mcp-server/main.go
+  rule: use-tls
+  count: 1
+  verdict: false-positive
+  reason: 'Der optionale SSE-Server wird lokal oder hinter einem TLS-Terminating Reverse Proxy betrieben; Standard-Transport des MCP-Servers ist Stdio.'
+  note: Found an HTTP server without TLS. Use 'http.ListenAndServeTLS' instead. See https://golang.org/pkg/net/http/#ListenAndServeTLS
+    for more information.

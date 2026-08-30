@@ -89,10 +89,39 @@ tasks:
         echo "gofmt: clean"
       - go vet ./...
 
+  semgrep:
+    desc: 'Statische Sicherheitsprüfung: Bericht + Kurzfassung + Urteils-Abgleich.'
+    preconditions:
+      - sh: command -v mlc-semgrep-baseline
+        msg: "mlc-semgrep-* fehlen — in mlcintegration einmal `task install-all` laufen lassen."
+    cmds:
+      - mkdir -p reports
+      # atomar: ein abgebrochener Lauf darf keinen halben Bericht hinterlassen
+      - semgrep scan --config {{.CONFIG | default "p/golang"}} --jobs 4 --json --quiet --output reports/.semgrep.tmp.json . || true
+      - mv reports/.semgrep.tmp.json reports/semgrep.json
+      - mlc-semgrep-summary reports/semgrep.json
+      - mlc-semgrep-baseline --report reports/semgrep.json --baseline semgrep-baseline.yaml
+
+  semgrep:review:
+    desc: 'Neue Befunde zur Beurteilung nachtragen (verdict/reason dann von Hand).'
+    cmds:
+      - mlc-semgrep-baseline --report reports/semgrep.json --baseline semgrep-baseline.yaml --update
+
+  semgrep:ticket:
+    desc: 'Einen als real beurteilten Befund als Backlog-Eintrag filen.'
+    cmds:
+      - mlc-semgrep-ticket --key {{.KEY}} --rule {{.RULE}} --priority {{.PRIO | default 2}} {{.DRY}}
+
+  semgrep:new:
+    desc: 'Nur was seit einem Bezugspunkt hinzukam — bricht ab, für CI.'
+    cmds:
+      - semgrep scan --config {{.CONFIG | default "p/golang"}} --jobs 4 --baseline-commit {{.SEIT | default "master"}} --error --quiet .
+
   clean:
     desc: Remove build output and generated images
     cmds:
       - rm -rf {{.BIN_DIR}}
+      - rm -rf reports
       - rm -f ./*.svg ./*.png
 
   deploy:

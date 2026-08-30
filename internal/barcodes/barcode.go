@@ -8,13 +8,7 @@
 package barcodes
 
 import (
-	"bytes"
-	"errors"
 	"fmt"
-	"image"
-	"image/color"
-	"image/draw"
-	"image/png"
 	"strings"
 
 	"github.com/boombuler/barcode"
@@ -26,6 +20,7 @@ import (
 	"github.com/boombuler/barcode/twooffive"
 )
 
+// BarcodeType represents the supported symbology types
 type BarcodeType string
 
 const (
@@ -121,174 +116,7 @@ func Generate(btype BarcodeType, data string, opts BarcodeOptions) (barcode.Barc
 	return bc, nil
 }
 
-// GeneratePNG returns a PNG byte slice for the given barcode
-func GeneratePNG(btype BarcodeType, data string, opts BarcodeOptions) ([]byte, error) {
-	bc, err := Generate(btype, data, opts)
-	if err != nil {
-		return nil, err
-	}
-
-	// barcode library doesn't easily support custom colors in Encode,
-	// so we might need to manually remap colors if they aren't black/white.
-	// For now, we'll implement a simple color remapper if colors are provided.
-
-	fg := parseColor(opts.ForegroundColor, color.Black)
-	bg := parseColor(opts.BackgroundColor, color.White)
-
-	bounds := bc.Bounds()
-	img := image.NewRGBA(bounds)
-	draw.Draw(img, bounds, &image.Uniform{bg}, image.Point{}, draw.Src)
-
-	for y := bounds.Min.Y; y < bounds.Max.Y; y++ {
-		for x := bounds.Min.X; x < bounds.Max.X; x++ {
-			r, g, b, a := bc.At(x, y).RGBA()
-			// If it's "black" in the source barcode
-			if a > 0x8000 && (r < 0x8000 || g < 0x8000 || b < 0x8000) {
-				img.Set(x, y, fg)
-			}
-		}
-	}
-
-	var buf bytes.Buffer
-	if err := png.Encode(&buf, img); err != nil {
-		return nil, err
-	}
-
-	return buf.Bytes(), nil
-}
-
-// GenerateSVG returns an SVG string for the given barcode
-func GenerateSVG(btype BarcodeType, data string, opts BarcodeOptions) (string, error) {
-	bc, err := Generate(btype, data, opts)
-	if err != nil {
-		return "", err
-	}
-
-	return barcodeToSVG(bc, opts)
-}
-
-// barcodeToSVG converts a barcode.Barcode to an SVG string
-func barcodeToSVG(bc barcode.Barcode, opts BarcodeOptions) (string, error) {
-	if bc == nil {
-		return "", errors.New("barcode is nil")
-	}
-
-	bounds := bc.Bounds()
-	width := bounds.Max.X
-	height := bounds.Max.Y
-
-	// If we show text, we need extra height in the viewBox
-	viewBoxHeight := height
-	textHeight := 0
-	if opts.ShowText {
-		textHeight = height / 5 // Reserve 20% of height for text
-		if textHeight < 20 {
-			textHeight = 20
-		}
-		viewBoxHeight += textHeight
-	}
-
-	var pathData strings.Builder
-
-	// Optimize by grouping consecutive black pixels in each row
-	for y := 0; y < height; y++ {
-		inBar := false
-		startX := 0
-		for x := 0; x < width; x++ {
-			r, g, b, a := bc.At(x, y).RGBA()
-			isBlack := (a > 0x8000) && (r < 0x8000 || g < 0x8000 || b < 0x8000)
-
-			if isBlack {
-				if !inBar {
-					startX = x
-					inBar = true
-				}
-			} else if inBar {
-				w := x - startX
-				fmt.Fprintf(&pathData, "M%d %d h%d v1 h-%d z ", startX, y, w, w)
-				inBar = false
-			}
-		}
-		if inBar {
-			w := width - startX
-			fmt.Fprintf(&pathData, "M%d %d h%d v1 h-%d z ", startX, y, w, w)
-		}
-	}
-
-	textElement := ""
-	if opts.ShowText {
-		content := bc.Content()
-		fontSize := textHeight * 8 / 10
-		textY := height + (textHeight * 7 / 10)
-		textElement = fmt.Sprintf(
-			`<text x="%d" y="%d" font-family="monospace" font-size="%d" text-anchor="middle" fill="%s">%s</text>`,
-			width/2, textY, fontSize, opts.ForegroundColor, content,
-		)
-	}
-
-	bgStyle := opts.BackgroundColor
-	if strings.ToLower(bgStyle) == "transparent" {
-		bgStyle = "none"
-	}
-
-	svg := fmt.Sprintf(
-		`<svg viewBox="0 0 %d %d" xmlns="http://www.w3.org/2000/svg" shape-rendering="crispEdges">
-  <rect width="%d" height="%d" fill="%s"/>
-  <path d="%s" fill="%s"/>
-  %s
-</svg>`,
-		width, viewBoxHeight,
-		width, viewBoxHeight, bgStyle,
-		pathData.String(), opts.ForegroundColor,
-		textElement,
-	)
-
-	return svg, nil
-}
-
-func parseColor(s string, def color.Color) color.Color {
-	s = strings.ToLower(strings.TrimSpace(s))
-	if s == "" || s == "transparent" || s == "none" {
-		return color.Transparent
-	}
-
-	switch s {
-	case "white":
-		return color.White
-	case "black":
-		return color.Black
-	case "red":
-		return color.RGBA{255, 0, 0, 255}
-	case "green":
-		return color.RGBA{0, 255, 0, 255}
-	case "blue":
-		return color.RGBA{0, 0, 255, 255}
-	}
-
-	// Hex parser
-	if strings.HasPrefix(s, "#") {
-		var r, g, b uint8
-		format := "#%02x%02x%02x"
-		if len(s) == 4 {
-			format = "#%1x%1x%1x"
-			var r1, g1, b1 uint8
-			fmt.Sscanf(s, format, &r1, &g1, &b1)
-			r = r1 * 17
-			g = g1 * 17
-			b = b1 * 17
-		} else if len(s) == 7 {
-			fmt.Sscanf(s, format, &r, &g, &b)
-		} else {
-			return def
-		}
-		return color.RGBA{r, g, b, 255}
-	}
-
-	return def
-}
-
-// Helper functions for backward compatibility or ease of use
-
+// CreateBarcodeToSVG is a helper function for backward compatibility
 func CreateBarcodeToSVG(barcodetype string, data string, width, height int) (string, error) {
 	btype := BarcodeType(strings.ToLower(barcodetype))
 	opts := DefaultOptions(btype)
