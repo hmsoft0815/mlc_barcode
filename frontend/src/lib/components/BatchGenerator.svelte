@@ -173,8 +173,9 @@
           <!-- Configuration -->
           <div class="row g-2 mb-3">
             <div class="col-6">
-              <label class="form-label small text-muted mb-1">Barcode-Typ</label>
+              <label for="batchTypeSelect" class="form-label small text-muted mb-1">Barcode-Typ</label>
               <select
+                id="batchTypeSelect"
                 class="form-select form-select-sm"
                 bind:value={selectedType}
                 on:change={runBatchGenerate}
@@ -185,22 +186,26 @@
               </select>
             </div>
             <div class="col-3">
-              <label class="form-label small text-muted mb-1">Vordergrund</label>
+              <label for="batchFgColor" class="form-label small text-muted mb-1">Vordergrund</label>
               <input
+                id="batchFgColor"
                 type="color"
                 class="form-control form-control-sm form-control-color w-100"
                 bind:value={fgColor}
                 on:input={runBatchGenerate}
+                aria-label="Vordergrundfarbe"
               />
             </div>
             <div class="col-3">
-              <label class="form-label small text-muted mb-1">Hintergrund</label>
+              <label for="batchBgColor" class="form-label small text-muted mb-1">Hintergrund</label>
               <input
+                id="batchBgColor"
                 type="color"
                 class="form-control form-control-sm form-control-color w-100"
                 disabled={isTransparent}
                 bind:value={bgColor}
                 on:input={runBatchGenerate}
+                aria-label="Hintergrundfarbe"
               />
             </div>
           </div>
@@ -256,15 +261,15 @@
         <div class="card-body">
           <div class="row g-2 mb-3">
             <div class="col-6">
-              <label class="form-label small text-muted mb-1">Format</label>
-              <select class="form-select form-select-sm" bind:value={exportFormat}>
+              <label for="exportFormatSelect" class="form-label small text-muted mb-1">Format</label>
+              <select id="exportFormatSelect" class="form-select form-select-sm" bind:value={exportFormat}>
                 <option value="png">PNG (Rastergrafik)</option>
                 <option value="svg">SVG (Vektorgrafik)</option>
               </select>
             </div>
             <div class="col-6">
-              <label class="form-label small text-muted mb-1">Dateibenennung</label>
-              <select class="form-select form-select-sm" bind:value={namingScheme}>
+              <label for="namingSchemeSelect" class="form-label small text-muted mb-1">Dateibenennung</label>
+              <select id="namingSchemeSelect" class="form-select form-select-sm" bind:value={namingScheme}>
                 <option value="data_slug">Nummer + Inhalt</option>
                 <option value="index">Nur Nummer (001, 002...)</option>
                 <option value="data_raw">Nur Inhalt</option>
@@ -273,8 +278,9 @@
           </div>
 
           <div class="mb-3">
-            <label class="form-label small text-muted mb-1">Dateinamen-Präfix</label>
+            <label for="exportPrefixInput" class="form-label small text-muted mb-1">Dateinamen-Präfix</label>
             <input
+              id="exportPrefixInput"
               type="text"
               class="form-control form-control-sm font-monospace"
               placeholder="z.B. code_"

@@ -47,8 +47,9 @@
     <div class="card-body">
       <div class="row g-3 align-items-center">
         <div class="col-md-4">
-          <label class="form-label small text-muted mb-1">Standard-Vorlagen (DIN A4)</label>
+          <label for="labelPresetSelect" class="form-label small text-muted mb-1">Standard-Vorlagen (DIN A4)</label>
           <select
+            id="labelPresetSelect"
             class="form-select form-select-sm"
             on:change={(e) => {
               const val = e.currentTarget.value;
@@ -65,8 +66,9 @@
         </div>
 
         <div class="col-md-2 col-6">
-          <label class="form-label small text-muted mb-1">Spalten (Columns)</label>
+          <label for="labelColumnsInput" class="form-label small text-muted mb-1">Spalten (Columns)</label>
           <input
+            id="labelColumnsInput"
             type="number"
             class="form-control form-control-sm"
             min="1"
@@ -76,8 +78,9 @@
         </div>
 
         <div class="col-md-2 col-6">
-          <label class="form-label small text-muted mb-1">Zeilen (Rows)</label>
+          <label for="labelRowsInput" class="form-label small text-muted mb-1">Zeilen (Rows)</label>
           <input
+            id="labelRowsInput"
             type="number"
             class="form-control form-control-sm"
             min="1"
@@ -87,8 +90,9 @@
         </div>
 
         <div class="col-md-2 col-6">
-          <label class="form-label small text-muted mb-1">Wiederholungen</label>
+          <label for="labelRepeatInput" class="form-label small text-muted mb-1">Wiederholungen</label>
           <input
+            id="labelRepeatInput"
             type="number"
             class="form-control form-control-sm"
             min="1"

@@ -115,8 +115,14 @@ tasks:
     cmds:
       - go test -tags gtk3 ./...
 
+  check:frontend:
+    desc: Run svelte-check for TypeScript and Svelte diagnostics
+    dir: frontend
+    cmds:
+      - pnpm run check
+
   lint:
-    desc: gofmt check and go vet
+    desc: gofmt check, go vet, and svelte-check
     cmds:
       - |
         unformatted=$(gofmt -l . | grep -v '^$' || true)
@@ -125,6 +131,7 @@ tasks:
         fi
         echo "gofmt: clean"
       - go vet -tags gtk3 ./...
+      - task: check:frontend
 
   semgrep:
     desc: 'Statische Sicherheitsprüfung: Bericht + Kurzfassung + Urteils-Abgleich.'
