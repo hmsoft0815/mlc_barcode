@@ -40,9 +40,13 @@ jobs:
     - uses: actions/checkout@v4
 
     - name: Set up Go
+      # From go.mod, so this cannot drift away from what the module requires.
+      # The literal '1.23' that stood here worked only because GOTOOLCHAIN=auto
+      # quietly fetched the newer toolchain go.mod asked for — which is fine
+      # until someone reads the workflow and believes it.
       uses: actions/setup-go@v5
       with:
-        go-version: '1.23'
+        go-version-file: 'go.mod'
 
     - name: Build Binaries
       env:
@@ -56,8 +60,12 @@ jobs:
           CLI_NAME=${CLI_NAME}.exe
           SERVER_NAME=${SERVER_NAME}.exe
         fi
-        go build -v -o "dist/${CLI_NAME}" ./cmd/barcode
-        go build -v -o "dist/${SERVER_NAME}" ./cmd/mcp-server
+        # VERSION is the single source of truth; internal/version holds only a
+        # "dev" placeholder. Without this stamp the released binaries would
+        # report `vdev` and say nothing about which release they are.
+        LDFLAGS="-X github.com/mlcmcp/mlc_barcode/internal/version.Version=$(cat VERSION)"
+        go build -v -ldflags "$LDFLAGS" -o "dist/${CLI_NAME}" ./cmd/barcode
+        go build -v -ldflags "$LDFLAGS" -o "dist/${SERVER_NAME}" ./cmd/mcp-server
 
     - name: Create Archive
       run: |
