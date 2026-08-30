@@ -5,7 +5,7 @@ Structured documentation lives in `.mlcai/`, maintained through the
 `mlc-dochub` MCP server.
 
 - **Project ID:** `mlc-barcode` — MLC Barcode — CLI & MCP Server
-- **Source directory:** `/mnt/data2tb/mlc_allmcp/mlc_barcode` (read source files with native Read —
+- **Source directory:** `/mnt/data2tb/mlc_barcode` (read source files with native Read —
   the MCP tools only touch `.mlcai/`)
 
 ### Existing docs

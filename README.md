@@ -22,7 +22,7 @@ Make sure you have Go installed.
 ```bash
 git clone <repository-url>
 cd mlc_barcode
-make build
+task build
 ```
 
 The binaries are located in `bin/`:
@@ -98,10 +98,10 @@ The MCP tool `generate_barcode` has additional parameters:
 
 ## Development
 
-- `make build`: Compiles everything.
-- `make run-server`: Starts the MCP server via stdio.
-- `make clean`: Clean up.
-- `make test`: Run unit tests.
+- `task build`: Compiles everything.
+- `task dev:server`: Starts the MCP server via stdio.
+- `task clean`: Clean up.
+- `task test`: Run unit tests.
 
 ## License
 

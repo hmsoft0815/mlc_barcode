@@ -19,7 +19,7 @@ func FormatWifi(opts WifiOptions) string {
 	if enc == "" {
 		enc = "WPA"
 	}
-	
+
 	hidden := ""
 	if opts.Hidden {
 		hidden = "H:true;"

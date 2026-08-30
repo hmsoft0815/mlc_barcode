@@ -8,10 +8,10 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/hmsoft0815/mlcartifact/client"
 	"github.com/mlcmcp/mlc_barcode/internal/barcodes"
 	"github.com/mlcmcp/mlc_barcode/internal/qrformats"
 	"github.com/mlcmcp/mlc_barcode/internal/version"
-	"github.com/hmsoft0815/mlcartifact/client"
 )
 
 func main() {

@@ -1,0 +1,118 @@
+version: '3'
+
+# Replaces the previous Makefile. The house style asks for Taskfile v3 with
+# build / dev / test / lint, and for the version to live in a VERSION file
+# rather than in the source — keeping both build systems would have meant two
+# places to bump and one of them going stale.
+
+vars:
+  CLI_BINARY: barcode
+  SERVER_BINARY: mcp-barcode-server
+  BIN_DIR: bin
+  MODULE: github.com/mlcmcp/mlc_barcode
+  VERSION:
+    sh: cat VERSION
+  # Stamped into every binary, so `barcode --version` reports what VERSION
+  # says and not the "dev" placeholder in the source.
+  LDFLAGS: -X {{.MODULE}}/internal/version.Version={{.VERSION}}
+  # Where the product page expects the files. The names are not free: they are
+  # what mlcprodweb/meta.yaml links, and a mismatch is a 404 nobody notices.
+  VPS_HOST: mlc@mlcgo.eu
+  VPS_DIR: /var/www/html/downloads/mlc-barcode
+
+tasks:
+  default:
+    desc: List the available tasks
+    cmds:
+      - task --list
+    silent: true
+
+  build:
+    desc: Build the CLI and the MCP server for this machine
+    cmds:
+      - mkdir -p {{.BIN_DIR}}
+      - go build -ldflags "{{.LDFLAGS}}" -o {{.BIN_DIR}}/{{.CLI_BINARY}} ./cmd/barcode
+      - go build -ldflags "{{.LDFLAGS}}" -o {{.BIN_DIR}}/{{.SERVER_BINARY}} ./cmd/mcp-server
+
+  build:linux:
+    desc: Cross-compile for Linux amd64
+    cmds:
+      - mkdir -p {{.BIN_DIR}}
+      - GOOS=linux GOARCH=amd64 go build -ldflags "{{.LDFLAGS}}" -o {{.BIN_DIR}}/{{.CLI_BINARY}}-linux-amd64 ./cmd/barcode
+      - GOOS=linux GOARCH=amd64 go build -ldflags "{{.LDFLAGS}}" -o {{.BIN_DIR}}/{{.SERVER_BINARY}}-linux-amd64 ./cmd/mcp-server
+
+  build:windows:
+    desc: Cross-compile for Windows amd64
+    cmds:
+      - mkdir -p {{.BIN_DIR}}
+      - GOOS=windows GOARCH=amd64 go build -ldflags "{{.LDFLAGS}}" -o {{.BIN_DIR}}/{{.CLI_BINARY}}-windows-amd64.exe ./cmd/barcode
+      - GOOS=windows GOARCH=amd64 go build -ldflags "{{.LDFLAGS}}" -o {{.BIN_DIR}}/{{.SERVER_BINARY}}-windows-amd64.exe ./cmd/mcp-server
+
+  build:macos:
+    desc: Cross-compile for macOS, both architectures
+    cmds:
+      - mkdir -p {{.BIN_DIR}}
+      - GOOS=darwin GOARCH=arm64 go build -ldflags "{{.LDFLAGS}}" -o {{.BIN_DIR}}/{{.CLI_BINARY}}-macos-arm64 ./cmd/barcode
+      - GOOS=darwin GOARCH=arm64 go build -ldflags "{{.LDFLAGS}}" -o {{.BIN_DIR}}/{{.SERVER_BINARY}}-macos-arm64 ./cmd/mcp-server
+      - GOOS=darwin GOARCH=amd64 go build -ldflags "{{.LDFLAGS}}" -o {{.BIN_DIR}}/{{.CLI_BINARY}}-macos-amd64 ./cmd/barcode
+      - GOOS=darwin GOARCH=amd64 go build -ldflags "{{.LDFLAGS}}" -o {{.BIN_DIR}}/{{.SERVER_BINARY}}-macos-amd64 ./cmd/mcp-server
+
+  build:all:
+    desc: Cross-compile every published target
+    deps: [build:linux, build:windows, build:macos]
+
+  dev:
+    desc: Build and run the CLI with CLI_ARGS
+    cmds:
+      - task: build
+      - ./{{.BIN_DIR}}/{{.CLI_BINARY}} {{.CLI_ARGS}}
+
+  dev:server:
+    desc: Build and run the MCP server
+    cmds:
+      - task: build
+      - ./{{.BIN_DIR}}/{{.SERVER_BINARY}}
+
+  test:
+    desc: Run the Go tests
+    cmds:
+      - go test ./...
+
+  lint:
+    desc: gofmt check and go vet
+    cmds:
+      - |
+        unformatted=$(gofmt -l . | grep -v '^$' || true)
+        if [ -n "$unformatted" ]; then
+          echo "gofmt would change:"; echo "$unformatted"; exit 1
+        fi
+        echo "gofmt: clean"
+      - go vet ./...
+
+  clean:
+    desc: Remove build output and generated images
+    cmds:
+      - rm -rf {{.BIN_DIR}}
+      - rm -f ./*.svg ./*.png
+
+  deploy:
+    desc: "PUBLISH: upload the four CLI binaries the product page links"
+    deps: [build:all]
+    cmds:
+      # Only the CLI: the product page offers `barcode`, not the MCP server,
+      # and uploading a file nothing links to is how a downloads directory
+      # turns into a junk drawer.
+      - |
+        set -e
+        for f in {{.CLI_BINARY}}-linux-amd64 {{.CLI_BINARY}}-windows-amd64.exe \
+                 {{.CLI_BINARY}}-macos-arm64 {{.CLI_BINARY}}-macos-amd64; do
+          if [ ! -f "{{.BIN_DIR}}/$f" ]; then echo "missing: {{.BIN_DIR}}/$f"; exit 1; fi
+        done
+        ssh -o BatchMode=yes {{.VPS_HOST}} "mkdir -p {{.VPS_DIR}}"
+        rsync -az --timeout=30 -e 'ssh -o BatchMode=yes -o ConnectTimeout=10' \
+          {{.BIN_DIR}}/{{.CLI_BINARY}}-linux-amd64 \
+          {{.BIN_DIR}}/{{.CLI_BINARY}}-windows-amd64.exe \
+          {{.BIN_DIR}}/{{.CLI_BINARY}}-macos-arm64 \
+          {{.BIN_DIR}}/{{.CLI_BINARY}}-macos-amd64 \
+          {{.VPS_HOST}}:{{.VPS_DIR}}/
+        echo "✓ https://mlcgo.eu/downloads/mlc-barcode/"

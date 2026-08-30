@@ -23,11 +23,11 @@ func FormatVCalendar(opts VCalendarOptions) string {
 	sb.WriteString("BEGIN:VCALENDAR\n")
 	sb.WriteString("VERSION:2.0\n")
 	sb.WriteString("BEGIN:VEVENT\n")
-	
+
 	if opts.Summary != "" {
 		fmt.Fprintf(&sb, "SUMMARY:%s\n", opts.Summary)
 	}
-	
+
 	tzPrefix := ""
 	if opts.TimeZone != "" {
 		tzPrefix = fmt.Sprintf(";TZID=%s", opts.TimeZone)
@@ -41,7 +41,7 @@ func FormatVCalendar(opts VCalendarOptions) string {
 			fmt.Fprintf(&sb, "DTSTART:%s\n", opts.StartTime)
 		}
 	}
-	
+
 	if opts.EndTime != "" {
 		if opts.TimeZone != "" && !strings.HasSuffix(opts.EndTime, "Z") {
 			fmt.Fprintf(&sb, "DTEND%s:%s\n", tzPrefix, opts.EndTime)
@@ -49,7 +49,7 @@ func FormatVCalendar(opts VCalendarOptions) string {
 			fmt.Fprintf(&sb, "DTEND:%s\n", opts.EndTime)
 		}
 	}
-	
+
 	if opts.Location != "" {
 		fmt.Fprintf(&sb, "LOCATION:%s\n", opts.Location)
 	}
@@ -57,11 +57,11 @@ func FormatVCalendar(opts VCalendarOptions) string {
 	if opts.Latitude != 0 || opts.Longitude != 0 {
 		fmt.Fprintf(&sb, "GEO:%f;%f\n", opts.Latitude, opts.Longitude)
 	}
-	
+
 	if opts.Description != "" {
 		fmt.Fprintf(&sb, "DESCRIPTION:%s\n", opts.Description)
 	}
-	
+
 	sb.WriteString("END:VEVENT\n")
 	sb.WriteString("END:VCALENDAR")
 	return sb.String()
