@@ -1,4 +1,4 @@
-package main
+package gui
 
 // BarcodeRequest contains parameters for generating a single barcode.
 type BarcodeRequest struct {

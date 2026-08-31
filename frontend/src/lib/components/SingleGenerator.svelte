@@ -8,8 +8,8 @@
     FormatEvent,
     SaveSingleFile,
     CopyToClipboard
-  } from '../../../bindings/github.com/mlcmcp/mlc_barcode/barcodeapp';
-  import type { BarcodeResult } from '../../../bindings/github.com/mlcmcp/mlc_barcode/models';
+  } from '../../../bindings/github.com/mlcmcp/mlc_barcode/internal/gui/barcodeapp';
+  import type { BarcodeResult } from '../../../bindings/github.com/mlcmcp/mlc_barcode/internal/gui/models';
 
   export let onSendToPrint: ((item: { data: string; svg: string; type: string }) => void) | undefined = undefined;
 

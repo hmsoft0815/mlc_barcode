@@ -5,6 +5,7 @@ import (
 	_ "embed"
 	"log"
 
+	"github.com/mlcmcp/mlc_barcode/internal/gui"
 	"github.com/mlcmcp/mlc_barcode/internal/version"
 	"github.com/wailsapp/wails/v3/pkg/application"
 )
@@ -20,7 +21,7 @@ var assets embed.FS
 var appIcon []byte
 
 func main() {
-	barcodeApp := NewBarcodeApp()
+	barcodeApp := gui.NewBarcodeApp()
 
 	wailsApp := application.New(application.Options{
 		Name:        "MLC Barcode",

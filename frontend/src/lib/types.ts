@@ -1,4 +1,4 @@
-import type * as Models from '../../bindings/github.com/mlcmcp/mlc_barcode/models';
+import type * as Models from '../../bindings/github.com/mlcmcp/mlc_barcode/internal/gui/models';
 
 export type BarcodeType = 'qr' | 'datamatrix' | 'code128' | 'code39' | 'ean13' | 'ean8' | 'upca' | 'itf';
 

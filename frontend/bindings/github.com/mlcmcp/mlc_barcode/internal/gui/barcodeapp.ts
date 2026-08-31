@@ -18,75 +18,75 @@ import * as $models from "./models.js";
  * CopyToClipboard copies text (e.g. raw SVG or string) to the native OS clipboard.
  */
 export function CopyToClipboard(text: string): $CancellablePromise<boolean> {
-    return $Call.ByID(1411264089, text);
+    return $Call.ByID(3783022343, text);
 }
 
 /**
  * ExportBatchToFolder exports generated batch barcodes into a target directory.
  */
 export function ExportBatchToFolder(req: $models.BatchExportRequest): $CancellablePromise<$models.BatchExportResponse> {
-    return $Call.ByID(1829561616, req);
+    return $Call.ByID(697745266, req);
 }
 
 /**
  * FormatEvent formats event parameters into iCal/vCalendar QR data format.
  */
 export function FormatEvent(opts: $models.EventInput): $CancellablePromise<string> {
-    return $Call.ByID(2432037614, opts);
+    return $Call.ByID(2251355188, opts);
 }
 
 /**
  * FormatVCard formats contact parameters into vCard 3.0 standard QR data format.
  */
 export function FormatVCard(opts: $models.VCardInput): $CancellablePromise<string> {
-    return $Call.ByID(1596215682, opts);
+    return $Call.ByID(939783500, opts);
 }
 
 /**
  * FormatWifi formats Wi-Fi connection parameters into standard QR data format.
  */
 export function FormatWifi(opts: $models.WifiInput): $CancellablePromise<string> {
-    return $Call.ByID(3458962879, opts);
+    return $Call.ByID(1953257241, opts);
 }
 
 /**
  * GenerateBarcode generates SVG and PNG representations of a single barcode.
  */
 export function GenerateBarcode(req: $models.BarcodeRequest): $CancellablePromise<$models.BarcodeResult> {
-    return $Call.ByID(2834328570, req);
+    return $Call.ByID(3245091200, req);
 }
 
 /**
  * GenerateBatch processes multiple lines of text and generates barcodes for each.
  */
 export function GenerateBatch(req: $models.BatchBarcodeRequest): $CancellablePromise<$models.BatchBarcodeResponse> {
-    return $Call.ByID(1822436222, req);
+    return $Call.ByID(3453167428, req);
 }
 
 /**
  * GetVersion returns the current application version.
  */
 export function GetVersion(): $CancellablePromise<string> {
-    return $Call.ByID(2309158169);
+    return $Call.ByID(3771792143);
 }
 
 /**
  * PickExportFolder opens a native folder selection dialog.
  */
 export function PickExportFolder(): $CancellablePromise<string> {
-    return $Call.ByID(1083076046);
+    return $Call.ByID(512332088);
 }
 
 /**
  * PickTextFile opens a native open-file dialog for .txt or .csv files and reads all lines.
  */
 export function PickTextFile(): $CancellablePromise<[string, string[] | null]> {
-    return $Call.ByID(161843409);
+    return $Call.ByID(2658359795);
 }
 
 /**
  * SaveSingleFile opens a native save-file dialog and writes the given SVG or PNG content.
  */
 export function SaveSingleFile(req: $models.SaveSingleFileRequest): $CancellablePromise<string> {
-    return $Call.ByID(4267146450, req);
+    return $Call.ByID(2139578368, req);
 }

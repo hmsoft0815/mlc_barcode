@@ -5,7 +5,7 @@
   import BatchGenerator from './lib/components/BatchGenerator.svelte';
   import LabelPrinter from './lib/components/LabelPrinter.svelte';
   import AboutView from './lib/components/AboutView.svelte';
-  import { GetVersion } from '../bindings/github.com/mlcmcp/mlc_barcode/barcodeapp';
+  import { GetVersion } from '../bindings/github.com/mlcmcp/mlc_barcode/internal/gui/barcodeapp';
 
   let activeTab: 'single' | 'batch' | 'print' | 'about' = 'single';
   let appVersion = '1.3.0';

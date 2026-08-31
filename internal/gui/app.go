@@ -1,4 +1,4 @@
-package main
+package gui
 
 import (
 	"bufio"
@@ -140,43 +140,49 @@ func (a *BarcodeApp) GenerateBatch(req BatchBarcodeRequest) (BatchBarcodeRespons
 		opts.BackgroundColor = req.BackgroundColor
 	}
 
-	items := make([]BatchItemResult, 0, len(req.Lines))
+	var results []BatchItemResult
 	validCount := 0
 	errorCount := 0
 
 	for i, line := range req.Lines {
 		data := strings.TrimSpace(line)
+		itemIndex := i + 1
+
 		if data == "" {
 			continue
 		}
 
-		item := BatchItemResult{
-			Index: i + 1,
-			Data:  data,
-		}
-
 		svgStr, err := barcodes.GenerateSVG(btype, data, opts)
 		if err != nil {
-			item.Success = false
-			item.Error = err.Error()
+			results = append(results, BatchItemResult{
+				Index:   itemIndex,
+				Data:    data,
+				Success: false,
+				Error:   err.Error(),
+			})
 			errorCount++
-		} else {
-			item.Success = true
-			item.SVG = svgStr
-
-			pngBytes, pngErr := barcodes.GeneratePNG(btype, data, opts)
-			if pngErr == nil && len(pngBytes) > 0 {
-				item.PNGData = "data:image/png;base64," + base64.StdEncoding.EncodeToString(pngBytes)
-			}
-			validCount++
+			continue
 		}
 
-		items = append(items, item)
+		pngBytes, err := barcodes.GeneratePNG(btype, data, opts)
+		var pngDataURI string
+		if err == nil && len(pngBytes) > 0 {
+			pngDataURI = "data:image/png;base64," + base64.StdEncoding.EncodeToString(pngBytes)
+		}
+
+		results = append(results, BatchItemResult{
+			Index:   itemIndex,
+			Data:    data,
+			SVG:     svgStr,
+			PNGData: pngDataURI,
+			Success: true,
+		})
+		validCount++
 	}
 
 	return BatchBarcodeResponse{
-		Items:      items,
-		Total:      len(items),
+		Items:      results,
+		Total:      len(results),
 		ValidCount: validCount,
 		ErrorCount: errorCount,
 	}, nil
@@ -184,14 +190,17 @@ func (a *BarcodeApp) GenerateBatch(req BatchBarcodeRequest) (BatchBarcodeRespons
 
 // PickTextFile opens a native open-file dialog for .txt or .csv files and reads all lines.
 func (a *BarcodeApp) PickTextFile() (string, []string, error) {
-	filePath, err := application.Get().Dialog.OpenFile().
-		SetTitle("Select text or CSV file for batch barcodes").
-		AddFilter("Text & CSV Files (*.txt, *.csv)", "*.txt;*.csv").
-		AddFilter("All Files (*.*)", "*.*").
-		PromptForSingleSelection()
+	dialog := application.Get().Dialog.OpenFile()
+	dialog.SetMessage("Text- oder CSV-Datei auswählen")
+	dialog.AddFilter("Text & CSV Dateien (*.txt, *.csv)", "*.txt;*.csv")
+	dialog.AddFilter("Alle Dateien (*.*)", "*.*")
 
-	if err != nil || filePath == "" {
+	filePath, err := dialog.PromptForSingleSelection()
+	if err != nil {
 		return "", nil, err
+	}
+	if filePath == "" {
+		return "", nil, nil // User cancelled
 	}
 
 	file, err := os.Open(filePath)
@@ -208,9 +217,8 @@ func (a *BarcodeApp) PickTextFile() (string, []string, error) {
 			lines = append(lines, text)
 		}
 	}
-
 	if err := scanner.Err(); err != nil {
-		return filePath, lines, fmt.Errorf("error reading file: %w", err)
+		return filePath, nil, fmt.Errorf("error reading file lines: %w", err)
 	}
 
 	return filePath, lines, nil
@@ -218,160 +226,152 @@ func (a *BarcodeApp) PickTextFile() (string, []string, error) {
 
 // PickExportFolder opens a native folder selection dialog.
 func (a *BarcodeApp) PickExportFolder() (string, error) {
-	folderPath, err := application.Get().Dialog.OpenFile().
-		SetTitle("Select Destination Folder for Barcode Export").
-		CanChooseDirectories(true).
-		CanChooseFiles(false).
-		PromptForSingleSelection()
+	dialog := application.Get().Dialog.OpenFile()
+	dialog.SetMessage("Zielordner für Barcode-Dateien auswählen")
+	dialog.CanChooseDirectories(true)
+	dialog.CanChooseFiles(false)
 
+	folderPath, err := dialog.PromptForSingleSelection()
 	if err != nil {
 		return "", err
 	}
 	return folderPath, nil
 }
 
-// sanitizeFilename turns an arbitrary string into a safe file name.
-var nonAlphanumericRegex = regexp.MustCompile(`[^a-zA-Z0-9_-]+`)
-
-func sanitizeFilename(s string) string {
-	s = strings.TrimSpace(s)
-	s = nonAlphanumericRegex.ReplaceAllString(s, "_")
-	s = strings.Trim(s, "_")
-	if len(s) > 40 {
-		s = s[:40]
-	}
-	if s == "" {
-		s = "barcode"
-	}
-	return s
-}
-
 // ExportBatchToFolder exports generated batch barcodes into a target directory.
 func (a *BarcodeApp) ExportBatchToFolder(req BatchExportRequest) (BatchExportResponse, error) {
 	if req.FolderPath == "" {
-		return BatchExportResponse{}, fmt.Errorf("folder path cannot be empty")
+		return BatchExportResponse{Error: "Zielordner ist nicht angegeben"}, nil
 	}
 
 	if err := os.MkdirAll(req.FolderPath, 0755); err != nil {
-		return BatchExportResponse{}, fmt.Errorf("failed to create destination folder: %w", err)
+		return BatchExportResponse{Error: fmt.Sprintf("Ordner konnte nicht erstellt werden: %v", err)}, nil
 	}
 
-	format := strings.ToLower(req.Format)
-	if format != "png" {
-		format = "svg"
+	ext := ".png"
+	if strings.ToLower(req.Format) == "svg" {
+		ext = ".svg"
 	}
 
-	prefix := req.Prefix
-	savedPaths := make([]string, 0, len(req.Items))
-	exportedCount := 0
-	skippedCount := 0
+	var saved []string
+	skipped := 0
+	exported := 0
 
 	for i, item := range req.Items {
 		if !item.Success {
-			skippedCount++
+			skipped++
 			continue
 		}
 
 		var filename string
 		switch req.NamingScheme {
-		case "data_slug":
-			filename = fmt.Sprintf("%s%03d_%s.%s", prefix, i+1, sanitizeFilename(item.Data), format)
+		case "index":
+			filename = fmt.Sprintf("%s%03d%s", req.Prefix, i+1, ext)
 		case "data_raw":
-			filename = fmt.Sprintf("%s%s.%s", prefix, sanitizeFilename(item.Data), format)
-		default: // "index"
-			filename = fmt.Sprintf("%s%03d.%s", prefix, i+1, format)
+			slug := sanitizeFilename(item.Data)
+			filename = fmt.Sprintf("%s%s%s", req.Prefix, slug, ext)
+		case "data_slug":
+			fallthrough
+		default:
+			slug := sanitizeFilename(item.Data)
+			filename = fmt.Sprintf("%s%03d_%s%s", req.Prefix, i+1, slug, ext)
 		}
 
-		destPath := filepath.Join(req.FolderPath, filename)
+		outPath := filepath.Join(req.FolderPath, filename)
 
-		var contentBytes []byte
-		if format == "svg" {
-			contentBytes = []byte(item.SVG)
+		var writeErr error
+		if ext == ".svg" && item.SVG != "" {
+			writeErr = os.WriteFile(outPath, []byte(item.SVG), 0644)
+		} else if ext == ".png" && item.PNGData != "" {
+			// Extract base64 payload from data URI
+			dataURI := item.PNGData
+			if idx := strings.Index(dataURI, ","); idx != -1 {
+				dataURI = dataURI[idx+1:]
+			}
+			pngBytes, decodeErr := base64.StdEncoding.DecodeString(dataURI)
+			if decodeErr == nil {
+				writeErr = os.WriteFile(outPath, pngBytes, 0644)
+			} else {
+				writeErr = decodeErr
+			}
+		}
+
+		if writeErr != nil {
+			skipped++
 		} else {
-			// PNG Data URI
-			pngBase64 := item.PNGData
-			if idx := strings.Index(pngBase64, ","); idx != -1 {
-				pngBase64 = pngBase64[idx+1:]
-			}
-			var err error
-			contentBytes, err = base64.StdEncoding.DecodeString(pngBase64)
-			if err != nil {
-				skippedCount++
-				continue
-			}
+			exported++
+			saved = append(saved, outPath)
 		}
-
-		if err := os.WriteFile(destPath, contentBytes, 0644); err != nil {
-			skippedCount++
-			continue
-		}
-
-		savedPaths = append(savedPaths, destPath)
-		exportedCount++
 	}
 
 	return BatchExportResponse{
-		ExportedCount: exportedCount,
-		SkippedCount:  skippedCount,
-		SavedPaths:    savedPaths,
+		ExportedCount: exported,
+		SkippedCount:  skipped,
+		SavedPaths:    saved,
 	}, nil
 }
 
 // SaveSingleFile opens a native save-file dialog and writes the given SVG or PNG content.
 func (a *BarcodeApp) SaveSingleFile(req SaveSingleFileRequest) (string, error) {
-	format := strings.ToLower(req.Format)
-	if format != "png" {
-		format = "svg"
-	}
-
-	defaultName := req.DefaultName
-	if defaultName == "" {
-		defaultName = "barcode." + format
-	}
-	if !strings.HasSuffix(strings.ToLower(defaultName), "."+format) {
-		defaultName = defaultName + "." + format
-	}
-
-	filterName := "SVG Image (*.svg)"
-	filterPattern := "*.svg"
-	if format == "png" {
-		filterName = "PNG Image (*.png)"
-		filterPattern = "*.png"
-	}
-
-	destPath, err := application.Get().Dialog.SaveFile().
-		SetMessage("Save Barcode").
-		SetFilename(defaultName).
-		AddFilter(filterName, filterPattern).
-		PromptForSingleSelection()
-
-	if err != nil || destPath == "" {
-		return "", err // user cancelled
-	}
-
-	var contentBytes []byte
-	if format == "svg" {
-		contentBytes = []byte(req.Content)
+	dialog := application.Get().Dialog.SaveFile()
+	dialog.SetMessage("Barcode speichern unter...")
+	if req.Format == "svg" {
+		dialog.AddFilter("SVG Vektorgrafik (*.svg)", "*.svg")
+		dialog.SetFilename(req.DefaultName)
 	} else {
-		pngBase64 := req.Content
-		if idx := strings.Index(pngBase64, ","); idx != -1 {
-			pngBase64 = pngBase64[idx+1:]
+		dialog.AddFilter("PNG Bild (*.png)", "*.png")
+		dialog.SetFilename(req.DefaultName)
+	}
+
+	targetPath, err := dialog.PromptForSingleSelection()
+	if err != nil {
+		return "", err
+	}
+	if targetPath == "" {
+		return "", nil // User cancelled
+	}
+
+	if req.Format == "svg" {
+		if err := os.WriteFile(targetPath, []byte(req.Content), 0644); err != nil {
+			return "", fmt.Errorf("failed to write svg file: %w", err)
 		}
-		var decodeErr error
-		contentBytes, decodeErr = base64.StdEncoding.DecodeString(pngBase64)
-		if decodeErr != nil {
-			return "", fmt.Errorf("failed to decode PNG data: %w", decodeErr)
+	} else {
+		// PNG data URI
+		dataURI := req.Content
+		if idx := strings.Index(dataURI, ","); idx != -1 {
+			dataURI = dataURI[idx+1:]
+		}
+		pngBytes, err := base64.StdEncoding.DecodeString(dataURI)
+		if err != nil {
+			return "", fmt.Errorf("failed to decode png base64: %w", err)
+		}
+		if err := os.WriteFile(targetPath, pngBytes, 0644); err != nil {
+			return "", fmt.Errorf("failed to write png file: %w", err)
 		}
 	}
 
-	if err := os.WriteFile(destPath, contentBytes, 0644); err != nil {
-		return "", fmt.Errorf("failed to write file: %w", err)
-	}
-
-	return destPath, nil
+	return targetPath, nil
 }
 
 // CopyToClipboard copies text (e.g. raw SVG or string) to the native OS clipboard.
 func (a *BarcodeApp) CopyToClipboard(text string) bool {
-	return application.Get().Clipboard.SetText(text)
+	app := application.Get()
+	if app == nil || app.Clipboard == nil {
+		return false
+	}
+	return app.Clipboard.SetText(text)
+}
+
+var nonAlphanumericRegex = regexp.MustCompile(`[^a-zA-Z0-9_-]+`)
+
+func sanitizeFilename(s string) string {
+	clean := nonAlphanumericRegex.ReplaceAllString(s, "_")
+	clean = strings.Trim(clean, "_")
+	if len(clean) > 40 {
+		clean = clean[:40]
+	}
+	if clean == "" {
+		clean = "item"
+	}
+	return clean
 }

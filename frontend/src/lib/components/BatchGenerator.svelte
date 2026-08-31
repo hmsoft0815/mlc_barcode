@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { onMount } from 'svelte';
   import { BARCODE_TYPES, type BarcodeType } from '../types';
   import {
     GenerateBatch,
@@ -6,8 +7,8 @@
     PickExportFolder,
     ExportBatchToFolder,
     CopyToClipboard
-  } from '../../../bindings/github.com/mlcmcp/mlc_barcode/barcodeapp';
-  import type { BatchBarcodeResponse, BatchItemResult } from '../../../bindings/github.com/mlcmcp/mlc_barcode/models';
+  } from '../../../bindings/github.com/mlcmcp/mlc_barcode/internal/gui/barcodeapp';
+  import type { BatchBarcodeResponse, BatchItemResult } from '../../../bindings/github.com/mlcmcp/mlc_barcode/internal/gui/models';
 
   export let onSendBatchToPrint: ((items: Array<{ data: string; svg: string; type: string }>) => void) | undefined = undefined;
 
@@ -128,6 +129,10 @@
     if (!svg) return;
     await CopyToClipboard(svg);
   }
+
+  onMount(() => {
+    runBatchGenerate();
+  });
 </script>
 
 <div class="container-fluid py-3">
