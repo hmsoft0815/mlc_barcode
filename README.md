@@ -103,6 +103,14 @@ The MCP tool `generate_barcode` has additional parameters:
 - `task clean`: Clean up.
 - `task test`: Run unit tests.
 
+## Reference
+
+The **[MCP Handbook](https://mlcgo.eu/books/mcp-handbuch/)** explains the Model Context Protocol from the ground
+up — tools, resources, prompts, transports, security and the artifact pattern.
+Available in English and German.
+
+---
+
 ## License
 
 Copyright (c) 2026 Michael Lechner.
