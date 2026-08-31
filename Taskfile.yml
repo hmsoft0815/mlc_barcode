@@ -154,9 +154,30 @@ tasks:
           rm -f "bin/{{.APP_NAME}}-arm64" "bin/{{.APP_NAME}}-amd64"
           lipo -info "bin/{{.APP_NAME}}"
 
+          # Info.plist traegt die Version, die der Finder anzeigt — eine zweite
+          # Quelle der Wahrheit neben VERSION. Sie stand auf 0.1.0, waehrend das
+          # Projekt bei 1.3.0 war. Bei jedem Build nachstempeln, damit das
+          # Bundle nie eine andere Version behauptet als die Binaries.
+          plutil -replace CFBundleVersion -string "${VERSION}" build/darwin/Info.plist
+          plutil -replace CFBundleShortVersionString -string "${VERSION}" build/darwin/Info.plist
+
           task darwin:create:app:bundle
-          task darwin:create:dmg
-          mv -f "bin/{{.APP_NAME}}.dmg" "bin/mlc-barcode-${VERSION}.dmg"
+
+          # Nicht `task darwin:create:dmg`: das Scaffold uebergibt --volume-icon
+          # und --window-width, die die installierte wails3-CLI nicht kennt
+          # (Versionsdifferenz Template/CLI). create-dmg liegt auf dem Mac und
+          # ist bei mlcterm erprobt; das Fenster ist auf die 540x380 des
+          # Hintergrundbildes gesetzt.
+          rm -f "bin/mlc-barcode-${VERSION}.dmg"
+          create-dmg \
+            --volname "MLC Barcode ${VERSION}" \
+            --volicon "build/darwin/icons.icns" \
+            --background "build/darwin/dmg-background.png" \
+            --window-pos 200 150 --window-size 540 380 --icon-size 96 \
+            --icon "{{.APP_NAME}}.app" 130 190 --hide-extension "{{.APP_NAME}}.app" \
+            --app-drop-link 410 190 \
+            --no-internet-enable --skip-jenkins \
+            "bin/mlc-barcode-${VERSION}.dmg" "bin/{{.APP_NAME}}.app"
           echo "→ fertig: bin/mlc-barcode-${VERSION}.dmg"
         ENDSSH
       - mkdir -p {{.BIN_DIR}}
@@ -308,7 +329,8 @@ tasks:
           "{{.BIN_DIR}}/mlc-barcode-{{.VERSION}}-windows-setup.exe" \
           "{{.BIN_DIR}}/mlc-barcode-{{.VERSION}}-linux-amd64.tar.gz" \
           "{{.BIN_DIR}}/mlc-barcode-{{.VERSION}}-macos-arm64.tar.gz" \
-          "{{.BIN_DIR}}/mlc-barcode-{{.VERSION}}-macos-amd64.tar.gz"; do
+          "{{.BIN_DIR}}/mlc-barcode-{{.VERSION}}-macos-amd64.tar.gz" \
+          "{{.BIN_DIR}}/mlc-barcode-{{.VERSION}}.dmg"; do
           if [ -f "$f" ]; then cp "$f" "{{.DROPZONE}}/"; echo "  ✓ $(basename "$f")";
           else echo "  ✗ missing: $f"; MISSING=$((MISSING+1)); fi
         done
@@ -325,7 +347,10 @@ tasks:
 
   deploy:
     desc: "PUBLISH: upload all binaries, installers and archives to VPS"
-    deps: [build:all]
+    # build:macos:remote gehoert dazu: die Produktseite verlinkt das .dmg, also
+    # muss es mit hoch. Ist der Mac aus, soll deploy laut scheitern statt einen
+    # toten Link zu veroeffentlichen.
+    deps: [build:all, build:macos:remote]
     cmds:
       - |
         set -e
@@ -345,5 +370,6 @@ tasks:
           {{.BIN_DIR}}/mlc-barcode-{{.VERSION}}-linux-amd64.tar.gz \
           {{.BIN_DIR}}/mlc-barcode-{{.VERSION}}-macos-arm64.tar.gz \
           {{.BIN_DIR}}/mlc-barcode-{{.VERSION}}-macos-amd64.tar.gz \
+          {{.BIN_DIR}}/mlc-barcode-{{.VERSION}}.dmg \
           {{.VPS_HOST}}:{{.VPS_DIR}}/
         echo "✓ https://mlcgo.eu/downloads/mlc-barcode/"

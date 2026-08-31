@@ -1,11 +1,13 @@
-# MLC Barcode CLI & MCP Server
+# MLC Barcode — Desktop GUI, CLI & MCP Server
 
-Ein Werkzeug zur Generierung von Barcodes, das sowohl als Kommandozeilen-Tool (CLI) als auch als Model Context Protocol (MCP) Server genutzt werden kann.
+Ein Werkzeug zur Generierung von Barcodes und QR-Codes — als Desktop-GUI, als Kommandozeilen-Tool (CLI) und als Model Context Protocol (MCP) Server.
+
+<img src="assets/qrcode-product-teaser-960.jpg" alt="MLC Barcode — Desktop GUI, CLI and MCP Server" width="960">
 
 <img src="assets/mlc_barcode_mpc3.png" >
 
 ## Version
-Aktuelle Version: **1.2.1**
+Aktuelle Version: **1.3.0**
 
 ## Funktionen
 - Unterstützt mehrere Barcode-Typen: QR, DataMatrix, Code128, Code39, EAN-13, EAN-8, UPC-A, ITF.
