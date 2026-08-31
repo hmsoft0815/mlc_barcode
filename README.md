@@ -1,5 +1,8 @@
 # MLC Barcode — Desktop GUI, CLI & MCP Server
 
+> **[mlcgo.eu](https://mlcgo.eu)** — tools, libraries and manuals · [Product page](https://mlcgo.eu/products/mlc-barcode/)
+
+
 A tool for generating barcodes and QR codes — as a desktop GUI, a Command Line Interface (CLI) and a Model Context Protocol (MCP) server.
 
 <img src="assets/qrcode-product-teaser-960.jpg" alt="MLC Barcode — Desktop GUI, CLI and MCP Server" width="960">
