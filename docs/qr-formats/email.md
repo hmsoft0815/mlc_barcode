@@ -16,8 +16,8 @@ Standard: **RFC 6068** (`mailto:` URI).
 
 ### CLI Example
 ```bash
-./bin/barcode -mail-to "info@example.com" -mail-subject "Anfrage" \
-  -mail-body "Guten Tag," -out mail.png
+./bin/barcode -mail-to "info@example.com" -mail-subject "Enquiry" \
+  -mail-body "Hello," -out mail.png
 ```
 
 ### MCP Tool Example
@@ -26,8 +26,8 @@ Standard: **RFC 6068** (`mailto:` URI).
   "name": "generate_email_qr",
   "arguments": {
     "to": "info@example.com",
-    "subject": "Anfrage",
-    "body": "Guten Tag,"
+    "subject": "Enquiry",
+    "body": "Hello,"
   }
 }
 ```

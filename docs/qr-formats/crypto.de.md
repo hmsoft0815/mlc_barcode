@@ -19,7 +19,7 @@ Standards: **BIP 21** (Bitcoin und kompatible Ketten) sowie **EIP-681** für Eth
 ### CLI-Beispiel
 ```bash
 ./bin/barcode -crypto-coin bitcoin -crypto-addr "bc1qexampleaddress" \
-  -crypto-amount 0.005 -crypto-msg "Invoice 1002" -out pay.png
+  -crypto-amount 0.005 -crypto-msg "Rechnung 1002" -out zahlung.png
 ```
 
 ### MCP-Tool-Beispiel

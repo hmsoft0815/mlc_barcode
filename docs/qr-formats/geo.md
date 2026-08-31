@@ -16,7 +16,7 @@ Standard: **RFC 5870** (`geo:` URI).
 
 ### CLI Example
 ```bash
-./bin/barcode -geo-lat 52.5200 -geo-lon 13.4050 -geo-query "Brandenburger Tor" -out ort.png
+./bin/barcode -geo-lat 52.5200 -geo-lon 13.4050 -geo-query "Brandenburg Gate" -out location.png
 ```
 
 ### MCP Tool Example
@@ -26,7 +26,7 @@ Standard: **RFC 5870** (`geo:` URI).
   "arguments": {
     "latitude": 52.5200,
     "longitude": 13.4050,
-    "query": "Brandenburger Tor"
+    "query": "Brandenburg Gate"
   }
 }
 ```

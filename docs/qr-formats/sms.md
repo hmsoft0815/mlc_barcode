@@ -15,7 +15,7 @@ Format: `smsto:<number>:<text>`, the spelling Android and iOS both understand.
 
 ### CLI Example
 ```bash
-./bin/barcode -sms "+493012345678" -sms-text "Bin da" -out sms.png
+./bin/barcode -sms "+493012345678" -sms-text "On my way" -out sms.png
 ```
 
 ### MCP Tool Example
@@ -24,7 +24,7 @@ Format: `smsto:<number>:<text>`, the spelling Android and iOS both understand.
   "name": "generate_sms_qr",
   "arguments": {
     "phone_number": "+493012345678",
-    "message": "Bin da"
+    "message": "On my way"
   }
 }
 ```

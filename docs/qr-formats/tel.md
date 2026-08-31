@@ -14,7 +14,7 @@ Standard: **RFC 3966** (`tel:` URI).
 
 ### CLI Example
 ```bash
-./bin/barcode -tel "+49 30 123456" -out anruf.png
+./bin/barcode -tel "+49 30 123456" -out call.png
 ```
 
 ### MCP Tool Example

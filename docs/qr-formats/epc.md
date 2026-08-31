@@ -18,8 +18,8 @@ Standard: European Payments Council **EPC069-12**, payload version `002`.
 
 ### CLI Example
 ```bash
-./bin/barcode -epc-name "Verein e.V." -epc-iban "DE89 3704 0044 0532 0130 00" \
-  -epc-amount 25.00 -epc-ref "Mitgliedsbeitrag 2026" -out spende.png
+./bin/barcode -epc-name "Example Charity" -epc-iban "DE89 3704 0044 0532 0130 00" \
+  -epc-amount 25.00 -epc-ref "Membership 2026" -out donation.png
 ```
 
 ### MCP Tool Example
@@ -27,10 +27,10 @@ Standard: European Payments Council **EPC069-12**, payload version `002`.
 {
   "name": "generate_epc_qr",
   "arguments": {
-    "name": "Verein e.V.",
+    "name": "Example Charity",
     "iban": "DE89370400440532013000",
     "amount": 25.00,
-    "reference": "Mitgliedsbeitrag 2026"
+    "reference": "Membership 2026"
   }
 }
 ```
