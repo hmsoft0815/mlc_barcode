@@ -31,10 +31,10 @@
 
 <div class="container-fluid py-3">
   <!-- Controls (hidden when printing) -->
-  <div class="card shadow-sm border-0 mb-3 no-print">
-    <div class="card-header bg-white border-bottom py-2 d-flex justify-content-between align-items-center">
-      <h6 class="mb-0 fw-semibold text-secondary">
-        <i class="bi bi-printer me-1"></i> Etikettenbogen-Layout & Druckeinstellungen
+  <div class="card shadow-sm border mb-3 no-print">
+    <div class="card-header bg-body border-bottom py-2 d-flex justify-content-between align-items-center">
+      <h6 class="mb-0 fw-semibold text-body">
+        <i class="bi bi-printer me-1 text-primary"></i> Etikettenbogen-Layout & Druckeinstellungen
       </h6>
       <button
         class="btn btn-primary btn-sm"
@@ -47,7 +47,7 @@
     <div class="card-body">
       <div class="row g-3 align-items-center">
         <div class="col-md-4">
-          <label for="labelPresetSelect" class="form-label small text-muted mb-1">Standard-Vorlagen (DIN A4)</label>
+          <label for="labelPresetSelect" class="form-label small text-body-secondary mb-1">Standard-Vorlagen (DIN A4)</label>
           <select
             id="labelPresetSelect"
             class="form-select form-select-sm"
@@ -66,7 +66,7 @@
         </div>
 
         <div class="col-md-2 col-6">
-          <label for="labelColumnsInput" class="form-label small text-muted mb-1">Spalten (Columns)</label>
+          <label for="labelColumnsInput" class="form-label small text-body-secondary mb-1">Spalten (Columns)</label>
           <input
             id="labelColumnsInput"
             type="number"
@@ -78,7 +78,7 @@
         </div>
 
         <div class="col-md-2 col-6">
-          <label for="labelRowsInput" class="form-label small text-muted mb-1">Zeilen (Rows)</label>
+          <label for="labelRowsInput" class="form-label small text-body-secondary mb-1">Zeilen (Rows)</label>
           <input
             id="labelRowsInput"
             type="number"
@@ -90,7 +90,7 @@
         </div>
 
         <div class="col-md-2 col-6">
-          <label for="labelRepeatInput" class="form-label small text-muted mb-1">Wiederholungen</label>
+          <label for="labelRepeatInput" class="form-label small text-body-secondary mb-1">Wiederholungen</label>
           <input
             id="labelRepeatInput"
             type="number"
@@ -137,10 +137,10 @@
       </div>
     </div>
   {:else}
-    <div class="card shadow-sm border-0 py-5 text-center text-muted no-print">
-      <i class="bi bi-printer fs-1 text-secondary opacity-50 mb-2"></i>
-      <h5>Keine Etiketten in der Druck-Warteschlange</h5>
-      <p class="small text-muted mb-0">
+    <div class="card shadow-sm border py-5 text-center text-body-secondary no-print">
+      <i class="bi bi-printer fs-1 opacity-50 mb-2"></i>
+      <h5 class="text-body">Keine Etiketten in der Druck-Warteschlange</h5>
+      <p class="small text-body-secondary mb-0">
         Erstelle Barcodes im <strong>Einzel-Generator</strong> oder <strong>Batch-Generator</strong> und klicke auf "Als Etikett drucken".
       </p>
     </div>
@@ -150,6 +150,7 @@
 <style>
   .print-page-wrapper {
     background: #fff;
+    color: #000;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
     margin: 0 auto;
     padding: 10mm;
@@ -176,6 +177,7 @@
     box-sizing: border-box;
     overflow: hidden;
     background: #fff;
+    color: #000;
   }
 
   .label-svg-wrapper {
@@ -206,6 +208,7 @@
   @media print {
     :global(body) {
       background: #fff !important;
+      color: #000 !important;
       margin: 0 !important;
       padding: 0 !important;
     }

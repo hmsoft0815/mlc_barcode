@@ -38,9 +38,13 @@ func main() {
 	})
 
 	wailsApp.Window.NewWithOptions(application.WebviewWindowOptions{
-		Title:  "MLC Barcode v" + version.Version,
-		Width:  1100,
-		Height: 760,
+		Title:           "MLC Barcode v" + version.Version,
+		Width:           1200,
+		Height:          850,
+		MinWidth:        900,
+		MinHeight:       650,
+		DevToolsEnabled: isDebugBuild(),
+		KeyBindings:     devtoolsKeyBindings(),
 		Linux: application.LinuxWindow{
 			Icon: appIcon,
 		},

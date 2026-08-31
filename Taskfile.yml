@@ -55,6 +55,20 @@ tasks:
       - mkdir -p {{.BIN_DIR}}
       - GOOS=windows GOARCH=amd64 CGO_ENABLED=0 go build -tags production -trimpath -ldflags "{{.LDFLAGS}} -w -s -H windowsgui" -o {{.BIN_DIR}}/{{.GUI_BINARY}}-windows-amd64.exe .
 
+  build:debug:
+    desc: Build Linux GUI with F12 DevTools enabled
+    deps: [build:frontend]
+    cmds:
+      - mkdir -p {{.BIN_DIR}}
+      - CGO_ENABLED=1 go build -tags gtk3,devtools -ldflags "{{.LDFLAGS}}" -o {{.BIN_DIR}}/{{.GUI_BINARY}}-debug .
+
+  build:debug:windows:
+    desc: Cross-compile Windows GUI with F12 DevTools enabled
+    deps: [build:frontend]
+    cmds:
+      - mkdir -p {{.BIN_DIR}}
+      - GOOS=windows GOARCH=amd64 CGO_ENABLED=0 go build -tags production,devtools -ldflags "{{.LDFLAGS}}" -o {{.BIN_DIR}}/{{.GUI_BINARY}}-windows-amd64-debug.exe .
+
   package:windows:
     desc: Build the Windows NSIS setup installer (.exe)
     deps: [build:gui:windows]
@@ -95,7 +109,7 @@ tasks:
 
   build:all:
     desc: Cross-compile every published target and installers
-    deps: [build:linux, build:windows, build:macos, package:windows, build:gui]
+    deps: [build:linux, build:windows, build:macos, package:windows, build:gui, build:debug, build:debug:windows]
 
   dev:
     desc: Run the desktop GUI in Wails v3 development mode with live reload
@@ -107,6 +121,12 @@ tasks:
     cmds:
       - task: build:gui
       - ./{{.BIN_DIR}}/{{.GUI_BINARY}}
+
+  dev:gui:debug:
+    desc: Build and run the desktop GUI with F12 DevTools enabled
+    cmds:
+      - task: build:debug
+      - ./{{.BIN_DIR}}/{{.GUI_BINARY}}-debug
 
   dev:cli:
     desc: "Build and run the CLI (default: QR code for https://mlcgo.eu, or specify CLI_ARGS)"
@@ -194,7 +214,9 @@ tasks:
           "{{.BIN_DIR}}/{{.SERVER_BINARY}}-linux-amd64" \
           "{{.BIN_DIR}}/{{.SERVER_BINARY}}-windows-amd64.exe" \
           "{{.BIN_DIR}}/{{.GUI_BINARY}}" \
+          "{{.BIN_DIR}}/{{.GUI_BINARY}}-debug" \
           "{{.BIN_DIR}}/{{.GUI_BINARY}}-windows-amd64.exe" \
+          "{{.BIN_DIR}}/{{.GUI_BINARY}}-windows-amd64-debug.exe" \
           "{{.BIN_DIR}}/mlc-barcode-{{.VERSION}}-windows-setup.exe"; do
           if [ -f "$f" ]; then cp "$f" "{{.DROPZONE}}/"; echo "  ✓ $(basename "$f")";
           else echo "  ✗ missing: $f"; MISSING=$((MISSING+1)); fi

@@ -141,10 +141,10 @@
   <div class="row g-3">
     <!-- Left Column: Input & Controls -->
     <div class="col-lg-5">
-      <div class="card shadow-sm border-0 mb-3">
-        <div class="card-header bg-white border-bottom py-2 d-flex justify-content-between align-items-center">
-          <h6 class="mb-0 fw-semibold text-secondary">
-            <i class="bi bi-file-earmark-text me-1"></i> Datenquelle (1 Zeile = 1 Barcode)
+      <div class="card shadow-sm border mb-3">
+        <div class="card-header bg-body border-bottom py-2 d-flex justify-content-between align-items-center">
+          <h6 class="mb-0 fw-semibold text-body">
+            <i class="bi bi-file-earmark-text me-1 text-primary"></i> Datenquelle (1 Zeile = 1 Barcode)
           </h6>
           <button class="btn btn-outline-primary btn-sm" on:click={loadFile}>
             <i class="bi bi-folder2-open me-1"></i> Textdatei laden...
@@ -152,7 +152,7 @@
         </div>
         <div class="card-body">
           {#if importedFilePath}
-            <div class="small text-muted mb-2 text-truncate">
+            <div class="small text-body-secondary mb-2 text-truncate">
               <i class="bi bi-file-check text-success me-1"></i> {importedFilePath}
             </div>
           {/if}
@@ -173,7 +173,7 @@
           <!-- Configuration -->
           <div class="row g-2 mb-3">
             <div class="col-6">
-              <label for="batchTypeSelect" class="form-label small text-muted mb-1">Barcode-Typ</label>
+              <label for="batchTypeSelect" class="form-label small text-body-secondary mb-1">Barcode-Typ</label>
               <select
                 id="batchTypeSelect"
                 class="form-select form-select-sm"
@@ -186,7 +186,7 @@
               </select>
             </div>
             <div class="col-3">
-              <label for="batchFgColor" class="form-label small text-muted mb-1">Vordergrund</label>
+              <label for="batchFgColor" class="form-label small text-body-secondary mb-1">Vordergrund</label>
               <input
                 id="batchFgColor"
                 type="color"
@@ -197,7 +197,7 @@
               />
             </div>
             <div class="col-3">
-              <label for="batchBgColor" class="form-label small text-muted mb-1">Hintergrund</label>
+              <label for="batchBgColor" class="form-label small text-body-secondary mb-1">Hintergrund</label>
               <input
                 id="batchBgColor"
                 type="color"
@@ -252,23 +252,23 @@
       </div>
 
       <!-- Export Settings Box -->
-      <div class="card shadow-sm border-0">
-        <div class="card-header bg-white border-bottom py-2">
-          <h6 class="mb-0 fw-semibold text-secondary">
-            <i class="bi bi-box-arrow-up-right me-1"></i> Batch-Export Einstellungen
+      <div class="card shadow-sm border">
+        <div class="card-header bg-body border-bottom py-2">
+          <h6 class="mb-0 fw-semibold text-body">
+            <i class="bi bi-box-arrow-up-right me-1 text-primary"></i> Batch-Export Einstellungen
           </h6>
         </div>
         <div class="card-body">
           <div class="row g-2 mb-3">
             <div class="col-6">
-              <label for="exportFormatSelect" class="form-label small text-muted mb-1">Format</label>
+              <label for="exportFormatSelect" class="form-label small text-body-secondary mb-1">Format</label>
               <select id="exportFormatSelect" class="form-select form-select-sm" bind:value={exportFormat}>
                 <option value="png">PNG (Rastergrafik)</option>
                 <option value="svg">SVG (Vektorgrafik)</option>
               </select>
             </div>
             <div class="col-6">
-              <label for="namingSchemeSelect" class="form-label small text-muted mb-1">Dateibenennung</label>
+              <label for="namingSchemeSelect" class="form-label small text-body-secondary mb-1">Dateibenennung</label>
               <select id="namingSchemeSelect" class="form-select form-select-sm" bind:value={namingScheme}>
                 <option value="data_slug">Nummer + Inhalt</option>
                 <option value="index">Nur Nummer (001, 002...)</option>
@@ -278,7 +278,7 @@
           </div>
 
           <div class="mb-3">
-            <label for="exportPrefixInput" class="form-label small text-muted mb-1">Dateinamen-Präfix</label>
+            <label for="exportPrefixInput" class="form-label small text-body-secondary mb-1">Dateinamen-Präfix</label>
             <input
               id="exportPrefixInput"
               type="text"
@@ -317,10 +317,10 @@
 
     <!-- Right Column: Results Table -->
     <div class="col-lg-7">
-      <div class="card shadow-sm border-0 h-100 d-flex flex-column">
-        <div class="card-header bg-white border-bottom py-2 d-flex justify-content-between align-items-center">
-          <h6 class="mb-0 fw-semibold text-secondary">
-            <i class="bi bi-list-check me-1"></i> Generierte Barcodes
+      <div class="card shadow-sm border h-100 d-flex flex-column">
+        <div class="card-header bg-body border-bottom py-2 d-flex justify-content-between align-items-center">
+          <h6 class="mb-0 fw-semibold text-body">
+            <i class="bi bi-list-check me-1 text-primary"></i> Generierte Barcodes
           </h6>
           {#if batchResponse}
             <div class="d-flex gap-2">
@@ -352,10 +352,10 @@
                 <tbody>
                   {#each batchResponse.items as item (item.index)}
                     <tr>
-                      <td class="text-muted small">{item.index}</td>
+                      <td class="text-body-secondary small">{item.index}</td>
                       <td>
                         {#if item.success && item.svg}
-                          <div class="mini-svg-preview">
+                          <div class="mini-svg-preview checkerboard-bg">
                             <!-- eslint-disable-next-line svelte/no-at-html-tags -->
                             {@html item.svg}
                           </div>
@@ -393,8 +393,8 @@
               </table>
             </div>
           {:else}
-            <div class="text-muted text-center py-5">
-              <i class="bi bi-collection fs-1 text-secondary opacity-50 mb-2 d-block"></i>
+            <div class="text-body-secondary text-center py-5">
+              <i class="bi bi-collection fs-1 opacity-50 mb-2 d-block"></i>
               <span>Keine Barcode-Daten geladen</span>
             </div>
           {/if}
@@ -411,8 +411,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    background: #f8f9fa;
-    border: 1px solid #dee2e6;
+    border: 1px solid var(--bs-border-color);
     border-radius: 4px;
     padding: 2px;
   }

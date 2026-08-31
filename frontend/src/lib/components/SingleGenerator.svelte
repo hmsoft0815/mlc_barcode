@@ -143,7 +143,6 @@
     if (ok) {
       showFeedback('SVG erfolgreich in Zwischenablage kopiert!');
     } else {
-      // Fallback
       await navigator.clipboard.writeText(result.svg);
       showFeedback('SVG in Zwischenablage kopiert!');
     }
@@ -221,16 +220,16 @@
   <div class="row g-3">
     <!-- Left Column: Settings & Input -->
     <div class="col-lg-6">
-      <div class="card shadow-sm border-0 mb-3">
-        <div class="card-header bg-white border-bottom py-2">
-          <h6 class="mb-0 fw-semibold text-secondary">
-            <i class="bi bi-sliders me-1"></i> Barcode-Typ & Konfiguration
+      <div class="card shadow-sm border mb-3">
+        <div class="card-header bg-body border-bottom py-2">
+          <h6 class="mb-0 fw-semibold text-body">
+            <i class="bi bi-sliders me-1 text-primary"></i> Barcode-Typ & Konfiguration
           </h6>
         </div>
         <div class="card-body">
           <!-- Type Selection -->
           <div class="mb-3">
-            <label for="singleTypeSelect" class="form-label fw-medium small text-muted">Symbologie / Typ</label>
+            <label for="singleTypeSelect" class="form-label fw-medium small text-body-secondary">Symbologie / Typ</label>
             <select
               id="singleTypeSelect"
               class="form-select form-select-sm"
@@ -253,11 +252,11 @@
           <!-- QR Special Modes (if QR selected) -->
           {#if selectedType === 'qr'}
             <div class="mb-3">
-              <span class="form-label fw-medium small text-muted d-block">QR-Inhaltsformat</span>
-              <ul class="nav nav-pills nav-fill bg-light p-1 rounded small">
+              <span class="form-label fw-medium small text-body-secondary d-block">QR-Inhaltsformat</span>
+              <ul class="nav nav-pills nav-fill bg-body-secondary p-1 rounded small">
                 <li class="nav-item">
                   <button
-                    class="nav-link py-1 {qrMode === 'text' ? 'active' : ''}"
+                    class="nav-link py-1 {qrMode === 'text' ? 'active' : 'text-body'}"
                     type="button"
                     on:click={() => {
                       qrMode = 'text';
@@ -269,7 +268,7 @@
                 </li>
                 <li class="nav-item">
                   <button
-                    class="nav-link py-1 {qrMode === 'wifi' ? 'active' : ''}"
+                    class="nav-link py-1 {qrMode === 'wifi' ? 'active' : 'text-body'}"
                     type="button"
                     on:click={() => {
                       qrMode = 'wifi';
@@ -281,7 +280,7 @@
                 </li>
                 <li class="nav-item">
                   <button
-                    class="nav-link py-1 {qrMode === 'vcard' ? 'active' : ''}"
+                    class="nav-link py-1 {qrMode === 'vcard' ? 'active' : 'text-body'}"
                     type="button"
                     on:click={() => {
                       qrMode = 'vcard';
@@ -293,7 +292,7 @@
                 </li>
                 <li class="nav-item">
                   <button
-                    class="nav-link py-1 {qrMode === 'event' ? 'active' : ''}"
+                    class="nav-link py-1 {qrMode === 'event' ? 'active' : 'text-body'}"
                     type="button"
                     on:click={() => {
                       qrMode = 'event';
@@ -308,7 +307,7 @@
 
             <!-- Structured Forms for QR -->
             {#if qrMode === 'wifi'}
-              <div class="p-3 bg-light rounded mb-3 border">
+              <div class="p-3 bg-body-secondary rounded mb-3 border">
                 <div class="row g-2 mb-2">
                   <div class="col-8">
                     <label for="wifiSsidInput" class="form-label small mb-1">WLAN-Name (SSID)</label>
@@ -350,7 +349,7 @@
                 {/if}
               </div>
             {:else if qrMode === 'vcard'}
-              <div class="p-3 bg-light rounded mb-3 border">
+              <div class="p-3 bg-body-secondary rounded mb-3 border">
                 <div class="row g-2 mb-2">
                   <div class="col-6">
                     <label for="vcardFirstInput" class="form-label small mb-1">Vorname</label>
@@ -401,7 +400,7 @@
                 </div>
               </div>
             {:else if qrMode === 'event'}
-              <div class="p-3 bg-light rounded mb-3 border">
+              <div class="p-3 bg-body-secondary rounded mb-3 border">
                 <div class="mb-2">
                   <label for="eventSummaryInput" class="form-label small mb-1">Event-Titel</label>
                   <input
@@ -444,7 +443,7 @@
           <!-- Direct Data Input -->
           <div class="mb-3">
             <div class="d-flex justify-content-between align-items-center mb-1">
-              <label for="rawDataTextarea" class="form-label fw-medium small text-muted mb-0">Daten / Inhalt</label>
+              <label for="rawDataTextarea" class="form-label fw-medium small text-body-secondary mb-0">Daten / Inhalt</label>
               {#if selectedType === 'ean13'}
                 <span class="badge bg-secondary-subtle text-secondary small">12 oder 13 Ziffern</span>
               {:else if selectedType === 'ean8'}
@@ -466,7 +465,7 @@
           <!-- Color & Appearance Options -->
           <div class="row g-2 mb-3">
             <div class="col-sm-6">
-              <label for="singleFgColorText" class="form-label small text-muted mb-1">Vordergrundfarbe</label>
+              <label for="singleFgColorText" class="form-label small text-body-secondary mb-1">Vordergrundfarbe</label>
               <div class="input-group input-group-sm">
                 <input
                   type="color"
@@ -486,7 +485,7 @@
             </div>
 
             <div class="col-sm-6">
-              <label for="singleBgColorText" class="form-label small text-muted mb-1">Hintergrundfarbe</label>
+              <label for="singleBgColorText" class="form-label small text-body-secondary mb-1">Hintergrundfarbe</label>
               <div class="input-group input-group-sm">
                 <input
                   type="color"
@@ -540,10 +539,10 @@
 
     <!-- Right Column: Live Preview & Export -->
     <div class="col-lg-6">
-      <div class="card shadow-sm border-0 h-100">
-        <div class="card-header bg-white border-bottom py-2 d-flex justify-content-between align-items-center">
-          <h6 class="mb-0 fw-semibold text-secondary">
-            <i class="bi bi-eye me-1"></i> Live-Vorschau
+      <div class="card shadow-sm border h-100">
+        <div class="card-header bg-body border-bottom py-2 d-flex justify-content-between align-items-center">
+          <h6 class="mb-0 fw-semibold text-body">
+            <i class="bi bi-eye me-1 text-primary"></i> Live-Vorschau
           </h6>
           {#if isGenerating}
             <span class="spinner-border spinner-border-sm text-primary" role="status"></span>
@@ -551,7 +550,7 @@
         </div>
         <div class="card-body d-flex flex-column align-items-center justify-content-center p-4">
           {#if result?.success && result.svg}
-            <div class="preview-box p-3 rounded d-flex align-items-center justify-content-center w-100 mb-3 shadow-inner">
+            <div class="preview-box checkerboard-bg p-3 rounded d-flex align-items-center justify-content-center w-100 mb-3 border">
               <div class="svg-container">
                 <!-- eslint-disable-next-line svelte/no-at-html-tags -->
                 {@html result.svg}
@@ -564,8 +563,8 @@
               <div class="small text-danger-emphasis">{result.error}</div>
             </div>
           {:else}
-            <div class="text-muted text-center py-5">
-              <i class="bi bi-qr-code fs-1 text-secondary opacity-50 mb-2 d-block"></i>
+            <div class="text-body-secondary text-center py-5">
+              <i class="bi bi-qr-code fs-1 opacity-50 mb-2 d-block"></i>
               <span>Keine Daten eingegeben</span>
             </div>
           {/if}
@@ -613,17 +612,8 @@
 
 <style>
   .preview-box {
-    background-color: #f8f9fa;
-    background-image: 
-      linear-gradient(45deg, #e9ecef 25%, transparent 25%), 
-      linear-gradient(-45deg, #e9ecef 25%, transparent 25%), 
-      linear-gradient(45deg, transparent 75%, #e9ecef 75%), 
-      linear-gradient(-45deg, transparent 75%, #e9ecef 75%);
-    background-size: 16px 16px;
-    background-position: 0 0, 0 8px, 8px -8px, -8px 0px;
     min-height: 280px;
     max-height: 400px;
-    border: 1px dashed #ced4da;
     overflow: auto;
   }
 
@@ -638,6 +628,6 @@
     max-width: 100%;
     max-height: 260px;
     height: auto;
-    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.08));
+    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.12));
   }
 </style>
