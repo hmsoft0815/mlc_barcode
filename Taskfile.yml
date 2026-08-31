@@ -111,6 +111,58 @@ tasks:
           rm -rf $PKG
           echo "✓ {{.BIN_DIR}}/mlc-barcode-{{.VERSION}}-macos-{{.ITEM}}.tar.gz"
 
+  # ─── macOS-GUI (remote gebaut — das SDK gibt es nur auf einem Mac) ─────────
+  build:macos:remote:
+    desc: "Build the macOS universal .app + .dmg on macstudio via SSH → bin/mlc-barcode-{VERSION}.dmg"
+    # frontend/dist wird mitgeschickt statt auf dem Mac gebaut: es ist
+    # plattformunabhaengig und erspart eine pnpm-Installation dort.
+    deps: [build:frontend]
+    vars:
+      MAC_HOST: mlc@macstudio.fritz.box
+      REMOTE_DIR: mlc-barcode-build
+    cmds:
+      - |
+        rsync -az --delete \
+          --exclude='.git' --exclude='.mlcai' --exclude='mlcprodweb' \
+          --exclude='bin/' --exclude='reports/' --exclude='showcase/' \
+          --exclude='node_modules/' --exclude='frontend/node_modules/' \
+          . {{.MAC_HOST}}:{{.REMOTE_DIR}}/
+        echo "→ Quellen auf {{.MAC_HOST}}:{{.REMOTE_DIR}} synchronisiert"
+      - |
+        ssh {{.MAC_HOST}} bash -s << 'ENDSSH'
+          set -e
+          # Nicht-interaktive Shell: .zshrc wird nicht gelesen, PATH von Hand.
+          export PATH=$PATH:/usr/local/go/bin:$HOME/go/bin:/opt/homebrew/bin
+          cd ~/mlc-barcode-build
+          VERSION=$(cat VERSION)
+          LD="-X {{.MODULE}}/internal/version.Version=${VERSION} -w -s"
+
+          # Bewusst nicht `task darwin:build:universal`: dessen BUILD_FLAGS
+          # setzen nur -w -s, ohne -X. Der Fenstertitel heisst dann sichtbar
+          # "MLC Barcode vdev". Deshalb hier explizit mit Stempel bauen und
+          # das Scaffold nur fuers Bundle und das .dmg verwenden.
+          for A in arm64 amd64; do
+            echo "→ baue darwin/$A"
+            GOOS=darwin GOARCH=$A CGO_ENABLED=1 \
+              CGO_CFLAGS=-mmacosx-version-min=12.0 \
+              CGO_LDFLAGS=-mmacosx-version-min=12.0 \
+              MACOSX_DEPLOYMENT_TARGET=12.0 \
+              go build -tags production -trimpath -buildvcs=false \
+                -ldflags "$LD" -o "bin/{{.APP_NAME}}-$A" .
+          done
+          lipo -create -output "bin/{{.APP_NAME}}" "bin/{{.APP_NAME}}-arm64" "bin/{{.APP_NAME}}-amd64"
+          rm -f "bin/{{.APP_NAME}}-arm64" "bin/{{.APP_NAME}}-amd64"
+          lipo -info "bin/{{.APP_NAME}}"
+
+          task darwin:create:app:bundle
+          task darwin:create:dmg
+          mv -f "bin/{{.APP_NAME}}.dmg" "bin/mlc-barcode-${VERSION}.dmg"
+          echo "→ fertig: bin/mlc-barcode-${VERSION}.dmg"
+        ENDSSH
+      - mkdir -p {{.BIN_DIR}}
+      - scp "{{.MAC_HOST}}:{{.REMOTE_DIR}}/bin/mlc-barcode-{{.VERSION}}.dmg" {{.BIN_DIR}}/mlc-barcode-{{.VERSION}}.dmg
+      - echo "✓ {{.BIN_DIR}}/mlc-barcode-{{.VERSION}}.dmg"
+
   build:
     desc: Build CLI, MCP server, and GUI for this machine
     deps: [build:frontend]
