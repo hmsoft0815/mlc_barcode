@@ -68,12 +68,15 @@ func barcodeToSVG(bc barcode.Barcode, opts BarcodeOptions) (string, error) {
 
 	textElement := ""
 	if opts.ShowText {
-		content := bc.Content()
+		content := opts.CustomText
+		if content == "" {
+			content = bc.Content()
+		}
 		fontSize := textHeight * 8 / 10
 		textY := height + (textHeight * 7 / 10)
 		textElement = fmt.Sprintf(
-			`<text x="%d" y="%d" font-family="monospace" font-size="%d" text-anchor="middle" fill="%s">%s</text>`,
-			width/2, textY, fontSize, opts.ForegroundColor, content,
+			`<text x="%d" y="%d" font-family="sans-serif, monospace" font-size="%d" text-anchor="middle" fill="%s">%s</text>`,
+			width/2, textY, fontSize, opts.ForegroundColor, escapeXML(content),
 		)
 	}
 
@@ -95,4 +98,25 @@ func barcodeToSVG(bc barcode.Barcode, opts BarcodeOptions) (string, error) {
 	)
 
 	return svg, nil
+}
+
+func escapeXML(s string) string {
+	var buf strings.Builder
+	for _, r := range s {
+		switch r {
+		case '&':
+			buf.WriteString("&amp;")
+		case '<':
+			buf.WriteString("&lt;")
+		case '>':
+			buf.WriteString("&gt;")
+		case '"':
+			buf.WriteString("&quot;")
+		case '\'':
+			buf.WriteString("&apos;")
+		default:
+			buf.WriteRune(r)
+		}
+	}
+	return buf.String()
 }

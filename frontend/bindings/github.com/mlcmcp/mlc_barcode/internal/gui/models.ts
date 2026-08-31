@@ -16,6 +16,11 @@ export interface BarcodeRequest {
     "data": string;
 
     /**
+     * Optional custom caption text to show below barcode
+     */
+    "customText": string;
+
+    /**
      * Output width in px (0 for default)
      */
     "width": number;

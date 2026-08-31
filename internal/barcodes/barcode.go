@@ -39,6 +39,7 @@ type BarcodeOptions struct {
 	Width           int
 	Height          int
 	ShowText        bool
+	CustomText      string // If set, rendered under barcode instead of raw content
 	ForegroundColor string // SVG color (e.g. "black", "#000")
 	BackgroundColor string // SVG color (e.g. "white", "#fff")
 	// For QR codes

@@ -4,6 +4,7 @@ package gui
 type BarcodeRequest struct {
 	Type            string `json:"type"`            // qr, datamatrix, code128, code39, ean13, ean8, upca, itf
 	Data            string `json:"data"`            // Content / text to encode
+	CustomText      string `json:"customText"`      // Optional custom caption text to show below barcode
 	Width           int    `json:"width"`           // Output width in px (0 for default)
 	Height          int    `json:"height"`          // Output height in px (0 for default)
 	ShowText        bool   `json:"showText"`        // Show readable text below barcode

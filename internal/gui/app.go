@@ -86,6 +86,7 @@ func (a *BarcodeApp) GenerateBarcode(req BarcodeRequest) (BarcodeResult, error) 
 		opts.Height = req.Height
 	}
 	opts.ShowText = req.ShowText
+	opts.CustomText = req.CustomText
 	if req.ForegroundColor != "" {
 		opts.ForegroundColor = req.ForegroundColor
 	}
