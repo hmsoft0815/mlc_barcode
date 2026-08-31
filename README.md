@@ -7,7 +7,7 @@ A tool for generating barcodes and QR codes — as a desktop GUI, a Command Line
 <img src="assets/mlc_barcode_mpc3.png" >
 
 ## Version
-Current Version: **1.3.0**
+Current Version: **1.4.0**
 
 ## Features
 
@@ -60,6 +60,12 @@ The binaries are located in `bin/`:
 - **WIFI**: `-wifi-ssid`, `-wifi-pass`, `-wifi-enc` (WPA/WEP/nopass). [Documentation](docs/qr-formats/wifi.md)
 - **vCard**: `-vcard-first`, `-vcard-last`, `-vcard-email`, `-vcard-tel`. [Documentation](docs/qr-formats/vcard.md)
 - **Event**: `-event-summary`, `-event-start` (YYYYMMDDTHHMMSS), `-event-end`, `-event-tz`. [Documentation](docs/qr-formats/event.md)
+- **GiroCode (EPC)**: `-epc-name`, `-epc-iban`, `-epc-bic`, `-epc-amount`, `-epc-ref`. [Documentation](docs/qr-formats/epc.md)
+- **Crypto**: `-crypto-coin`, `-crypto-addr`, `-crypto-amount`, `-crypto-msg`. [Documentation](docs/qr-formats/crypto.md)
+- **Geo**: `-geo-lat`, `-geo-lon`, `-geo-query`. [Documentation](docs/qr-formats/geo.md)
+- **Telephone**: `-tel`. [Documentation](docs/qr-formats/tel.md)
+- **SMS**: `-sms`, `-sms-text`. [Documentation](docs/qr-formats/sms.md)
+- **Email**: `-mail-to`, `-mail-subject`, `-mail-body`. [Documentation](docs/qr-formats/email.md)
 
 ## Example output
 <img src="showcase/assets/qr.png" > <img src="showcase/assets/ean13.svg" >

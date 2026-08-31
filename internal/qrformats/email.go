@@ -29,7 +29,13 @@ func FormatEmail(opts EmailOptions) string {
 		params.Set("body", opts.Body)
 	}
 
-	queryString := params.Encode()
+	// url.Values.Encode is HTML form encoding: it writes a space as "+".
+	// RFC 6068 does not define "+" as a space — in a mailto URI it is a literal
+	// plus sign, and a strict client shows "Guten+Tag" in the subject line.
+	// Every other character is already percent-encoded by Encode, and a real
+	// plus in the input comes back as %2B, so the only "+" left to rewrite are
+	// the spaces.
+	queryString := strings.ReplaceAll(params.Encode(), "+", "%20")
 	if queryString != "" {
 		return fmt.Sprintf("mailto:%s?%s", to, queryString)
 	}

@@ -98,29 +98,80 @@ func TestFormatVCalendar(t *testing.T) {
 	}
 }
 
+/*
+TestFormatEPC checks the payload line by line, not by substring.
+
+EPC069-12 is positional: the reader takes line 6 as the beneficiary and line 7
+as the IBAN, whatever they contain. A `strings.Contains` check passes just as
+happily when those two are swapped — and that is the one mistake in a payment
+format nobody notices until money moves. Found by making exactly that swap and
+watching the old test stay green.
+*/
 func TestFormatEPC(t *testing.T) {
-	opts := EPCOptions{
+	got := FormatEPC(EPCOptions{
 		Name:      "Max Mustermann",
 		IBAN:      "DE89 3704 0044 0532 0130 00",
 		BIC:       "GENODEFFXXX",
 		Amount:    12.50,
 		Reference: "Rechnung-1002",
-	}
-	got := FormatEPC(opts)
+	})
 
-	expect := []string{
-		"BCD\n002\n1\nSCT",
-		"GENODEFFXXX",
-		"Max Mustermann",
-		"DE89370400440532013000",
-		"EUR12.50",
-		"Rechnung-1002",
+	// Every element the standard defines, in the order it defines them.
+	want := []string{
+		"BCD",                    // 1 service tag
+		"002",                    // 2 version
+		"1",                      // 3 UTF-8
+		"SCT",                    // 4 SEPA credit transfer
+		"GENODEFFXXX",            // 5 BIC
+		"Max Mustermann",         // 6 beneficiary
+		"DE89370400440532013000", // 7 IBAN, spaces stripped
+		"EUR12.50",               // 8 amount
+		"",                       // 9 purpose code
+		"",                       // 10 structured reference
+		"Rechnung-1002",          // 11 unstructured remittance
 	}
-
-	for _, s := range expect {
-		if !strings.Contains(got, s) {
-			t.Errorf("FormatEPC() = %v, must contain %v", got, s)
+	lines := strings.Split(got, "\n")
+	if len(lines) != len(want) {
+		t.Fatalf("got %d lines, want %d:\n%q", len(lines), len(want), got)
+	}
+	for i, w := range want {
+		if lines[i] != w {
+			t.Errorf("line %d = %q, want %q", i+1, lines[i], w)
 		}
+	}
+}
+
+/*
+TestFormatEPCOmitsTrailingElements pins what the payload looks like with
+nothing optional filled in.
+
+The standard allows trailing empty elements to be dropped, and FormatEPC does
+so with a single TrimRight. That is fine for the last elements and would be
+wrong for one in the middle — the test above is what guards the middle.
+*/
+func TestFormatEPCOmitsTrailingElements(t *testing.T) {
+	got := FormatEPC(EPCOptions{Name: "Verein e.V.", IBAN: "DE89370400440532013000"})
+	want := "BCD\n002\n1\nSCT\n\nVerein e.V.\nDE89370400440532013000"
+	if got != want {
+		t.Errorf("got:\n%q\nwant:\n%q", got, want)
+	}
+}
+
+/*
+TestFormatEPCWithoutAmountLeavesItOpen — an amount of zero is not "EUR0.00",
+it is an open amount the payer fills in. Writing a zero would produce a
+transfer the bank rejects.
+*/
+func TestFormatEPCWithoutAmountLeavesItOpen(t *testing.T) {
+	got := FormatEPC(EPCOptions{
+		Name: "Verein e.V.", IBAN: "DE89370400440532013000", Reference: "Spende",
+	})
+	lines := strings.Split(got, "\n")
+	if lines[7] != "" {
+		t.Errorf("amount line = %q, want empty for an open amount", lines[7])
+	}
+	if lines[10] != "Spende" {
+		t.Errorf("remittance line = %q — the reference moved when the amount was empty", lines[10])
 	}
 }
 
@@ -184,7 +235,53 @@ func TestFormatEmail(t *testing.T) {
 	if !strings.HasPrefix(email, "mailto:support@example.com?") {
 		t.Errorf("unexpected mailto URI: %s", email)
 	}
-	if !strings.Contains(email, "subject=Question") || !strings.Contains(email, "body=Please+help+me") {
+	if !strings.Contains(email, "subject=Question") || !strings.Contains(email, "body=Please%20help%20me") {
 		t.Errorf("missing mail params: %s", email)
+	}
+}
+
+/*
+TestFormatEmailEncodesSpaceAsPercent20 pins the difference between the two
+encodings that both look like "URL encoding".
+
+url.Values.Encode writes a space as "+", which is HTML form encoding. RFC 6068
+gives "+" no such meaning: in a mailto URI it is a plus sign, and a client that
+follows the spec puts "Guten+Tag" in the subject line. Found while documenting
+the format — the code looked right and the output was not.
+*/
+func TestFormatEmailEncodesSpaceAsPercent20(t *testing.T) {
+	got := FormatEmail(EmailOptions{To: "a@b.de", Subject: "Guten Tag", Body: "Zeile eins"})
+	if strings.Contains(got, "+") {
+		t.Errorf("got %q — a space was encoded as '+', which reads as a plus sign", got)
+	}
+	for _, want := range []string{"subject=Guten%20Tag", "body=Zeile%20eins"} {
+		if !strings.Contains(got, want) {
+			t.Errorf("got %q, want it to contain %q", got, want)
+		}
+	}
+}
+
+// TestFormatEmailKeepsARealPlus — the rewrite above must not turn an encoded
+// plus back into a space. Encode writes it as %2B, which contains no "+".
+func TestFormatEmailKeepsARealPlus(t *testing.T) {
+	got := FormatEmail(EmailOptions{To: "a@b.de", Subject: "1+1"})
+	if !strings.Contains(got, "%2B") {
+		t.Errorf("got %q, want the plus preserved as %%2B", got)
+	}
+}
+
+/*
+TestFormatSMSDoesNotEscapeTheMessage records what actually happens rather than
+what one would hope.
+
+The payload is "smsto:<number>:<text>" and the text is inserted verbatim, so a
+colon inside it produces a third colon. Readers split on the first two and are
+unbothered, which is why this is pinned as behaviour and not fixed: changing it
+would mean picking an escaping scheme that no reader has agreed to.
+*/
+func TestFormatSMSDoesNotEscapeTheMessage(t *testing.T) {
+	got := FormatSMS(SMSOptions{PhoneNumber: "+4930123", Message: "Treffen: 18:00"})
+	if got != "smsto:+4930123:Treffen: 18:00" {
+		t.Errorf("got %q", got)
 	}
 }

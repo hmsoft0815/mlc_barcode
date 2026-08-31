@@ -8,7 +8,7 @@ info:
   description: "Cross-platform Barcode & QR Code Generator"
   copyright: "Copyright © 2026 Michael Lechner"
   comments: "Barcode & QR Code Generator with batch processing and live preview"
-  version: "1.3.0"
+  version: "1.4.0"
 
 # Dev mode configuration
 dev_mode:

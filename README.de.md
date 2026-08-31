@@ -7,7 +7,7 @@ Ein Werkzeug zur Generierung von Barcodes und QR-Codes — als Desktop-GUI, als 
 <img src="assets/mlc_barcode_mpc3.png" >
 
 ## Version
-Aktuelle Version: **1.3.0**
+Aktuelle Version: **1.4.0**
 
 ## Funktionen
 - Unterstützt mehrere Barcode-Typen: QR, DataMatrix, Code128, Code39, EAN-13, EAN-8, UPC-A, ITF.
@@ -59,6 +59,12 @@ Die Binärdateien befinden sich in `bin/`:
 - **WLAN**: `-wifi-ssid`, `-wifi-pass`, `-wifi-enc` (WPA/WEP/nopass). [Dokumentation](docs/qr-formats/wifi.de.md)
 - **vCard**: `-vcard-first`, `-vcard-last`, `-vcard-email`, `-vcard-tel`. [Dokumentation](docs/qr-formats/vcard.de.md)
 - **Termin**: `-event-summary`, `-event-start` (YYYYMMDDTHHMMSS), `-event-end`, `-event-tz`. [Dokumentation](docs/qr-formats/event.de.md)
+- **GiroCode (EPC)**: `-epc-name`, `-epc-iban`, `-epc-bic`, `-epc-amount`, `-epc-ref`. [Dokumentation](docs/qr-formats/epc.de.md)
+- **Krypto**: `-crypto-coin`, `-crypto-addr`, `-crypto-amount`, `-crypto-msg`. [Dokumentation](docs/qr-formats/crypto.de.md)
+- **Geo**: `-geo-lat`, `-geo-lon`, `-geo-query`. [Dokumentation](docs/qr-formats/geo.de.md)
+- **Telefon**: `-tel`. [Dokumentation](docs/qr-formats/tel.de.md)
+- **SMS**: `-sms`, `-sms-text`. [Dokumentation](docs/qr-formats/sms.de.md)
+- **E-Mail**: `-mail-to`, `-mail-subject`, `-mail-body`. [Dokumentation](docs/qr-formats/email.de.md)
 
 ## Beispielausgabe
 <img src="showcase/assets/qr.png" > <img src="showcase/assets/ean13.svg" >
