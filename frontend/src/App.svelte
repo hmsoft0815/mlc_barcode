@@ -71,10 +71,27 @@
       <AboutView {appVersion} />
     {/if}
   </main>
+
+  <footer class="py-2 px-3 border-top bg-body text-body-secondary small d-flex flex-wrap justify-content-between align-items-center">
+    <div>
+      <span class="fw-medium">MLC Barcode v{appVersion}</span> · © 2026 Michael Lechner · <span class="badge bg-body-secondary text-body border">MIT License</span>
+    </div>
+    <div class="d-flex gap-3">
+      <a href="https://github.com/mlcmcp/mlc_barcode" target="_blank" rel="noreferrer" class="text-body-secondary text-decoration-none hover-primary">
+        <i class="bi bi-github me-1"></i> GitHub
+      </a>
+      <a href="https://mlcgo.eu/products/mlc-barcode/" target="_blank" rel="noreferrer" class="text-body-secondary text-decoration-none hover-primary">
+        <i class="bi bi-globe me-1"></i> mlcgo.eu
+      </a>
+    </div>
+  </footer>
 </div>
 
 <style>
   .app-root {
     font-family: system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  }
+  .hover-primary:hover {
+    color: var(--bs-primary) !important;
   }
 </style>
