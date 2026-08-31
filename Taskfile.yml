@@ -91,6 +91,26 @@ tasks:
         rm -rf /tmp/mlc-barcode-pkg-linux
         echo "✓ {{.BIN_DIR}}/mlc-barcode-{{.VERSION}}-linux-amd64.tar.gz"
 
+  package:macos:
+    desc: Build macOS tarballs containing CLI and MCP server (no GUI — see note)
+    # The Wails GUI is deliberately absent. It needs CGO against the macOS SDK,
+    # which a Linux host cannot provide; building it requires a Mac or a
+    # macos-latest CI runner. Shipping the CLI and MCP server for macOS is
+    # possible today and is what these archives carry.
+    deps: [build:macos]
+    cmds:
+      - mkdir -p {{.BIN_DIR}}
+      - for: ["arm64", "amd64"]
+        cmd: |
+          PKG=/tmp/mlc-barcode-pkg-macos-{{.ITEM}}
+          rm -rf $PKG && mkdir -p $PKG
+          cp {{.BIN_DIR}}/{{.CLI_BINARY}}-macos-{{.ITEM}} $PKG/barcode
+          cp {{.BIN_DIR}}/{{.SERVER_BINARY}}-macos-{{.ITEM}} $PKG/mcp-barcode-server
+          cp build/appicon.png $PKG/icon.png
+          tar -czf {{.BIN_DIR}}/mlc-barcode-{{.VERSION}}-macos-{{.ITEM}}.tar.gz -C $PKG .
+          rm -rf $PKG
+          echo "✓ {{.BIN_DIR}}/mlc-barcode-{{.VERSION}}-macos-{{.ITEM}}.tar.gz"
+
   build:
     desc: Build CLI, MCP server, and GUI for this machine
     deps: [build:frontend]
@@ -125,7 +145,7 @@ tasks:
 
   build:all:
     desc: Cross-compile every published target and installers
-    deps: [build:linux, build:windows, build:macos, build:gui, build:debug, build:debug:windows, package:windows, package:linux]
+    deps: [build:linux, build:windows, build:macos, build:gui, build:debug, build:debug:windows, package:windows, package:linux, package:macos]
 
   dev:
     desc: Run the desktop GUI in Wails v3 development mode with live reload
@@ -234,7 +254,9 @@ tasks:
           "{{.BIN_DIR}}/{{.GUI_BINARY}}-windows-amd64.exe" \
           "{{.BIN_DIR}}/{{.GUI_BINARY}}-windows-amd64-debug.exe" \
           "{{.BIN_DIR}}/mlc-barcode-{{.VERSION}}-windows-setup.exe" \
-          "{{.BIN_DIR}}/mlc-barcode-{{.VERSION}}-linux-amd64.tar.gz"; do
+          "{{.BIN_DIR}}/mlc-barcode-{{.VERSION}}-linux-amd64.tar.gz" \
+          "{{.BIN_DIR}}/mlc-barcode-{{.VERSION}}-macos-arm64.tar.gz" \
+          "{{.BIN_DIR}}/mlc-barcode-{{.VERSION}}-macos-amd64.tar.gz"; do
           if [ -f "$f" ]; then cp "$f" "{{.DROPZONE}}/"; echo "  ✓ $(basename "$f")";
           else echo "  ✗ missing: $f"; MISSING=$((MISSING+1)); fi
         done
@@ -269,5 +291,7 @@ tasks:
           {{.BIN_DIR}}/{{.GUI_BINARY}}-windows-amd64.exe \
           {{.BIN_DIR}}/mlc-barcode-{{.VERSION}}-windows-setup.exe \
           {{.BIN_DIR}}/mlc-barcode-{{.VERSION}}-linux-amd64.tar.gz \
+          {{.BIN_DIR}}/mlc-barcode-{{.VERSION}}-macos-arm64.tar.gz \
+          {{.BIN_DIR}}/mlc-barcode-{{.VERSION}}-macos-amd64.tar.gz \
           {{.VPS_HOST}}:{{.VPS_DIR}}/
         echo "✓ https://mlcgo.eu/downloads/mlc-barcode/"
