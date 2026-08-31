@@ -71,9 +71,25 @@ tasks:
 
   package:windows:
     desc: Build the Windows NSIS setup installer (.exe)
-    deps: [build:gui:windows]
+    deps: [build:gui:windows, build:windows]
     cmds:
       - makensis -V3 -NOCD -DAPP_VERSION={{.VERSION}} -DEXE_SRC={{.BIN_DIR}}/{{.GUI_BINARY}}-windows-amd64.exe build/windows/installer.nsi
+
+  package:linux:
+    desc: Build Linux tarball containing GUI, CLI, and MCP server
+    deps: [build:gui, build:linux]
+    cmds:
+      - mkdir -p {{.BIN_DIR}}
+      - |
+        rm -rf /tmp/mlc-barcode-pkg-linux
+        mkdir -p /tmp/mlc-barcode-pkg-linux
+        cp {{.BIN_DIR}}/{{.GUI_BINARY}} /tmp/mlc-barcode-pkg-linux/mlc-barcode-gui
+        cp {{.BIN_DIR}}/{{.CLI_BINARY}}-linux-amd64 /tmp/mlc-barcode-pkg-linux/barcode
+        cp {{.BIN_DIR}}/{{.SERVER_BINARY}}-linux-amd64 /tmp/mlc-barcode-pkg-linux/mcp-barcode-server
+        cp build/appicon.png /tmp/mlc-barcode-pkg-linux/icon.png
+        tar -czf {{.BIN_DIR}}/mlc-barcode-{{.VERSION}}-linux-amd64.tar.gz -C /tmp/mlc-barcode-pkg-linux .
+        rm -rf /tmp/mlc-barcode-pkg-linux
+        echo "✓ {{.BIN_DIR}}/mlc-barcode-{{.VERSION}}-linux-amd64.tar.gz"
 
   build:
     desc: Build CLI, MCP server, and GUI for this machine
@@ -109,7 +125,7 @@ tasks:
 
   build:all:
     desc: Cross-compile every published target and installers
-    deps: [build:linux, build:windows, build:macos, package:windows, build:gui, build:debug, build:debug:windows]
+    deps: [build:linux, build:windows, build:macos, build:gui, build:debug, build:debug:windows, package:windows, package:linux]
 
   dev:
     desc: Run the desktop GUI in Wails v3 development mode with live reload
@@ -217,7 +233,8 @@ tasks:
           "{{.BIN_DIR}}/{{.GUI_BINARY}}-debug" \
           "{{.BIN_DIR}}/{{.GUI_BINARY}}-windows-amd64.exe" \
           "{{.BIN_DIR}}/{{.GUI_BINARY}}-windows-amd64-debug.exe" \
-          "{{.BIN_DIR}}/mlc-barcode-{{.VERSION}}-windows-setup.exe"; do
+          "{{.BIN_DIR}}/mlc-barcode-{{.VERSION}}-windows-setup.exe" \
+          "{{.BIN_DIR}}/mlc-barcode-{{.VERSION}}-linux-amd64.tar.gz"; do
           if [ -f "$f" ]; then cp "$f" "{{.DROPZONE}}/"; echo "  ✓ $(basename "$f")";
           else echo "  ✗ missing: $f"; MISSING=$((MISSING+1)); fi
         done
@@ -233,22 +250,24 @@ tasks:
       - task: deploy:dropzone
 
   deploy:
-    desc: "PUBLISH: upload CLI binaries and Windows installer"
+    desc: "PUBLISH: upload all binaries, installers and archives to VPS"
     deps: [build:all]
     cmds:
       - |
         set -e
-        for f in {{.CLI_BINARY}}-linux-amd64 {{.CLI_BINARY}}-windows-amd64.exe \
-                 {{.CLI_BINARY}}-macos-arm64 {{.CLI_BINARY}}-macos-amd64 \
-                 mlc-barcode-{{.VERSION}}-windows-setup.exe; do
-          if [ ! -f "{{.BIN_DIR}}/$f" ]; then echo "missing: {{.BIN_DIR}}/$f"; exit 1; fi
-        done
         ssh -o BatchMode=yes {{.VPS_HOST}} "mkdir -p {{.VPS_DIR}}"
         rsync -az --timeout=30 -e 'ssh -o BatchMode=yes -o ConnectTimeout=10' \
           {{.BIN_DIR}}/{{.CLI_BINARY}}-linux-amd64 \
           {{.BIN_DIR}}/{{.CLI_BINARY}}-windows-amd64.exe \
           {{.BIN_DIR}}/{{.CLI_BINARY}}-macos-arm64 \
           {{.BIN_DIR}}/{{.CLI_BINARY}}-macos-amd64 \
+          {{.BIN_DIR}}/{{.SERVER_BINARY}}-linux-amd64 \
+          {{.BIN_DIR}}/{{.SERVER_BINARY}}-windows-amd64.exe \
+          {{.BIN_DIR}}/{{.SERVER_BINARY}}-macos-arm64 \
+          {{.BIN_DIR}}/{{.SERVER_BINARY}}-macos-amd64 \
+          {{.BIN_DIR}}/{{.GUI_BINARY}} \
+          {{.BIN_DIR}}/{{.GUI_BINARY}}-windows-amd64.exe \
           {{.BIN_DIR}}/mlc-barcode-{{.VERSION}}-windows-setup.exe \
+          {{.BIN_DIR}}/mlc-barcode-{{.VERSION}}-linux-amd64.tar.gz \
           {{.VPS_HOST}}:{{.VPS_DIR}}/
         echo "✓ https://mlcgo.eu/downloads/mlc-barcode/"

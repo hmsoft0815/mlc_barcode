@@ -70,8 +70,10 @@ Section "MainSection" SEC01
   SetOutPath "$INSTDIR"
   SetOverwrite on
 
-  ; Install main application binary
+  ; Install GUI, CLI, and MCP Server binaries
   File "/oname=mlc-barcode.exe" "${EXE_SRC}"
+  File "/oname=barcode.exe" "bin/barcode-windows-amd64.exe"
+  File "/oname=mcp-barcode-server.exe" "bin/mcp-barcode-server-windows-amd64.exe"
   File "build/windows/icon.ico"
 
   ; Create uninstaller
@@ -111,6 +113,8 @@ Section "Uninstall"
   RMDir "$SMPROGRAMS\MLC Barcode"
 
   Delete "$INSTDIR\mlc-barcode.exe"
+  Delete "$INSTDIR\barcode.exe"
+  Delete "$INSTDIR\mcp-barcode-server.exe"
   Delete "$INSTDIR\icon.ico"
   Delete "$INSTDIR\Uninstall.exe"
   RMDir "$INSTDIR"
