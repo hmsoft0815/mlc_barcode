@@ -6,9 +6,10 @@
 <div class="container-fluid py-3" style="max-width: 900px;">
   <div class="card shadow-sm border mb-3">
     <div class="card-body p-4 text-center">
-      <div class="display-6 text-primary mb-2">
-        <i class="bi bi-qr-code"></i> MLC Barcode
+      <div class="mb-3">
+        <img src="/appicon.png" width="72" height="72" class="rounded-3 shadow" alt="MLC Barcode Logo" />
       </div>
+      <h3 class="fw-bold text-body mb-1">MLC Barcode</h3>
       <p class="lead text-body-secondary mb-2">
         Leichtgewichtiges, schnelles Desktop-Tool zur Generierung und Stapelverarbeitung von Barcodes & QR-Codes.
       </p>

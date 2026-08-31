@@ -9,7 +9,7 @@
   <div class="container-fluid d-flex align-items-center justify-content-between">
     <!-- Brand -->
     <div class="d-flex align-items-center gap-2">
-      <span class="fs-4 text-primary"><i class="bi bi-qr-code"></i></span>
+      <img src="/appicon.png" width="30" height="30" class="rounded shadow-sm" alt="MLC Barcode Logo" />
       <div>
         <span class="fw-bold fs-5 text-body">MLC Barcode</span>
         <span class="badge bg-primary-subtle text-primary border border-primary-subtle ms-1">v{appVersion}</span>
