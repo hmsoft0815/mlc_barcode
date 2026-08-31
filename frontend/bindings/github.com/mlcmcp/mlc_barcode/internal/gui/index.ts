@@ -14,8 +14,14 @@ export type {
     BatchExportRequest,
     BatchExportResponse,
     BatchItemResult,
+    CryptoInput,
+    EPCInput,
+    EmailInput,
     EventInput,
+    GeoInput,
+    SMSInput,
     SaveSingleFileRequest,
+    TelInput,
     VCardInput,
     WifiInput
 } from "./models.js";

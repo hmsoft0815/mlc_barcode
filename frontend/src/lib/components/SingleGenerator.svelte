@@ -6,6 +6,12 @@
     FormatWifi,
     FormatVCard,
     FormatEvent,
+    FormatEPC,
+    FormatCrypto,
+    FormatGeo,
+    FormatTel,
+    FormatSMS,
+    FormatEmail,
     SaveSingleFile,
     CopyToClipboard
   } from '../../../bindings/github.com/mlcmcp/mlc_barcode/internal/gui/barcodeapp';
@@ -14,28 +20,59 @@
   export let onSendToPrint: ((item: { data: string; svg: string; type: string }) => void) | undefined = undefined;
 
   let selectedType: BarcodeType = 'qr';
-  let qrMode: 'text' | 'wifi' | 'vcard' | 'event' = 'text';
+  type QRMode = 'text' | 'epc' | 'wifi' | 'vcard' | 'event' | 'crypto' | 'geo' | 'tel' | 'sms' | 'email';
+  let qrMode: QRMode = 'text';
 
   // Free text / data
   let rawData: string = 'https://mlcgo.eu';
   let customLabelText: string = '';
   let customLabelTouched: boolean = false;
 
-  // Structured QR inputs
+  // Structured QR inputs: EPC / GiroCode
+  let epcName = 'Michael Lechner';
+  let epcIBAN = 'DE89370400440532013000';
+  let epcBIC = '';
+  let epcAmount: number | string = 19.99;
+  let epcRef = 'Rechnung-1002';
+
+  // Structured QR inputs: WIFI
   let wifiSSID = '';
   let wifiPass = '';
   let wifiEnc = 'WPA';
   let wifiHidden = false;
 
+  // Structured QR inputs: vCard
   let vcardFirst = '';
   let vcardLast = '';
   let vcardEmail = '';
   let vcardPhone = '';
 
+  // Structured QR inputs: Event
   let eventSummary = '';
   let eventStart = '';
   let eventEnd = '';
   let eventTZ = 'Europe/Berlin';
+
+  // Structured QR inputs: Crypto
+  let cryptoCoin = 'bitcoin';
+  let cryptoAddress = '1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa';
+  let cryptoAmount: number | string = 0.005;
+  let cryptoMessage = 'Spende';
+
+  // Structured QR inputs: Geo
+  let geoLat = 52.5200;
+  let geoLon = 13.4050;
+  let geoQuery = 'Berlin Fernsehturm';
+
+  // Structured QR inputs: Tel & SMS
+  let telNumber = '+49 170 1234567';
+  let smsNumber = '+49 170 1234567';
+  let smsMessage = 'Hallo, ich interessiere mich für MLC Barcode!';
+
+  // Structured QR inputs: Email
+  let mailTo = 'support@mlcgo.eu';
+  let mailSubject = 'Anfrage Barcode Software';
+  let mailBody = 'Guten Tag,\n\nich habe eine Frage zum Produkt.';
 
   // Styling options
   let fgColor = '#000000';
@@ -98,7 +135,70 @@
       selectedType = 'qr';
     }
 
-    if (qrMode === 'wifi') {
+    if (qrMode === 'epc') {
+      if (!epcIBAN && !epcName) return;
+      const numAmount = typeof epcAmount === 'string' ? parseFloat(epcAmount) || 0 : (epcAmount || 0);
+      rawData = await FormatEPC({
+        name: epcName,
+        iban: epcIBAN,
+        bic: epcBIC,
+        amount: numAmount,
+        reference: epcRef,
+        purpose: ''
+      });
+      if (!customLabelTouched) {
+        customLabelText = numAmount > 0 ? `Überweisung: ${numAmount.toFixed(2)} € an ${epcName}` : `GiroCode: ${epcName}`;
+      }
+    } else if (qrMode === 'crypto') {
+      if (!cryptoAddress) return;
+      const numAmount = typeof cryptoAmount === 'string' ? parseFloat(cryptoAmount) || 0 : (cryptoAmount || 0);
+      rawData = await FormatCrypto({
+        coin: cryptoCoin,
+        address: cryptoAddress,
+        amount: numAmount,
+        label: '',
+        message: cryptoMessage
+      });
+      if (!customLabelTouched) {
+        customLabelText = `${cryptoCoin.toUpperCase()}: ${cryptoAddress.slice(0, 8)}...${cryptoAddress.slice(-6)}`;
+      }
+    } else if (qrMode === 'geo') {
+      rawData = await FormatGeo({
+        latitude: Number(geoLat) || 0,
+        longitude: Number(geoLon) || 0,
+        query: geoQuery
+      });
+      if (!customLabelTouched) {
+        customLabelText = geoQuery ? geoQuery : `Maps: ${geoLat}, ${geoLon}`;
+      }
+    } else if (qrMode === 'tel') {
+      if (!telNumber) return;
+      rawData = await FormatTel({
+        phoneNumber: telNumber
+      });
+      if (!customLabelTouched) {
+        customLabelText = `Tel: ${telNumber}`;
+      }
+    } else if (qrMode === 'sms') {
+      if (!smsNumber) return;
+      rawData = await FormatSMS({
+        phoneNumber: smsNumber,
+        message: smsMessage
+      });
+      if (!customLabelTouched) {
+        customLabelText = `SMS: ${smsNumber}`;
+      }
+    } else if (qrMode === 'email') {
+      if (!mailTo) return;
+      rawData = await FormatEmail({
+        to: mailTo,
+        subject: mailSubject,
+        body: mailBody
+      });
+      if (!customLabelTouched) {
+        customLabelText = `E-Mail: ${mailTo}`;
+      }
+    } else if (qrMode === 'wifi') {
       if (!wifiSSID) return;
       rawData = await FormatWifi({
         ssid: wifiSSID,
@@ -174,11 +274,10 @@
     }
   }
 
-  function handleModeChange(mode: 'text' | 'wifi' | 'vcard' | 'event') {
+  function handleModeChange(mode: QRMode) {
     qrMode = mode;
     customLabelTouched = false;
     if (mode !== 'text') {
-      // Structured modes only support 2D Matrix codes
       if (selectedType !== 'qr' && selectedType !== 'datamatrix') {
         selectedType = 'qr';
       }
@@ -289,45 +388,79 @@
         <div class="card-body">
           <!-- Inhaltsformat / Typ-Modus Switcher -->
           <div class="mb-3">
-            <span class="form-label fw-medium small text-body-secondary d-block">Inhaltstyp</span>
-            <ul class="nav nav-pills nav-fill bg-body-secondary p-1 rounded small">
-              <li class="nav-item">
-                <button
-                  class="nav-link py-1 {qrMode === 'text' ? 'active' : 'text-body'}"
-                  type="button"
-                  on:click={() => handleModeChange('text')}
-                >
-                  <i class="bi bi-fonts"></i> Freitext / URL
-                </button>
-              </li>
-              <li class="nav-item">
-                <button
-                  class="nav-link py-1 {qrMode === 'wifi' ? 'active' : 'text-body'}"
-                  type="button"
-                  on:click={() => handleModeChange('wifi')}
-                >
-                  <i class="bi bi-wifi"></i> WLAN
-                </button>
-              </li>
-              <li class="nav-item">
-                <button
-                  class="nav-link py-1 {qrMode === 'vcard' ? 'active' : 'text-body'}"
-                  type="button"
-                  on:click={() => handleModeChange('vcard')}
-                >
-                  <i class="bi bi-person-badge"></i> vCard
-                </button>
-              </li>
-              <li class="nav-item">
-                <button
-                  class="nav-link py-1 {qrMode === 'event' ? 'active' : 'text-body'}"
-                  type="button"
-                  on:click={() => handleModeChange('event')}
-                >
-                  <i class="bi bi-calendar-event"></i> Termin
-                </button>
-              </li>
-            </ul>
+            <span class="form-label fw-medium small text-body-secondary d-block mb-1">Inhaltstyp / Vorlage</span>
+            <div class="d-flex flex-wrap gap-1 bg-body-secondary p-1 rounded">
+              <button
+                class="btn btn-sm {qrMode === 'text' ? 'btn-primary' : 'btn-light border-0'} py-1 px-2"
+                type="button"
+                on:click={() => handleModeChange('text')}
+              >
+                <i class="bi bi-fonts"></i> Freitext/URL
+              </button>
+              <button
+                class="btn btn-sm {qrMode === 'epc' ? 'btn-primary' : 'btn-light border-0'} py-1 px-2"
+                type="button"
+                on:click={() => handleModeChange('epc')}
+              >
+                <i class="bi bi-bank"></i> GiroCode / SEPA
+              </button>
+              <button
+                class="btn btn-sm {qrMode === 'wifi' ? 'btn-primary' : 'btn-light border-0'} py-1 px-2"
+                type="button"
+                on:click={() => handleModeChange('wifi')}
+              >
+                <i class="bi bi-wifi"></i> WLAN
+              </button>
+              <button
+                class="btn btn-sm {qrMode === 'vcard' ? 'btn-primary' : 'btn-light border-0'} py-1 px-2"
+                type="button"
+                on:click={() => handleModeChange('vcard')}
+              >
+                <i class="bi bi-person-badge"></i> vCard
+              </button>
+              <button
+                class="btn btn-sm {qrMode === 'event' ? 'btn-primary' : 'btn-light border-0'} py-1 px-2"
+                type="button"
+                on:click={() => handleModeChange('event')}
+              >
+                <i class="bi bi-calendar-event"></i> Termin
+              </button>
+              <button
+                class="btn btn-sm {qrMode === 'crypto' ? 'btn-primary' : 'btn-light border-0'} py-1 px-2"
+                type="button"
+                on:click={() => handleModeChange('crypto')}
+              >
+                <i class="bi bi-currency-bitcoin"></i> Krypto
+              </button>
+              <button
+                class="btn btn-sm {qrMode === 'geo' ? 'btn-primary' : 'btn-light border-0'} py-1 px-2"
+                type="button"
+                on:click={() => handleModeChange('geo')}
+              >
+                <i class="bi bi-geo-alt"></i> Maps (Geo)
+              </button>
+              <button
+                class="btn btn-sm {qrMode === 'tel' ? 'btn-primary' : 'btn-light border-0'} py-1 px-2"
+                type="button"
+                on:click={() => handleModeChange('tel')}
+              >
+                <i class="bi bi-telephone"></i> Telefon
+              </button>
+              <button
+                class="btn btn-sm {qrMode === 'sms' ? 'btn-primary' : 'btn-light border-0'} py-1 px-2"
+                type="button"
+                on:click={() => handleModeChange('sms')}
+              >
+                <i class="bi bi-chat-dots"></i> SMS
+              </button>
+              <button
+                class="btn btn-sm {qrMode === 'email' ? 'btn-primary' : 'btn-light border-0'} py-1 px-2"
+                type="button"
+                on:click={() => handleModeChange('email')}
+              >
+                <i class="bi bi-envelope"></i> E-Mail
+              </button>
+            </div>
           </div>
 
           <!-- Symbology Selection -->
@@ -359,8 +492,273 @@
             </select>
           </div>
 
-          <!-- Structured Forms for WLAN, vCard, Event -->
-          {#if qrMode === 'wifi'}
+          <!-- Structured Forms -->
+          {#if qrMode === 'epc'}
+            <!-- EPC / GiroCode -->
+            <div class="p-3 bg-body-secondary rounded mb-3 border">
+              <div class="d-flex align-items-center mb-2">
+                <i class="bi bi-bank text-primary me-2"></i>
+                <span class="fw-medium small">GiroCode / SEPA-Überweisung (EPC-QR)</span>
+              </div>
+              <div class="row g-2 mb-2">
+                <div class="col-7">
+                  <label for="epcNameInput" class="form-label small mb-1 fw-medium">Empfängername</label>
+                  <input
+                    id="epcNameInput"
+                    type="text"
+                    class="form-control form-control-sm"
+                    placeholder="z.B. Mustermann GmbH"
+                    bind:value={epcName}
+                    on:input={updateStructuredQR}
+                  />
+                </div>
+                <div class="col-5">
+                  <label for="epcAmountInput" class="form-label small mb-1 fw-medium">Betrag (€)</label>
+                  <input
+                    id="epcAmountInput"
+                    type="number"
+                    step="0.01"
+                    class="form-control form-control-sm"
+                    placeholder="0.00"
+                    bind:value={epcAmount}
+                    on:input={updateStructuredQR}
+                  />
+                </div>
+              </div>
+              <div class="row g-2 mb-2">
+                <div class="col-8">
+                  <label for="epcIbanInput" class="form-label small mb-1 fw-medium">IBAN</label>
+                  <input
+                    id="epcIbanInput"
+                    type="text"
+                    class="form-control form-control-sm font-monospace"
+                    placeholder="DE89 3704 0044 0532 0130 00"
+                    bind:value={epcIBAN}
+                    on:input={updateStructuredQR}
+                  />
+                </div>
+                <div class="col-4">
+                  <label for="epcBicInput" class="form-label small mb-1 fw-medium">BIC (optional)</label>
+                  <input
+                    id="epcBicInput"
+                    type="text"
+                    class="form-control form-control-sm font-monospace"
+                    placeholder="GENODEFFXXX"
+                    bind:value={epcBIC}
+                    on:input={updateStructuredQR}
+                  />
+                </div>
+              </div>
+              <div>
+                <label for="epcRefInput" class="form-label small mb-1 fw-medium">Verwendungszweck</label>
+                <input
+                  id="epcRefInput"
+                  type="text"
+                  class="form-control form-control-sm"
+                  placeholder="z.B. Rechnungsnummer 1002"
+                  bind:value={epcRef}
+                  on:input={updateStructuredQR}
+                />
+              </div>
+            </div>
+          {:else if qrMode === 'crypto'}
+            <!-- Crypto -->
+            <div class="p-3 bg-body-secondary rounded mb-3 border">
+              <div class="d-flex align-items-center mb-2">
+                <i class="bi bi-currency-bitcoin text-warning me-2"></i>
+                <span class="fw-medium small">Krypto Wallet & Zahlungsadresse</span>
+              </div>
+              <div class="row g-2 mb-2">
+                <div class="col-4">
+                  <label for="cryptoCoinSelect" class="form-label small mb-1 fw-medium">Kryptowährung</label>
+                  <select
+                    id="cryptoCoinSelect"
+                    class="form-select form-select-sm"
+                    bind:value={cryptoCoin}
+                    on:change={updateStructuredQR}
+                  >
+                    <option value="bitcoin">Bitcoin (BTC)</option>
+                    <option value="ethereum">Ethereum (ETH)</option>
+                    <option value="solana">Solana (SOL)</option>
+                    <option value="dogecoin">Dogecoin (DOGE)</option>
+                    <option value="litecoin">Litecoin (LTC)</option>
+                  </select>
+                </div>
+                <div class="col-8">
+                  <label for="cryptoAddressInput" class="form-label small mb-1 fw-medium">Wallet-Adresse</label>
+                  <input
+                    id="cryptoAddressInput"
+                    type="text"
+                    class="form-control form-control-sm font-monospace"
+                    placeholder="Adresse einfügen"
+                    bind:value={cryptoAddress}
+                    on:input={updateStructuredQR}
+                  />
+                </div>
+              </div>
+              <div class="row g-2">
+                <div class="col-5">
+                  <label for="cryptoAmountInput" class="form-label small mb-1 fw-medium">Betrag (optional)</label>
+                  <input
+                    id="cryptoAmountInput"
+                    type="number"
+                    step="0.0001"
+                    class="form-control form-control-sm"
+                    placeholder="0.00"
+                    bind:value={cryptoAmount}
+                    on:input={updateStructuredQR}
+                  />
+                </div>
+                <div class="col-7">
+                  <label for="cryptoMessageInput" class="form-label small mb-1 fw-medium">Nachricht / Verwendungszweck</label>
+                  <input
+                    id="cryptoMessageInput"
+                    type="text"
+                    class="form-control form-control-sm"
+                    placeholder="z.B. Spende"
+                    bind:value={cryptoMessage}
+                    on:input={updateStructuredQR}
+                  />
+                </div>
+              </div>
+            </div>
+          {:else if qrMode === 'geo'}
+            <!-- Maps Geo -->
+            <div class="p-3 bg-body-secondary rounded mb-3 border">
+              <div class="d-flex align-items-center mb-2">
+                <i class="bi bi-geo-alt text-danger me-2"></i>
+                <span class="fw-medium small">Geo-Koordinaten (Google Maps & Apple Maps)</span>
+              </div>
+              <div class="row g-2 mb-2">
+                <div class="col-6">
+                  <label for="geoLatInput" class="form-label small mb-1 fw-medium">Breitengrad (Latitude)</label>
+                  <input
+                    id="geoLatInput"
+                    type="number"
+                    step="0.000001"
+                    class="form-control form-control-sm"
+                    placeholder="52.5200"
+                    bind:value={geoLat}
+                    on:input={updateStructuredQR}
+                  />
+                </div>
+                <div class="col-6">
+                  <label for="geoLonInput" class="form-label small mb-1 fw-medium">Längengrad (Longitude)</label>
+                  <input
+                    id="geoLonInput"
+                    type="number"
+                    step="0.000001"
+                    class="form-control form-control-sm"
+                    placeholder="13.4050"
+                    bind:value={geoLon}
+                    on:input={updateStructuredQR}
+                  />
+                </div>
+              </div>
+              <div>
+                <label for="geoQueryInput" class="form-label small mb-1 fw-medium">Ortsname / Suchbegriff (optional)</label>
+                <input
+                  id="geoQueryInput"
+                  type="text"
+                  class="form-control form-control-sm"
+                  placeholder="z.B. Berliner Fernsehturm"
+                  bind:value={geoQuery}
+                  on:input={updateStructuredQR}
+                />
+              </div>
+            </div>
+          {:else if qrMode === 'tel'}
+            <!-- Telephone -->
+            <div class="p-3 bg-body-secondary rounded mb-3 border">
+              <div class="d-flex align-items-center mb-2">
+                <i class="bi bi-telephone text-success me-2"></i>
+                <span class="fw-medium small">Telefonanruf (tel:)</span>
+              </div>
+              <div>
+                <label for="telInput" class="form-label small mb-1 fw-medium">Telefonnummer</label>
+                <input
+                  id="telInput"
+                  type="tel"
+                  class="form-control form-control-sm"
+                  placeholder="+49 170 1234567"
+                  bind:value={telNumber}
+                  on:input={updateStructuredQR}
+                />
+              </div>
+            </div>
+          {:else if qrMode === 'sms'}
+            <!-- SMS -->
+            <div class="p-3 bg-body-secondary rounded mb-3 border">
+              <div class="d-flex align-items-center mb-2">
+                <i class="bi bi-chat-dots text-info me-2"></i>
+                <span class="fw-medium small">SMS-Nachricht (smsto:)</span>
+              </div>
+              <div class="mb-2">
+                <label for="smsNumberInput" class="form-label small mb-1 fw-medium">Empfängernummer</label>
+                <input
+                  id="smsNumberInput"
+                  type="tel"
+                  class="form-control form-control-sm"
+                  placeholder="+49 170 1234567"
+                  bind:value={smsNumber}
+                  on:input={updateStructuredQR}
+                />
+              </div>
+              <div>
+                <label for="smsMsgInput" class="form-label small mb-1 fw-medium">SMS-Text</label>
+                <input
+                  id="smsMsgInput"
+                  type="text"
+                  class="form-control form-control-sm"
+                  placeholder="Vorgefertigte Nachricht..."
+                  bind:value={smsMessage}
+                  on:input={updateStructuredQR}
+                />
+              </div>
+            </div>
+          {:else if qrMode === 'email'}
+            <!-- Email -->
+            <div class="p-3 bg-body-secondary rounded mb-3 border">
+              <div class="d-flex align-items-center mb-2">
+                <i class="bi bi-envelope text-primary me-2"></i>
+                <span class="fw-medium small">E-Mail verfassen (mailto:)</span>
+              </div>
+              <div class="mb-2">
+                <label for="mailToInput" class="form-label small mb-1 fw-medium">Empfängeradresse</label>
+                <input
+                  id="mailToInput"
+                  type="email"
+                  class="form-control form-control-sm"
+                  placeholder="info@beispiel.de"
+                  bind:value={mailTo}
+                  on:input={updateStructuredQR}
+                />
+              </div>
+              <div class="mb-2">
+                <label for="mailSubInput" class="form-label small mb-1 fw-medium">Betreffzeile</label>
+                <input
+                  id="mailSubInput"
+                  type="text"
+                  class="form-control form-control-sm"
+                  placeholder="Betreff eingeben"
+                  bind:value={mailSubject}
+                  on:input={updateStructuredQR}
+                />
+              </div>
+              <div>
+                <label for="mailBodyInput" class="form-label small mb-1 fw-medium">Nachrichtentext</label>
+                <textarea
+                  id="mailBodyInput"
+                  rows="2"
+                  class="form-control form-control-sm"
+                  placeholder="Mailtext..."
+                  bind:value={mailBody}
+                  on:input={updateStructuredQR}
+                ></textarea>
+              </div>
+            </div>
+          {:else if qrMode === 'wifi'}
+            <!-- WLAN -->
             <div class="p-3 bg-body-secondary rounded mb-3 border">
               <div class="row g-2 mb-2">
                 <div class="col-8">
@@ -403,6 +801,7 @@
               {/if}
             </div>
           {:else if qrMode === 'vcard'}
+            <!-- vCard -->
             <div class="p-3 bg-body-secondary rounded mb-3 border">
               <div class="row g-2 mb-2">
                 <div class="col-6">
@@ -454,37 +853,38 @@
               </div>
             </div>
           {:else if qrMode === 'event'}
+            <!-- Event -->
             <div class="p-3 bg-body-secondary rounded mb-3 border">
               <div class="mb-2">
-                <label for="eventSummaryInput" class="form-label small mb-1 fw-medium">Event-Titel</label>
+                <label for="eventSummaryInput" class="form-label small mb-1 fw-medium">Titel / Anlass</label>
                 <input
                   id="eventSummaryInput"
                   type="text"
                   class="form-control form-control-sm"
-                  placeholder="Team Meeting / Sommerfest"
+                  placeholder="z.B. Jahres-Hauptversammlung"
                   bind:value={eventSummary}
                   on:input={updateStructuredQR}
                 />
               </div>
               <div class="row g-2">
                 <div class="col-6">
-                  <label for="eventStartInput" class="form-label small mb-1 fw-medium">Startzeit (YYYYMMDDTHHMMSS)</label>
+                  <label for="eventStartInput" class="form-label small mb-1 fw-medium">Beginn (YYYYMMDDTHHMMSS)</label>
                   <input
                     id="eventStartInput"
                     type="text"
-                    class="form-control form-control-sm"
+                    class="form-control form-control-sm font-monospace"
                     placeholder="20260901T100000"
                     bind:value={eventStart}
                     on:input={updateStructuredQR}
                   />
                 </div>
                 <div class="col-6">
-                  <label for="eventEndInput" class="form-label small mb-1 fw-medium">Endzeit (YYYYMMDDTHHMMSS)</label>
+                  <label for="eventEndInput" class="form-label small mb-1 fw-medium">Ende (YYYYMMDDTHHMMSS)</label>
                   <input
                     id="eventEndInput"
                     type="text"
-                    class="form-control form-control-sm"
-                    placeholder="20260901T113000"
+                    class="form-control form-control-sm font-monospace"
+                    placeholder="20260901T120000"
                     bind:value={eventEnd}
                     on:input={updateStructuredQR}
                   />
@@ -493,166 +893,122 @@
             </div>
           {/if}
 
-          <!-- Direct Data Input (for Text/URL or display of generated raw protocol string) -->
+          <!-- Raw Data Input -->
           <div class="mb-3">
             <div class="d-flex justify-content-between align-items-center mb-1">
-              <label for="rawDataTextarea" class="form-label fw-medium small text-body-secondary mb-0">
-                {qrMode === 'text' ? 'Daten / Inhalt' : 'Codierte Rohdaten (Protokoll)'}
+              <label for="singleDataInput" class="form-label fw-medium small text-body-secondary mb-0">
+                {qrMode === 'text' ? 'Inhalt / Nutzdaten' : 'Generierte Nutzdaten (Raw)'}
               </label>
-              {#if selectedType === 'ean13'}
-                <span class="badge bg-secondary-subtle text-secondary small">12 oder 13 Ziffern</span>
-              {:else if selectedType === 'ean8'}
-                <span class="badge bg-secondary-subtle text-secondary small">7 oder 8 Ziffern</span>
-              {:else if selectedType === 'upca'}
-                <span class="badge bg-secondary-subtle text-secondary small">11 oder 12 Ziffern</span>
-              {/if}
+              <span class="badge bg-secondary-subtle text-secondary-emphasis small font-monospace">
+                {rawData.length} Zeichen
+              </span>
             </div>
             <textarea
-              id="rawDataTextarea"
+              id="singleDataInput"
               class="form-control form-control-sm font-monospace"
               rows={qrMode === 'text' ? 3 : 2}
-              placeholder="Zu codierender Text oder Ziffern..."
+              placeholder="Text oder Link eingeben..."
               bind:value={rawData}
               on:input={triggerGenerate}
               readonly={qrMode !== 'text'}
             ></textarea>
           </div>
 
-          <!-- Klartext / Freitext unter Barcode Option -->
+          <!-- Custom Text / Caption Input -->
           <div class="p-3 bg-body-secondary rounded mb-3 border">
             <div class="form-check form-switch mb-2">
               <input
-                class="form-check-input"
-                type="checkbox"
                 id="showTextCheck"
+                type="checkbox"
+                class="form-check-input"
                 bind:checked={showText}
                 on:change={triggerGenerate}
               />
-              <label class="form-check-label fw-medium small" for="showTextCheck">
-                Beschriftung / Klartext unter Barcode anzeigen
+              <label for="showTextCheck" class="form-check-label small fw-medium">
+                Klartext-Beschriftung unter dem Barcode anzeigen
               </label>
             </div>
-
             {#if showText}
               <div>
-                <label for="customLabelInput" class="form-label small text-body-secondary mb-1">
-                  Freitext-Beschriftung (wird unter dem Barcode dargestellt)
+                <label for="customLabelInput" class="form-label small mb-1 text-body-secondary">
+                  Beschriftungstext (Freitext für Etikett oder Scan-Hinweis)
                 </label>
                 <input
                   id="customLabelInput"
                   type="text"
                   class="form-control form-control-sm"
-                  placeholder={qrMode === 'text' ? (rawData || 'z.B. Artikel-Nr. 1234') : 'z.B. Gäste-WLAN'}
+                  placeholder={rawData.slice(0, 40) || 'z.B. Artikel-Nr. 12345'}
                   bind:value={customLabelText}
                   on:input={() => {
                     customLabelTouched = true;
                     triggerGenerate();
                   }}
                 />
-                <div class="form-text small">
-                  Frei wählbarer Text (ohne kryptische Protokolldaten).
-                </div>
               </div>
             {/if}
           </div>
 
-          <!-- Color & Appearance Options -->
-          <div class="row g-3 mb-2">
-            <!-- Vordergrund -->
-            <div class="col-sm-6">
-              <label for="singleFgColorText" class="form-label small text-body-secondary mb-1 fw-medium">Vordergrundfarbe</label>
-              <div class="input-group input-group-sm mb-2">
+          <!-- Styling & Colors -->
+          <div class="row g-2 mb-3">
+            <!-- Background -->
+            <div class="col-6">
+              <span class="form-label fw-medium small text-body-secondary mb-1 d-block">Hintergrund</span>
+              <div class="d-flex align-items-center gap-2 mb-2">
                 <input
+                  id="singleBgColor"
                   type="color"
-                  class="form-control form-control-color"
-                  bind:value={fgColor}
-                  on:input={triggerGenerate}
-                  on:change={triggerGenerate}
-                  aria-label="Vordergrund-Farbwähler"
-                />
-                <input
-                  id="singleFgColorText"
-                  type="text"
-                  class="form-control font-monospace"
-                  bind:value={fgColor}
-                  on:input={triggerGenerate}
-                />
-              </div>
-              <div class="d-flex flex-wrap gap-1">
-                {#each PRESET_FG_COLORS as c}
-                  <button
-                    type="button"
-                    class="btn btn-sm btn-outline-secondary py-0 px-2 small font-monospace"
-                    style="font-size: 11px;"
-                    on:click={() => setFgColor(c.value)}
-                  >
-                    <span class="d-inline-block rounded-circle me-1" style="width: 8px; height: 8px; background-color: {c.value};"></span>
-                    {c.label}
-                  </button>
-                {/each}
-              </div>
-            </div>
-
-            <!-- Hintergrund -->
-            <div class="col-sm-6">
-              <div class="d-flex justify-content-between align-items-center mb-1">
-                <label for="singleBgColorText" class="form-label small text-body-secondary mb-0 fw-medium">Hintergrundfarbe</label>
-                <div class="form-check form-switch small mb-0">
-                  <input
-                    class="form-check-input"
-                    type="checkbox"
-                    id="transparentCheck"
-                    bind:checked={isTransparent}
-                    on:change={triggerGenerate}
-                  />
-                  <label class="form-check-label small" for="transparentCheck">Transparent</label>
-                </div>
-              </div>
-              <div class="input-group input-group-sm mb-2">
-                <input
-                  type="color"
-                  class="form-control form-control-color"
-                  disabled={isTransparent}
-                  bind:value={bgColor}
-                  on:input={triggerGenerate}
-                  on:change={() => {
-                    isTransparent = false;
-                    triggerGenerate();
-                  }}
-                  aria-label="Hintergrund-Farbwähler"
-                />
-                <input
-                  id="singleBgColorText"
-                  type="text"
-                  class="form-control font-monospace"
-                  disabled={isTransparent}
+                  class="form-control form-control-color form-control-sm"
                   bind:value={bgColor}
                   on:input={() => {
                     isTransparent = false;
                     triggerGenerate();
                   }}
+                  disabled={isTransparent}
                 />
-              </div>
-              <div class="d-flex flex-wrap gap-1">
-                {#each PRESET_BG_COLORS as c}
-                  <button
-                    type="button"
-                    class="btn btn-sm btn-outline-secondary py-0 px-2 small font-monospace"
-                    style="font-size: 11px;"
-                    on:click={() => setBgColor(c.value)}
-                  >
-                    <span class="d-inline-block rounded-circle me-1 border" style="width: 8px; height: 8px; background-color: {c.value};"></span>
-                    {c.label}
-                  </button>
-                {/each}
                 <button
                   type="button"
-                  class="btn btn-sm {isTransparent ? 'btn-primary' : 'btn-outline-secondary'} py-0 px-2 small"
-                  style="font-size: 11px;"
+                  class="btn btn-sm {isTransparent ? 'btn-primary' : 'btn-outline-secondary'} flex-grow-1"
                   on:click={toggleTransparent}
                 >
-                  <i class="bi bi-grid-3x3 me-1"></i> Transp.
+                  <i class="bi bi-circle-half me-1"></i> {isTransparent ? 'Transparent ✓' : 'Transparent'}
                 </button>
+              </div>
+              <div class="d-flex flex-wrap gap-1">
+                {#each PRESET_BG_COLORS as preset}
+                  <button
+                    type="button"
+                    class="btn btn-xs btn-outline-secondary p-1"
+                    style="width: 22px; height: 22px; background-color: {preset.value}; border-radius: 4px;"
+                    title="Hintergrund: {preset.label}"
+                    on:click={() => setBgColor(preset.value)}
+                  ></button>
+                {/each}
+              </div>
+            </div>
+
+            <!-- Foreground -->
+            <div class="col-6">
+              <label for="singleFgColor" class="form-label fw-medium small text-body-secondary mb-1">Barcode-Farbe</label>
+              <div class="d-flex align-items-center gap-2 mb-2">
+                <input
+                  id="singleFgColor"
+                  type="color"
+                  class="form-control form-control-color form-control-sm"
+                  bind:value={fgColor}
+                  on:input={triggerGenerate}
+                />
+                <span class="small font-monospace text-body-secondary">{fgColor}</span>
+              </div>
+              <div class="d-flex flex-wrap gap-1">
+                {#each PRESET_FG_COLORS as preset}
+                  <button
+                    type="button"
+                    class="btn btn-xs btn-outline-secondary p-1"
+                    style="width: 22px; height: 22px; background-color: {preset.value}; border-radius: 4px;"
+                    title="Barcode-Farbe: {preset.label}"
+                    on:click={() => setFgColor(preset.value)}
+                  ></button>
+                {/each}
               </div>
             </div>
           </div>
@@ -668,95 +1024,103 @@
             <i class="bi bi-eye me-1 text-primary"></i> Live-Vorschau
           </h6>
           {#if isGenerating}
-            <span class="spinner-border spinner-border-sm text-primary" role="status"></span>
+            <span class="badge bg-primary-subtle text-primary small">
+              <span class="spinner-border spinner-border-sm me-1"></span> Render...
+            </span>
+          {:else if result?.success}
+            <span class="badge bg-success-subtle text-success small">Bereit</span>
           {/if}
         </div>
+
         <div class="card-body d-flex flex-column align-items-center justify-content-center p-4">
-          {#if result?.success && result.svg}
-            <div class="preview-box checkerboard-bg p-3 rounded d-flex align-items-center justify-content-center w-100 mb-3 border">
-              <div class="svg-container">
-                <!-- eslint-disable-next-line svelte/no-at-html-tags -->
-                {@html result.svg}
-              </div>
+          {#if result?.success && result?.svg}
+            <div
+              class="svg-container rounded p-3 mb-3 d-flex align-items-center justify-content-center shadow-sm"
+              style="background-color: {isTransparent ? 'repeating-conic-gradient(#808080 0% 25%, transparent 0% 50%) 50% / 16px 16px' : bgColor};"
+            >
+              {@html result.svg}
             </div>
-          {:else if result && !result.success}
+
+            <!-- Format Badge -->
+            <div class="d-flex gap-2 mb-3">
+              <span class="badge bg-body-secondary text-body border small">
+                Typ: <strong class="text-uppercase">{result.type}</strong>
+              </span>
+              <span class="badge bg-body-secondary text-body border small">
+                Vektor: <strong>SVG / Crisp</strong>
+              </span>
+            </div>
+          {:else if result?.error}
             <div class="alert alert-danger w-100 text-center py-4 my-auto">
-              <i class="bi bi-exclamation-octagon fs-2 text-danger mb-2 d-block"></i>
-              <div class="fw-semibold mb-1">Ungültige Barcode-Daten</div>
-              <div class="small text-danger-emphasis">{result.error}</div>
+              <i class="bi bi-exclamation-octagon fs-2 d-block mb-2 text-danger"></i>
+              <strong class="d-block mb-1">Ungültige Eingabedaten für {selectedType.toUpperCase()}</strong>
+              <small class="text-body-secondary">{result.error}</small>
             </div>
           {:else}
-            <div class="text-body-secondary text-center py-5">
-              <i class="bi bi-qr-code fs-1 opacity-50 mb-2 d-block"></i>
-              <span>Keine Daten eingegeben</span>
+            <div class="text-center text-body-secondary py-5 my-auto">
+              <i class="bi bi-upc-scan fs-1 d-block mb-2 opacity-50"></i>
+              <span>Geben Sie Daten ein, um den Barcode in Echtzeit zu generieren.</span>
             </div>
           {/if}
+        </div>
 
-          <!-- Action Buttons -->
-          {#if result?.success}
-            <div class="w-100 mt-auto pt-3 border-top">
-              <div class="row g-2">
-                <div class="col-6 col-md-3">
-                  <button class="btn btn-outline-primary btn-sm w-100" on:click={copySVG}>
-                    <i class="bi bi-clipboard me-1"></i> SVG Copy
-                  </button>
-                </div>
-                <div class="col-6 col-md-3">
-                  <button class="btn btn-outline-primary btn-sm w-100" on:click={copyPNG}>
-                    <i class="bi bi-file-earmark-image me-1"></i> PNG Copy
-                  </button>
-                </div>
-                <div class="col-6 col-md-3">
-                  <button class="btn btn-primary btn-sm w-100" on:click={saveSVG}>
-                    <i class="bi bi-download me-1"></i> SVG Save
-                  </button>
-                </div>
-                <div class="col-6 col-md-3">
-                  <button class="btn btn-primary btn-sm w-100" on:click={savePNG}>
-                    <i class="bi bi-download me-1"></i> PNG Save
-                  </button>
-                </div>
+        <!-- Export Buttons -->
+        {#if result?.success}
+          <div class="card-footer bg-body border-top p-3">
+            <div class="row g-2">
+              <div class="col-6">
+                <button type="button" class="btn btn-outline-primary btn-sm w-100" on:click={copySVG}>
+                  <i class="bi bi-clipboard me-1"></i> SVG kopieren
+                </button>
               </div>
-
+              <div class="col-6">
+                <button type="button" class="btn btn-outline-secondary btn-sm w-100" on:click={copyPNG}>
+                  <i class="bi bi-image me-1"></i> PNG kopieren
+                </button>
+              </div>
+              <div class="col-6">
+                <button type="button" class="btn btn-primary btn-sm w-100" on:click={saveSVG}>
+                  <i class="bi bi-download me-1"></i> SVG speichern...
+                </button>
+              </div>
+              <div class="col-6">
+                <button type="button" class="btn btn-primary btn-sm w-100" on:click={savePNG}>
+                  <i class="bi bi-download me-1"></i> PNG speichern...
+                </button>
+              </div>
               {#if onSendToPrint}
-                <div class="mt-2 text-center">
-                  <button class="btn btn-outline-secondary btn-sm" on:click={sendToLabelPrint}>
-                    <i class="bi bi-printer me-1"></i> Als Etikett drucken
+                <div class="col-12 mt-2">
+                  <button type="button" class="btn btn-success btn-sm w-100" on:click={sendToLabelPrint}>
+                    <i class="bi bi-printer me-1"></i> Zum Etikettendruck (DIN A4) hinzufügen
                   </button>
                 </div>
               {/if}
             </div>
-          {/if}
-        </div>
+          </div>
+        {/if}
       </div>
     </div>
   </div>
 </div>
 
 <style>
-  .preview-box {
-    min-height: 280px;
-    max-height: 420px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    overflow: auto;
-  }
-
   .svg-container {
-    width: 100%;
     max-width: 380px;
+    width: 100%;
     height: 260px;
+    border: 1px solid rgba(128, 128, 128, 0.2);
     display: flex;
-    justify-content: center;
     align-items: center;
+    justify-content: center;
+    overflow: hidden;
   }
 
   .svg-container :global(svg) {
-    width: 100%;
-    height: 100%;
+    width: 100% !important;
+    height: 100% !important;
     max-width: 100%;
     max-height: 100%;
-    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.12));
+    display: block;
+    object-fit: contain;
   }
 </style>

@@ -29,10 +29,52 @@ export function ExportBatchToFolder(req: $models.BatchExportRequest): $Cancellab
 }
 
 /**
+ * FormatCrypto formats cryptocurrency payment parameters into standard URI format.
+ */
+export function FormatCrypto(opts: $models.CryptoInput): $CancellablePromise<string> {
+    return $Call.ByID(2436130509, opts);
+}
+
+/**
+ * FormatEPC formats SEPA credit transfer parameters into EPC-QR-Code (GiroCode).
+ */
+export function FormatEPC(opts: $models.EPCInput): $CancellablePromise<string> {
+    return $Call.ByID(1712079574, opts);
+}
+
+/**
+ * FormatEmail formats email address, subject and body into RFC 6068 mailto URI.
+ */
+export function FormatEmail(opts: $models.EmailInput): $CancellablePromise<string> {
+    return $Call.ByID(432479156, opts);
+}
+
+/**
  * FormatEvent formats event parameters into iCal/vCalendar QR data format.
  */
 export function FormatEvent(opts: $models.EventInput): $CancellablePromise<string> {
     return $Call.ByID(2251355188, opts);
+}
+
+/**
+ * FormatGeo formats latitude, longitude and search query into RFC 5870 geo URI.
+ */
+export function FormatGeo(opts: $models.GeoInput): $CancellablePromise<string> {
+    return $Call.ByID(1301610169, opts);
+}
+
+/**
+ * FormatSMS formats phone number and message into smsto URI.
+ */
+export function FormatSMS(opts: $models.SMSInput): $CancellablePromise<string> {
+    return $Call.ByID(1447939993, opts);
+}
+
+/**
+ * FormatTel formats telephone dialing number into RFC 3966 tel URI.
+ */
+export function FormatTel(opts: $models.TelInput): $CancellablePromise<string> {
+    return $Call.ByID(997924401, opts);
 }
 
 /**

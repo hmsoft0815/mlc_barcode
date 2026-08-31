@@ -46,6 +46,50 @@ type EventInput struct {
 	TimeZone  string `json:"timeZone"`
 }
 
+// EPCInput contains options for EPC-QR-Codes (GiroCode / SEPA-Überweisung).
+type EPCInput struct {
+	Name      string  `json:"name"`
+	IBAN      string  `json:"iban"`
+	BIC       string  `json:"bic"`
+	Amount    float64 `json:"amount"`
+	Reference string  `json:"reference"`
+	Purpose   string  `json:"purpose"`
+}
+
+// CryptoInput contains options for cryptocurrency payment QR codes.
+type CryptoInput struct {
+	Coin    string  `json:"coin"` // bitcoin, ethereum, solana, etc.
+	Address string  `json:"address"`
+	Amount  float64 `json:"amount"`
+	Label   string  `json:"label"`
+	Message string  `json:"message"`
+}
+
+// GeoInput contains latitude and longitude coordinates for map navigation QR codes.
+type GeoInput struct {
+	Latitude  float64 `json:"latitude"`
+	Longitude float64 `json:"longitude"`
+	Query     string  `json:"query"`
+}
+
+// TelInput contains telephone dialing parameters.
+type TelInput struct {
+	PhoneNumber string `json:"phoneNumber"`
+}
+
+// SMSInput contains SMS message parameters.
+type SMSInput struct {
+	PhoneNumber string `json:"phoneNumber"`
+	Message     string `json:"message"`
+}
+
+// EmailInput contains email parameters (mailto:).
+type EmailInput struct {
+	To      string `json:"to"`
+	Subject string `json:"subject"`
+	Body    string `json:"body"`
+}
+
 // BatchBarcodeRequest for bulk barcode generation.
 type BatchBarcodeRequest struct {
 	Type            string   `json:"type"`

@@ -63,19 +63,18 @@ func TestFormatVCard(t *testing.T) {
 
 	for _, s := range expect {
 		if !strings.Contains(got, s) {
-			t.Errorf("FormatVCard() missing %v", s)
+			t.Errorf("FormatVCard() = %v, must contain %v", got, s)
 		}
 	}
 }
 
 func TestFormatVCalendar(t *testing.T) {
 	opts := VCalendarOptions{
-		Summary:   "Meeting",
-		StartTime: "20260317T100000",
-		EndTime:   "20260317T110000",
-		TimeZone:  "Europe/Berlin",
-		Latitude:  52.5200,
-		Longitude: 13.4050,
+		Summary:     "Team Meeting",
+		Description: "Discuss roadmap",
+		Location:    "Conference Room A",
+		StartTime:   "20260420T100000Z",
+		EndTime:     "20260420T110000Z",
 	}
 	got := FormatVCalendar(opts)
 
@@ -83,17 +82,109 @@ func TestFormatVCalendar(t *testing.T) {
 		"BEGIN:VCALENDAR",
 		"VERSION:2.0",
 		"BEGIN:VEVENT",
-		"SUMMARY:Meeting",
-		"DTSTART;TZID=Europe/Berlin:20260317T100000",
-		"DTEND;TZID=Europe/Berlin:20260317T110000",
-		"GEO:52.520000;13.405000",
+		"SUMMARY:Team Meeting",
+		"DESCRIPTION:Discuss roadmap",
+		"LOCATION:Conference Room A",
+		"DTSTART:20260420T100000Z",
+		"DTEND:20260420T110000Z",
 		"END:VEVENT",
 		"END:VCALENDAR",
 	}
 
 	for _, s := range expect {
 		if !strings.Contains(got, s) {
-			t.Errorf("FormatVCalendar() missing %v", s)
+			t.Errorf("FormatVCalendar() = %v, must contain %v", got, s)
 		}
+	}
+}
+
+func TestFormatEPC(t *testing.T) {
+	opts := EPCOptions{
+		Name:      "Max Mustermann",
+		IBAN:      "DE89 3704 0044 0532 0130 00",
+		BIC:       "GENODEFFXXX",
+		Amount:    12.50,
+		Reference: "Rechnung-1002",
+	}
+	got := FormatEPC(opts)
+
+	expect := []string{
+		"BCD\n002\n1\nSCT",
+		"GENODEFFXXX",
+		"Max Mustermann",
+		"DE89370400440532013000",
+		"EUR12.50",
+		"Rechnung-1002",
+	}
+
+	for _, s := range expect {
+		if !strings.Contains(got, s) {
+			t.Errorf("FormatEPC() = %v, must contain %v", got, s)
+		}
+	}
+}
+
+func TestFormatCrypto(t *testing.T) {
+	// Bitcoin
+	btc := FormatCrypto(CryptoOptions{
+		Coin:    "btc",
+		Address: "1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa",
+		Amount:  0.05,
+		Label:   "Donation",
+	})
+	if !strings.HasPrefix(btc, "bitcoin:1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa?") {
+		t.Errorf("unexpected btc URI: %s", btc)
+	}
+	if !strings.Contains(btc, "amount=0.05") || !strings.Contains(btc, "label=Donation") {
+		t.Errorf("missing params in btc URI: %s", btc)
+	}
+
+	// Ethereum
+	eth := FormatCrypto(CryptoOptions{
+		Coin:    "eth",
+		Address: "0xde0b295669a9fd93d5f28d9ec85e40f4cb697bae",
+	})
+	if eth != "ethereum:0xde0b295669a9fd93d5f28d9ec85e40f4cb697bae" {
+		t.Errorf("unexpected eth URI: %s", eth)
+	}
+}
+
+func TestFormatGeo(t *testing.T) {
+	geo := FormatGeo(GeoOptions{
+		Latitude:  52.520008,
+		Longitude: 13.404954,
+		Query:     "Berlin Fernsehturm",
+	})
+	if !strings.HasPrefix(geo, "geo:52.520008,13.404954?q=") {
+		t.Errorf("unexpected geo URI: %s", geo)
+	}
+}
+
+func TestFormatTelAndSMS(t *testing.T) {
+	tel := FormatTel(TelOptions{PhoneNumber: "+49 (0) 123 456-789"})
+	if tel != "tel:+490123456789" {
+		t.Errorf("unexpected tel URI: %s", tel)
+	}
+
+	sms := FormatSMS(SMSOptions{
+		PhoneNumber: "+49 123 456789",
+		Message:     "Hello World",
+	})
+	if sms != "smsto:+49123456789:Hello World" {
+		t.Errorf("unexpected sms URI: %s", sms)
+	}
+}
+
+func TestFormatEmail(t *testing.T) {
+	email := FormatEmail(EmailOptions{
+		To:      "support@example.com",
+		Subject: "Question",
+		Body:    "Please help me",
+	})
+	if !strings.HasPrefix(email, "mailto:support@example.com?") {
+		t.Errorf("unexpected mailto URI: %s", email)
+	}
+	if !strings.Contains(email, "subject=Question") || !strings.Contains(email, "body=Please+help+me") {
+		t.Errorf("missing mail params: %s", email)
 	}
 }

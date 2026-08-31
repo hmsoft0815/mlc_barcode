@@ -135,6 +135,41 @@ export interface BatchItemResult {
 }
 
 /**
+ * CryptoInput contains options for cryptocurrency payment QR codes.
+ */
+export interface CryptoInput {
+    /**
+     * bitcoin, ethereum, solana, etc.
+     */
+    "coin": string;
+    "address": string;
+    "amount": number;
+    "label": string;
+    "message": string;
+}
+
+/**
+ * EPCInput contains options for EPC-QR-Codes (GiroCode / SEPA-Überweisung).
+ */
+export interface EPCInput {
+    "name": string;
+    "iban": string;
+    "bic": string;
+    "amount": number;
+    "reference": string;
+    "purpose": string;
+}
+
+/**
+ * EmailInput contains email parameters (mailto:).
+ */
+export interface EmailInput {
+    "to": string;
+    "subject": string;
+    "body": string;
+}
+
+/**
  * EventInput contains options for iCal/vCalendar QR codes.
  */
 export interface EventInput {
@@ -146,6 +181,23 @@ export interface EventInput {
     "startTime": string;
     "endTime": string;
     "timeZone": string;
+}
+
+/**
+ * GeoInput contains latitude and longitude coordinates for map navigation QR codes.
+ */
+export interface GeoInput {
+    "latitude": number;
+    "longitude": number;
+    "query": string;
+}
+
+/**
+ * SMSInput contains SMS message parameters.
+ */
+export interface SMSInput {
+    "phoneNumber": string;
+    "message": string;
 }
 
 /**
@@ -163,6 +215,13 @@ export interface SaveSingleFileRequest {
      * Raw SVG or Base64 PNG
      */
     "content": string;
+}
+
+/**
+ * TelInput contains telephone dialing parameters.
+ */
+export interface TelInput {
+    "phoneNumber": string;
 }
 
 /**

@@ -51,6 +51,10 @@ func main() {
 	registerWifiTools(s)
 	registerVCardTools(s)
 	registerVCalendarTools(s)
+	registerEPCTools(s)
+	registerCryptoTools(s)
+	registerGeoTools(s)
+	registerCommunicationTools(s)
 
 	if *addr != "" {
 		fmt.Fprintf(os.Stderr, "Starting Barcode MCP Server on SSE (%s)...\n", *addr)

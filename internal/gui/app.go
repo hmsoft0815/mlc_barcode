@@ -61,6 +61,62 @@ func (a *BarcodeApp) FormatEvent(opts EventInput) string {
 	})
 }
 
+// FormatEPC formats SEPA credit transfer parameters into EPC-QR-Code (GiroCode).
+func (a *BarcodeApp) FormatEPC(opts EPCInput) string {
+	return qrformats.FormatEPC(qrformats.EPCOptions{
+		Name:      opts.Name,
+		IBAN:      opts.IBAN,
+		BIC:       opts.BIC,
+		Amount:    opts.Amount,
+		Reference: opts.Reference,
+		Purpose:   opts.Purpose,
+	})
+}
+
+// FormatCrypto formats cryptocurrency payment parameters into standard URI format.
+func (a *BarcodeApp) FormatCrypto(opts CryptoInput) string {
+	return qrformats.FormatCrypto(qrformats.CryptoOptions{
+		Coin:    opts.Coin,
+		Address: opts.Address,
+		Amount:  opts.Amount,
+		Label:   opts.Label,
+		Message: opts.Message,
+	})
+}
+
+// FormatGeo formats latitude, longitude and search query into RFC 5870 geo URI.
+func (a *BarcodeApp) FormatGeo(opts GeoInput) string {
+	return qrformats.FormatGeo(qrformats.GeoOptions{
+		Latitude:  opts.Latitude,
+		Longitude: opts.Longitude,
+		Query:     opts.Query,
+	})
+}
+
+// FormatTel formats telephone dialing number into RFC 3966 tel URI.
+func (a *BarcodeApp) FormatTel(opts TelInput) string {
+	return qrformats.FormatTel(qrformats.TelOptions{
+		PhoneNumber: opts.PhoneNumber,
+	})
+}
+
+// FormatSMS formats phone number and message into smsto URI.
+func (a *BarcodeApp) FormatSMS(opts SMSInput) string {
+	return qrformats.FormatSMS(qrformats.SMSOptions{
+		PhoneNumber: opts.PhoneNumber,
+		Message:     opts.Message,
+	})
+}
+
+// FormatEmail formats email address, subject and body into RFC 6068 mailto URI.
+func (a *BarcodeApp) FormatEmail(opts EmailInput) string {
+	return qrformats.FormatEmail(qrformats.EmailOptions{
+		To:      opts.To,
+		Subject: opts.Subject,
+		Body:    opts.Body,
+	})
+}
+
 // GenerateBarcode generates SVG and PNG representations of a single barcode.
 func (a *BarcodeApp) GenerateBarcode(req BarcodeRequest) (BarcodeResult, error) {
 	btype := barcodes.BarcodeType(strings.ToLower(req.Type))

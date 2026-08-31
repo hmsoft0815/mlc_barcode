@@ -40,6 +40,53 @@ func TestBarcodeApp_Formatters(t *testing.T) {
 	if !contains(eventStr, "BEGIN:VEVENT") || !contains(eventStr, "SUMMARY:Meeting") {
 		t.Errorf("unexpected event output: %s", eventStr)
 	}
+
+	// Test EPC / GiroCode
+	epcStr := app.FormatEPC(EPCInput{
+		Name:      "Max",
+		IBAN:      "DE89370400440532013000",
+		Amount:    15.00,
+		Reference: "RE-100",
+	})
+	if !contains(epcStr, "BCD\n002\n1\nSCT") || !contains(epcStr, "EUR15.00") {
+		t.Errorf("unexpected epc output: %s", epcStr)
+	}
+
+	// Test Crypto
+	cryptoStr := app.FormatCrypto(CryptoInput{
+		Coin:    "btc",
+		Address: "1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa",
+		Amount:  0.01,
+	})
+	if !contains(cryptoStr, "bitcoin:1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa") {
+		t.Errorf("unexpected crypto output: %s", cryptoStr)
+	}
+
+	// Test Geo
+	geoStr := app.FormatGeo(GeoInput{
+		Latitude:  52.52,
+		Longitude: 13.40,
+	})
+	if !contains(geoStr, "geo:52.520000,13.400000") {
+		t.Errorf("unexpected geo output: %s", geoStr)
+	}
+
+	// Test Tel & SMS
+	telStr := app.FormatTel(TelInput{PhoneNumber: "+49 123 456"})
+	if telStr != "tel:+49123456" {
+		t.Errorf("unexpected tel output: %s", telStr)
+	}
+
+	smsStr := app.FormatSMS(SMSInput{PhoneNumber: "+49 123 456", Message: "Hi"})
+	if smsStr != "smsto:+49123456:Hi" {
+		t.Errorf("unexpected sms output: %s", smsStr)
+	}
+
+	// Test Email
+	mailStr := app.FormatEmail(EmailInput{To: "test@example.com", Subject: "Hi"})
+	if !contains(mailStr, "mailto:test@example.com?subject=Hi") {
+		t.Errorf("unexpected mail output: %s", mailStr)
+	}
 }
 
 func TestBarcodeApp_GenerateBarcode(t *testing.T) {
