@@ -83,7 +83,7 @@ func barcodeToSVG(bc barcode.Barcode, opts BarcodeOptions) (string, error) {
 	}
 
 	svg := fmt.Sprintf(
-		`<svg viewBox="0 0 %d %d" xmlns="http://www.w3.org/2000/svg" shape-rendering="crispEdges">
+		`<svg width="100%%" height="100%%" viewBox="0 0 %d %d" xmlns="http://www.w3.org/2000/svg" shape-rendering="crispEdges">
   <rect width="%d" height="%d" fill="%s"/>
   <path d="%s" fill="%s"/>
   %s

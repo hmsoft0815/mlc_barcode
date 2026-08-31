@@ -1,4 +1,7 @@
 <script lang="ts">
+  import { onMount } from 'svelte';
+  import { GenerateBatch } from '../../../bindings/github.com/mlcmcp/mlc_barcode/internal/gui/barcodeapp';
+
   export let printItems: Array<{ data: string; svg: string; type: string }> = [];
 
   let columns = 3;
@@ -19,6 +22,38 @@
     rows = p.rows;
   }
 
+  async function loadSampleLabels() {
+    try {
+      const res = await GenerateBatch({
+        type: 'qr',
+        lines: [
+          'MLC-ART-001',
+          'MLC-ART-002',
+          'MLC-ART-003',
+          'https://mlcgo.eu',
+          'PROD-SN-998811',
+          'BOX-ID-4402'
+        ],
+        width: 0,
+        height: 0,
+        showText: false,
+        foregroundColor: '#000000',
+        backgroundColor: '#ffffff'
+      });
+      if (res.items && res.items.length > 0) {
+        printItems = res.items
+          .filter((it) => it.success && it.svg)
+          .map((it) => ({
+            data: it.data,
+            svg: it.svg!,
+            type: 'qr'
+          }));
+      }
+    } catch (e) {
+      console.warn('Could not generate sample labels:', e);
+    }
+  }
+
   // Expanded items based on repeatCount
   $: expandedItems = printItems.flatMap((item) =>
     Array(repeatCount).fill(item)
@@ -27,6 +62,12 @@
   function triggerPrint() {
     window.print();
   }
+
+  onMount(() => {
+    if (!printItems || printItems.length === 0) {
+      loadSampleLabels();
+    }
+  });
 </script>
 
 <div class="container-fluid py-3">
@@ -36,13 +77,18 @@
       <h6 class="mb-0 fw-semibold text-body">
         <i class="bi bi-printer me-1 text-primary"></i> Etikettenbogen-Layout & Druckeinstellungen
       </h6>
-      <button
-        class="btn btn-primary btn-sm"
-        disabled={expandedItems.length === 0}
-        on:click={triggerPrint}
-      >
-        <i class="bi bi-printer-fill me-1"></i> Drucken (Print Dialog)
-      </button>
+      <div class="d-flex gap-2">
+        <button class="btn btn-outline-secondary btn-sm" on:click={loadSampleLabels}>
+          <i class="bi bi-magic me-1"></i> Muster laden
+        </button>
+        <button
+          class="btn btn-primary btn-sm"
+          disabled={expandedItems.length === 0}
+          on:click={triggerPrint}
+        >
+          <i class="bi bi-printer-fill me-1"></i> Drucken (Print Dialog)
+        </button>
+      </div>
     </div>
     <div class="card-body">
       <div class="row g-3 align-items-center">
@@ -123,7 +169,7 @@
         class="print-grid"
         style="--cols: {columns}; --rows: {rows};"
       >
-        {#each expandedItems as item, idx}
+        {#each expandedItems as item}
           <div class="label-cell">
             <div class="label-svg-wrapper">
               <!-- eslint-disable-next-line svelte/no-at-html-tags -->
@@ -140,18 +186,23 @@
     <div class="card shadow-sm border py-5 text-center text-body-secondary no-print">
       <i class="bi bi-printer fs-1 opacity-50 mb-2"></i>
       <h5 class="text-body">Keine Etiketten in der Druck-Warteschlange</h5>
-      <p class="small text-body-secondary mb-0">
+      <p class="small text-body-secondary mb-3">
         Erstelle Barcodes im <strong>Einzel-Generator</strong> oder <strong>Batch-Generator</strong> und klicke auf "Als Etikett drucken".
       </p>
+      <div>
+        <button class="btn btn-outline-primary btn-sm" on:click={loadSampleLabels}>
+          <i class="bi bi-magic me-1"></i> Beispiel-Etiketten laden
+        </button>
+      </div>
     </div>
   {/if}
 </div>
 
 <style>
   .print-page-wrapper {
-    background: #fff;
-    color: #000;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    background: #ffffff;
+    color: #000000;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
     margin: 0 auto;
     padding: 10mm;
     max-width: 210mm;
@@ -176,22 +227,23 @@
     justify-content: center;
     box-sizing: border-box;
     overflow: hidden;
-    background: #fff;
-    color: #000;
+    background: #ffffff;
+    color: #000000;
   }
 
   .label-svg-wrapper {
-    max-width: 90%;
-    max-height: 20mm;
+    width: 100%;
+    height: 20mm;
     display: flex;
     justify-content: center;
     align-items: center;
   }
 
   .label-svg-wrapper :global(svg) {
+    width: 100%;
+    height: 100%;
     max-width: 100%;
     max-height: 100%;
-    height: auto;
   }
 
   .label-text {
@@ -207,8 +259,8 @@
 
   @media print {
     :global(body) {
-      background: #fff !important;
-      color: #000 !important;
+      background: #ffffff !important;
+      color: #000000 !important;
       margin: 0 !important;
       padding: 0 !important;
     }

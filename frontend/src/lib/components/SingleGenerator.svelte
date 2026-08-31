@@ -613,21 +613,27 @@
 <style>
   .preview-box {
     min-height: 280px;
-    max-height: 400px;
+    max-height: 420px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     overflow: auto;
   }
 
   .svg-container {
-    max-width: 100%;
+    width: 100%;
+    max-width: 380px;
+    height: 260px;
     display: flex;
     justify-content: center;
     align-items: center;
   }
 
   .svg-container :global(svg) {
+    width: 100%;
+    height: 100%;
     max-width: 100%;
-    max-height: 260px;
-    height: auto;
+    max-height: 100%;
     filter: drop-shadow(0 2px 4px rgba(0,0,0,0.12));
   }
 </style>
