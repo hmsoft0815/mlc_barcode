@@ -2,6 +2,8 @@ module github.com/mlcmcp/mlc_barcode
 
 go 1.25.5
 
+toolchain go1.25.13
+
 require (
 	github.com/boombuler/barcode v1.1.0
 	github.com/hmsoft0815/mlcartifact v0.4.1
