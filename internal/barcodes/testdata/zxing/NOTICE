@@ -1,0 +1,7 @@
+The images and .txt files in this directory are taken unchanged from the
+ZXing project's blackbox test sets
+(https://github.com/zxing/zxing, core/src/test/resources/blackbox/).
+
+Copyright (C) ZXing authors. Licensed under the Apache License, Version 2.0;
+see internal/pdf417decode/LICENSE for the full text.
+They are used only as test data and are not part of any binary.

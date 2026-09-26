@@ -17,7 +17,7 @@ func TestExportedCodesReadWithoutExtraMargin(t *testing.T) {
 		{TypeEAN8, "96385074"}, {TypeUPCA, "036000291452"}, {TypeITF, "12345678"},
 	} {
 		img := renderPNG(t, c.btype, c.data, DefaultOptions(c.btype))
-		found := decodeOnce(img, image.Point{}, 1) // no withQuietZone
+		found := decodeOnce(img, frame{f: 1}, allReaders) // no withQuietZone
 		ok := false
 		for _, d := range found {
 			ok = ok || d.Type == c.btype
