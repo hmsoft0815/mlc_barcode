@@ -118,7 +118,7 @@ Detailed examples can be found in the **[Showcase](showcase/SHOWCASE.md)**.
 <img src="assets/mlc_barcode_mpc4.png" >
 
 
-The server supports Stdio (default) and SSE.
+The server supports stdio (default) and, with `-addr`, Streamable HTTP at `/mcp` plus legacy SSE at `/sse`.
 
 ### Claude Desktop Integration (Stdio)
 
@@ -140,11 +140,13 @@ The MCP tool `generate_barcode` has additional parameters:
 - `save_artifact` (boolean): If true, saves the barcode to the artifact service.
 - `filename` (string): Optional filename in the artifact store.
 
-### SSE Mode
+### HTTP mode (Streamable HTTP, SSE)
 
 ```bash
 ./bin/mcp-barcode-server -addr :8080 -artifact-addr localhost:9590
 ```
+
+Clients connect to `http://<host>:8080/mcp` (Streamable HTTP, stateless as spec 2026-07-28 requires); older SSE-only clients to `http://<host>:8080/sse`. Cross-origin browser requests are rejected; there is no built-in authentication, so run it on a trusted network or behind an authenticating proxy.
 
 Step-by-step setup for Claude Desktop, Claude Code, Gemini CLI and Cursor: **[MCP server guide on mlcgo.eu](https://mlcgo.eu/products/mlc-barcode/en/mcp/)**.
 
@@ -155,6 +157,7 @@ The server is checked against the MCP specification **2026-07-28** with **[mlc m
 - `inspect`: protocol version, capabilities, tool and prompt metadata, instructions — **quality score 100/100**.
 - Protocol test script [`tests/mcp/barcode.mcp`](tests/mcp/barcode.mcp): every tool and symbology, PNG/SVG, captions, check-digit completion and rejection, empty and schema-violating input (reported as tool errors the model can correct), unknown tools (`-32602`), and `structuredContent` validated against each tool's output schema — the check strict clients such as the official TypeScript SDK apply.
 - Both prompts (`payment_qr_from_invoice`, `product_labels`) via `prompts/get`, including the `-32602` error for a missing argument.
+- `http-check` on the Streamable HTTP endpoint: required headers and their Base64 form, error codes and HTTP status, Origin validation, no GET/DELETE, no sessions — plus `inspect` over Streamable HTTP (100/100) and legacy SSE (90/100: SSE negotiates 2025-11-25 at most).
 
 Run it yourself (needs `mcp-tester` in `PATH` or a checkout next to this repo):
 

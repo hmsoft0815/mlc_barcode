@@ -5,7 +5,6 @@ import (
 	"flag"
 	"fmt"
 	"log"
-	"net/http"
 	"os"
 
 	"github.com/hmsoft0815/mlcartifact/client"
@@ -14,7 +13,7 @@ import (
 )
 
 func main() {
-	addr := flag.String("addr", "", "Listen address for SSE (e.g. \":8080\"). If empty, uses stdio.")
+	addr := flag.String("addr", "", "Listen address for HTTP (e.g. \":8080\"): Streamable HTTP at /mcp, legacy SSE at /sse. If empty, uses stdio.")
 	artifactAddr := flag.String("artifact-addr", os.Getenv("ARTIFACT_GRPC_ADDR"), "Address of the mlcartifact gRPC server")
 	showVersion := flag.Bool("version", false, "Show version and exit")
 	flag.Parse()
@@ -60,10 +59,9 @@ func main() {
 	registerPrompts(s)
 
 	if *addr != "" {
-		fmt.Fprintf(os.Stderr, "Starting Barcode MCP Server on SSE (%s)...\n", *addr)
-		handler := mcp.NewSSEHandler(func(*http.Request) *mcp.Server { return s }, nil)
-		if err := http.ListenAndServe(*addr, handler); err != nil {
-			log.Fatalf("SSE server failed: %v", err)
+		fmt.Fprintf(os.Stderr, "Starting Barcode MCP Server on %s: Streamable HTTP at /mcp, legacy SSE at /sse\n", *addr)
+		if err := newHTTPServer(*addr, s).ListenAndServe(); err != nil {
+			log.Fatalf("HTTP server failed: %v", err)
 		}
 	} else {
 		fmt.Fprintf(os.Stderr, "Starting Barcode MCP Server on stdio...\n")

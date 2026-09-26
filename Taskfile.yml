@@ -267,7 +267,7 @@ tasks:
       - go test -tags gtk3 ./...
 
   test:mcp:
-    desc: MCP compliance check with mlc mcp-tester (inspect score 100 + protocol test script + prompts)
+    desc: MCP compliance check with mlc mcp-tester (inspect score 100, protocol test script, prompts, Streamable HTTP + SSE)
     # mcp-tester: https://github.com/hmsoft0815/mlc_mcptester — the sibling
     # checkout first (it tracks the newest spec), else PATH; override with
     # MCP_TESTER=/path/to/mcp-tester.
@@ -285,6 +285,7 @@ tasks:
         {{.MCP_TESTER}} prompts get payment_qr_from_invoice -c "{{.SERVER}}"
         -a '{"invoice":"Invoice 1234, Muster GmbH, IBAN DE89370400440532013000, total 49.90 EUR"}' > /dev/null
       - '{{.MCP_TESTER}} prompts get product_labels -c "{{.SERVER}}" -a ''{"items":"4006381333931;Schraube M4"}'' > /dev/null'
+      - bash tests/mcp/http-check.sh "{{.MCP_TESTER}}" "{{.SERVER}}" {{.BIN_DIR}}
       - echo "✓ MCP compliance OK"
 
   check:frontend:

@@ -118,7 +118,7 @@ Detaillierte Beispiele finden Sie im **[Showcase](showcase/SHOWCASE.de.md)**.
 
 <img src="assets/mlc_barcode_mpc4.png" >
 
-Der Server unterstützt Stdio (Standard) und SSE.
+Der Server unterstützt stdio (Standard) und mit `-addr` Streamable HTTP unter `/mcp` sowie das alte SSE unter `/sse`.
 
 ### Integration in Claude Desktop (Stdio)
 Ergänzen Sie Ihre `claude_desktop_config.json`:
@@ -138,10 +138,12 @@ Das MCP-Tool `generate_barcode` hat zusätzliche Parameter:
 - `save_artifact` (boolean): Wenn true, wird der Barcode via mlc_artifact gespeichert (benötigit mlc artifact mcp server) gespeichert.
 - `filename` (string): Optionaler Dateiname im Artifact-Speicher.
 
-### SSE Modus
+### HTTP-Modus (Streamable HTTP, SSE)
 ```bash
 ./bin/mcp-barcode-server -addr :8080 -artifact-addr localhost:9590
 ```
+
+Clients verbinden sich mit `http://<host>:8080/mcp` (Streamable HTTP, zustandslos wie von Spezifikation 2026-07-28 verlangt), ältere Clients, die nur SSE können, mit `http://<host>:8080/sse`. Browser-Anfragen fremder Herkunft werden abgewiesen; eine eigene Anmeldung gibt es nicht — nur im vertrauenswürdigen Netz oder hinter einem Proxy mit Authentifizierung betreiben.
 
 Schritt-für-Schritt-Anleitung für Claude Desktop, Claude Code, Gemini CLI und Cursor: **[MCP-Anleitung auf mlcgo.eu](https://mlcgo.eu/products/mlc-barcode/de/mcp/)**.
 
@@ -152,6 +154,7 @@ Der Server wird gegen die MCP-Spezifikation **2026-07-28** mit dem **[mlc mcp-te
 - `inspect`: Protokollversion, Capabilities, Metadaten von Werkzeugen und Prompts, Instructions — **Qualitäts-Score 100/100**.
 - Protokoll-Testskript [`tests/mcp/barcode.mcp`](tests/mcp/barcode.mcp): jedes Werkzeug und jede Symbologie, PNG/SVG, Beschriftungen, Ergänzen und Ablehnen von Prüfziffern, leere und schemawidrige Eingaben (als Tool-Fehler, die das Modell korrigieren kann), unbekannte Werkzeuge (`-32602`) sowie `structuredContent`, geprüft gegen das Output-Schema jedes Werkzeugs — so, wie strikte Clients (etwa das offizielle TypeScript-SDK) es verlangen.
 - Beide Prompts (`payment_qr_from_invoice`, `product_labels`) über `prompts/get`, einschließlich des Fehlers `-32602` bei fehlendem Argument.
+- `http-check` am Streamable-HTTP-Endpunkt: Pflicht-Header samt Base64-Form, Fehlercodes und HTTP-Status, Origin-Prüfung, kein GET/DELETE, keine Sessions — dazu `inspect` über Streamable HTTP (100/100) und das alte SSE (90/100: SSE handelt höchstens 2025-11-25 aus).
 
 Selbst ausführen (braucht `mcp-tester` im `PATH` oder einen Checkout neben diesem Repo):
 

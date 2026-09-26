@@ -16,7 +16,7 @@ Der `mcp-barcode-server` stellt eine Model Context Protocol (MCP) Schnittstelle 
 
 ## Konfigurationsparameter
 
-- `-addr`: (Optional) Adresse für SSE (z. B. `:8080`). Wenn leer, wird stdio verwendet.
+- `-addr`: (Optional) Adresse für HTTP (z. B. `:8080`): **Streamable HTTP** unter `/mcp` (zustandslos, Spezifikation 2026-07-28), altes SSE unter `/sse` für ältere Clients. Browser-Anfragen fremder Herkunft werden abgewiesen. Wenn leer, wird stdio verwendet.
 - `-artifact-addr`: (Optional) Die gRPC-Adresse des [mlcartifact Servers](https://github.com/hmsoft0815/mlcartifact) (z. B. `localhost:9590`).
 - `-version`: Version anzeigen und beenden.
 
