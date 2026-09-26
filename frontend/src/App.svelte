@@ -7,6 +7,9 @@
   import AboutView from './lib/components/AboutView.svelte';
   import Checker from './lib/components/Checker.svelte';
   import type { PrintItem } from './lib/types';
+  import { get } from 'svelte/store';
+  import { lang } from './lib/i18n/lang';
+  import { t } from './lib/i18n/text/shell';
   import { GetVersion } from '../bindings/github.com/mlcmcp/mlc_barcode/internal/gui/barcodeapp';
 
   let activeTab: 'single' | 'batch' | 'print' | 'check' | 'about' = 'single';
@@ -42,6 +45,7 @@
   }
 
   onMount(async () => {
+    document.documentElement.lang = get(lang);
     // Theme preference; dark is the house look (mlcgo.eu)
     const saved = localStorage.getItem('mlc_theme') as 'light' | 'dark' | null;
     if (saved === 'dark' || saved === 'light') {
@@ -86,7 +90,7 @@
 
   <footer class="no-print py-2 px-3 border-top bg-body text-body-secondary small d-flex flex-wrap justify-content-between align-items-center">
     <div>
-      <span class="fw-medium">MLC Barcode v{appVersion}</span> · © 2026 Michael Lechner · <span class="badge bg-body-secondary text-body border">MIT with Attribution</span>
+      <span class="fw-medium">MLC Barcode v{appVersion}</span> · © 2026 Michael Lechner · <span class="badge bg-body-secondary text-body border">{$t('footerLicense')}</span>
     </div>
     <div class="d-flex gap-3">
       <a href="https://github.com/hmsoft0815/mlc_barcode" target="_blank" rel="noreferrer" class="text-body-secondary text-decoration-none hover-primary">

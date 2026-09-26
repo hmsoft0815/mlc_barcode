@@ -1,10 +1,13 @@
 <script lang="ts">
+  import { lang } from '../i18n/lang';
+  import { t, type AboutKey } from '../i18n/text/about';
   // Braces would be Svelte syntax in the markup, so the example lives here.
-  const cliAndMcpExample = `# Kommandozeile:
+  // Only the prose comment lines are translated, the commands stay.
+  $: cliAndMcpExample = `${$t('cliComment')}
 barcode -type qr -data "https://mlcgo.eu" -out qr.svg
 
-# MCP-Server: startet Ihr KI-Client selbst.
-# Eintrag z. B. in claude_desktop_config.json (Windows-Setup):
+${$t('mcpComment1')}
+${$t('mcpComment2')}
 "mcpServers": {
   "mlc-barcode": {
     "command": "C:\\\\Program Files\\\\MLC Barcode\\\\mcp-barcode-server.exe"
@@ -14,6 +17,8 @@ barcode -type qr -data "https://mlcgo.eu" -out qr.svg
   import thirdPartyText from '../../../../THIRD_PARTY_NOTICES.txt?raw';
   import { BARCODE_TYPES } from '../types';
   export let appVersion: string = __APP_VERSION__;
+  // The type descriptions in types.ts are German; the help table shows them per language.
+  import { typeText, typeDescKey } from '../i18n/text/types';
 </script>
 
 <div class="container-fluid py-3" style="max-width: 900px;">
@@ -21,14 +26,14 @@ barcode -type qr -data "https://mlcgo.eu" -out qr.svg
   <div class="card shadow-sm border mb-3">
     <div class="card-body p-4 text-center">
       <div class="mb-3">
-        <img src="/appicon.png" width="72" height="72" class="rounded-3 shadow" alt="MLC Barcode Logo" />
+        <img src="/appicon.png" width="72" height="72" class="rounded-3 shadow" alt={$t('logoAlt')} />
       </div>
       <h3 class="fw-bold text-body mb-1">MLC Barcode</h3>
       <p class="lead text-body-secondary mb-2">
-        Plattformübergreifendes Desktop-Werkzeug zur Generierung, Stapelverarbeitung und dem Druck von Barcodes & QR-Codes.
+        {$t('lead')}
       </p>
       <div class="d-flex flex-wrap justify-content-center gap-2 mb-3">
-        <span class="badge bg-primary">Version {appVersion}</span>
+        <span class="badge bg-primary">{$t('version', { v: appVersion })}</span>
         <span class="badge bg-success-subtle text-success-emphasis border">MIT with Attribution</span>
         <span class="badge bg-secondary-subtle text-secondary border">Wails v3 + Svelte + Go</span>
       </div>
@@ -39,7 +44,7 @@ barcode -type qr -data "https://mlcgo.eu" -out qr.svg
           rel="noreferrer"
           class="btn btn-sm btn-outline-secondary"
         >
-          <i class="bi bi-github me-1"></i> GitHub Repository
+          <i class="bi bi-github me-1"></i> {$t('githubRepo')}
         </a>
         <a
           href="https://mlcgo.eu/products/mlc-barcode/"
@@ -47,7 +52,7 @@ barcode -type qr -data "https://mlcgo.eu" -out qr.svg
           rel="noreferrer"
           class="btn btn-sm btn-outline-primary"
         >
-          <i class="bi bi-globe me-1"></i> Produktseite (mlcgo.eu)
+          <i class="bi bi-globe me-1"></i> {$t('productPage')}
         </a>
       </div>
     </div>
@@ -57,7 +62,7 @@ barcode -type qr -data "https://mlcgo.eu" -out qr.svg
   <div class="card shadow-sm border mb-3">
     <div class="card-header bg-body border-bottom py-2">
       <h6 class="mb-0 fw-semibold text-body">
-        <i class="bi bi-card-checklist me-1 text-primary"></i> Unterstützte Symbologien & Formate
+        <i class="bi bi-card-checklist me-1 text-primary"></i> {$t('symbologiesTitle')}
       </h6>
     </div>
     <div class="card-body p-0">
@@ -65,23 +70,23 @@ barcode -type qr -data "https://mlcgo.eu" -out qr.svg
         <table class="table table-hover table-sm mb-0">
           <thead class="table-light">
             <tr>
-              <th style="width: 140px;">Typ</th>
-              <th style="width: 110px;">Kategorie</th>
-              <th>Beschreibung & Spezifikation</th>
-              <th>Beispiel</th>
+              <th style="width: 140px;">{$t('colType')}</th>
+              <th style="width: 110px;">{$t('colCategory')}</th>
+              <th>{$t('colDescription')}</th>
+              <th>{$t('colSample')}</th>
             </tr>
           </thead>
           <tbody>
-            {#each BARCODE_TYPES as t}
+            {#each BARCODE_TYPES as bt}
               <tr>
-                <td class="fw-medium text-body">{t.name}</td>
+                <td class="fw-medium text-body">{bt.name}</td>
                 <td>
-                  <span class="badge {t.category !== '1D Linear' ? 'bg-info-subtle text-info-emphasis' : 'bg-body-secondary text-body border'}">
-                    {t.category}
+                  <span class="badge {bt.category !== '1D Linear' ? 'bg-info-subtle text-info-emphasis' : 'bg-body-secondary text-body border'}">
+                    {bt.category}
                   </span>
                 </td>
-                <td class="small text-body-secondary">{t.description}</td>
-                <td><code class="small">{t.sample}</code></td>
+                <td class="small text-body-secondary">{$typeText(typeDescKey(bt.id))}</td>
+                <td><code class="small">{bt.sample}</code></td>
               </tr>
             {/each}
           </tbody>
@@ -96,17 +101,17 @@ barcode -type qr -data "https://mlcgo.eu" -out qr.svg
       <div class="card shadow-sm border h-100">
         <div class="card-header bg-body border-bottom py-2">
           <h6 class="mb-0 fw-semibold text-body">
-            <i class="bi bi-gear-fill me-1 text-primary"></i> Funktionen im Überblick
+            <i class="bi bi-gear-fill me-1 text-primary"></i> {$t('featuresTitle')}
           </h6>
         </div>
         <div class="card-body small text-body-secondary">
           <ul class="mb-0 ps-3">
-            <li><strong>Live-Vorschau:</strong> Direkte Vektordarstellung in SVG und hochauflösendem PNG.</li>
-            <li><strong>9 QR-Sonderformate:</strong> GiroCode (SEPA-Überweisung), Krypto-Wallets, Maps (Geo), Telefon, SMS, E-Mail, WLAN, vCard 3.0 und Kalender-Events.</li>
-            <li><strong>Prüfen:</strong> Barcodes aus Bildern lesen (Datei, Drag &amp; Drop, <kbd>Strg</kbd>+<kbd>V</kbd>) – Format, Inhalt und zerlegte Felder, beim GiroCode mit IBAN-Prüfung. Jeder erzeugte Code wird automatisch gegengelesen („Lesbar geprüft“).</li>
-            <li><strong>Beschriftung:</strong> Freitext unter dem Barcode mit einstellbarer Schriftgröße, in SVG und PNG.</li>
-            <li><strong>Batch-Generierung:</strong> Import von <code>.txt</code>/<code>.csv</code> (Format siehe unten) und Stapel-Export in einen Zielordner.</li>
-            <li><strong>Etiketten-Druckbogen:</strong> DIN-A4-Layouts nach gängigen Avery-Zweckform-Rastern; Etiketten aus dem Batch-Generator übernehmen oder direkt aus TXT/CSV mit eigenem Etikett-Text importieren.</li>
+            <li><strong>{$t('featPreviewLabel')}</strong> {$t('featPreview')}</li>
+            <li><strong>{$t('featQrLabel')}</strong> {$t('featQr')}</li>
+            <li><strong>{$t('featCheckLabel')}</strong> {$t('featCheckA')} <kbd>{$t('ctrlKey')}</kbd>+<kbd>V</kbd>{$t('featCheckB')}</li>
+            <li><strong>{$t('featCaptionLabel')}</strong> {$t('featCaption')}</li>
+            <li><strong>{$t('featBatchLabel')}</strong> {$t('featBatchA')} <code>.txt</code>/<code>.csv</code> {$t('featBatchB')}</li>
+            <li><strong>{$t('featSheetLabel')}</strong> {$t('featSheet')}</li>
           </ul>
         </div>
       </div>
@@ -116,21 +121,21 @@ barcode -type qr -data "https://mlcgo.eu" -out qr.svg
       <div class="card shadow-sm border h-100">
         <div class="card-header bg-body border-bottom py-2">
           <h6 class="mb-0 fw-semibold text-body">
-            <i class="bi bi-terminal me-1 text-primary"></i> CLI & MCP Server
+            <i class="bi bi-terminal me-1 text-primary"></i> {$t('cliTitle')}
           </h6>
         </div>
         <div class="card-body small text-body-secondary">
           <p class="mb-2">
-            MLC Barcode ist auch als stand-alone Kommandozeilentool und MCP-Server für KI-Assistenten (Claude Desktop, Cursor, Gemini-CLI) verfügbar:
+            {$t('cliIntro')}
           </p>
           <pre class="bg-body-secondary p-2 rounded mb-0 font-monospace small"><code>{cliAndMcpExample}</code></pre>
           <a
-            href="https://mlcgo.eu/products/mlc-barcode/de/mcp/"
+            href="https://mlcgo.eu/products/mlc-barcode/{$lang}/mcp/"
             target="_blank"
             rel="noreferrer"
             class="btn btn-sm btn-outline-primary mt-2"
           >
-            <i class="bi bi-plug me-1"></i> Anleitung: MCP-Server in Claude, Gemini &amp; Cursor einbinden
+            <i class="bi bi-plug me-1"></i> {$t('mcpGuide')}
           </a>
         </div>
       </div>
@@ -141,20 +146,31 @@ barcode -type qr -data "https://mlcgo.eu" -out qr.svg
   <div class="card shadow-sm border mb-3">
     <div class="card-header bg-body border-bottom py-2">
       <h6 class="mb-0 fw-semibold text-body">
-        <i class="bi bi-filetype-csv me-1 text-primary"></i> Datei-Import (Batch-Generator & Etiketten-Druck)
+        <i class="bi bi-filetype-csv me-1 text-primary"></i> {$t('importTitle')}
       </h6>
     </div>
     <div class="card-body small text-body-secondary">
       <ul class="ps-3 mb-2">
-        <li><strong>TXT:</strong> Jede Zeile ist ein Barcode-Inhalt. Es wird nichts aufgeteilt — Kommas und Semikolons gehören zum Inhalt.</li>
-        <li><strong>CSV:</strong> Spalte 1 = Inhalt (z.&nbsp;B. für den QR-Code), Spalte 2 = <em>optionaler</em> Etikett-Text. Der Batch-Generator nutzt nur Spalte 1.</li>
-        <li><strong>Trennzeichen:</strong> <code>;</code> oder Tab werden erkannt (Excel speichert deutsch mit <code>;</code>). Ein Komma gilt nur als Trennzeichen, wenn jede Zeile gleich viele hat. Ohne erkennbares Trennzeichen ist jede Zeile ein Inhalt.</li>
-        <li>Enthält der Inhalt selbst das Trennzeichen (z.&nbsp;B. <code>WIFI:…;…;</code>), das Feld in Anführungszeichen setzen.</li>
-        <li>Leere Zeilen werden übersprungen, eine Kopfzeile lässt sich im Etiketten-Druck abschalten.</li>
+        <li><strong>TXT:</strong> {$t('importTxt')}</li>
+        <li><strong>CSV:</strong> {$t('importCsvA')} <em>{$t('importCsvOptional')}</em> {$t('importCsvB')}</li>
+        <li><strong>{$t('importSepLabel')}</strong> <code>;</code> {$t('importSepA')} <code>;</code>{$t('importSepB')}</li>
+        <li>{$t('importQuoteA')} <code>WIFI:…;…;</code>{$t('importQuoteB')}</li>
+        <li>{$t('importEmpty')}</li>
       </ul>
-      <pre class="bg-body-secondary p-2 rounded mb-0 font-monospace small"><code>ART-1001;Schraube M4
-ART-1002
-"WIFI:T:WPA;S:Gast;P:geheim;;";Gäste-WLAN</code></pre>
+      <pre class="bg-body-secondary p-2 rounded mb-0 font-monospace small"><code>{$t('importSample')}</code></pre>
+    </div>
+  </div>
+
+  <!-- The mobile UI (phones, tablets) can be tried here as well -->
+  <div class="card shadow-sm border mb-3">
+    <div class="card-body d-flex align-items-center gap-3 flex-wrap">
+      <i class="bi bi-phone fs-3 text-primary"></i>
+      <div class="flex-grow-1 small">
+        <strong>{$t('mobileTitle')}</strong> {$t('mobileText')}
+      </div>
+      <button class="btn btn-sm btn-outline-primary" on:click={() => (window as any).mlcSetUI?.('mobile')}>
+        <i class="bi bi-phone me-1"></i> {$t('mobileButton')}
+      </button>
     </div>
   </div>
 
@@ -162,7 +178,7 @@ ART-1002
   <div class="card shadow-sm border mb-3">
     <div class="card-header bg-body border-bottom py-2">
       <h6 class="mb-0 fw-semibold text-body">
-        <i class="bi bi-shield-check me-1 text-success"></i> Lizenz & Copyright
+        <i class="bi bi-shield-check me-1 text-success"></i> {$t('licenseTitle')}
       </h6>
     </div>
     <div class="card-body small text-body-secondary">
@@ -172,54 +188,51 @@ ART-1002
             © 2026 Michael Lechner
           </p>
           <p class="mb-2">
-            Veröffentlicht als Open-Source-Software unter der <strong>MIT-Lizenz mit Namensnennung</strong>
-            (MIT with Attribution). Der Quellcode darf frei genutzt, verändert und weitergegeben werden —
-            auch kommerziell. Produkte, die ihn verwenden, müssen den Autor „Michael Lechner“ sichtbar
-            nennen (z.&nbsp;B. in der Dokumentation oder einem Info-Dialog). Eine kommerzielle Lizenz
-            ohne Namensnennung ist auf Anfrage erhältlich.
+            {$t('licenseA')} <strong>{$t('licenseName')}</strong>
+            {$t('licenseB')}
           </p>
           <div class="font-monospace p-2 bg-body-secondary rounded border small">
-            Lizenz: MIT with Attribution (siehe unten)<br />
+            {$t('licenseLine')}<br />
             Git Repository: <a href="https://github.com/hmsoft0815/mlc_barcode" target="_blank" rel="noreferrer" class="text-decoration-none">https://github.com/hmsoft0815/mlc_barcode</a>
           </div>
           <details class="mt-2">
-            <summary class="small text-primary" style="cursor: pointer;">Lizenztext anzeigen</summary>
+            <summary class="small text-primary" style="cursor: pointer;">{$t('showLicense')}</summary>
             <pre class="license-text bg-body-secondary border rounded p-2 mt-2 mb-0">{licenseText}</pre>
           </details>
           <details class="mt-2">
-            <summary class="small text-primary" style="cursor: pointer;">Drittlizenzen anzeigen (ZXing, boombuler/barcode, gozxing)</summary>
+            <summary class="small text-primary" style="cursor: pointer;">{$t('showThirdParty')}</summary>
             <pre class="license-text bg-body-secondary border rounded p-2 mt-2 mb-0">{thirdPartyText}</pre>
           </details>
         </div>
         <div class="col-md-5 border-start-md ps-md-3">
-          <h6 class="fw-semibold text-body small mb-2">Verwendete Open-Source Bibliotheken:</h6>
+          <h6 class="fw-semibold text-body small mb-2">{$t('libsTitle')}</h6>
           <ul class="list-unstyled mb-0" style="font-size: 0.82rem;">
             <li class="mb-1">
-              <i class="bi bi-box-seam me-1 text-primary"></i> <strong>Wails v3</strong> (MIT) — Desktop App Framework
+              <i class="bi bi-box-seam me-1 text-primary"></i> <strong>Wails v3</strong> (MIT) — {$t('libWails')}
             </li>
             <li class="mb-1">
-              <i class="bi bi-box-seam me-1 text-primary"></i> <strong>Svelte 5</strong> (MIT) — Reactive UI Framework
+              <i class="bi bi-box-seam me-1 text-primary"></i> <strong>Svelte 5</strong> (MIT) — {$t('libSvelte')}
             </li>
             <li class="mb-1">
-              <i class="bi bi-box-seam me-1 text-primary"></i> <strong>boombuler/barcode</strong> (MIT) — Barcode Engine
+              <i class="bi bi-box-seam me-1 text-primary"></i> <strong>boombuler/barcode</strong> (MIT) — {$t('libBoombuler')}
             </li>
             <li class="mb-1">
-              <i class="bi bi-box-seam me-1 text-primary"></i> <strong>gozxing</strong> (MIT) — Barcodes lesen
+              <i class="bi bi-box-seam me-1 text-primary"></i> <strong>gozxing</strong> (MIT) — {$t('libGozxing')}
             </li>
             <li class="mb-1">
-              <i class="bi bi-box-seam me-1 text-primary"></i> <strong>ZXing PDF417-Reader</strong> (Apache-2.0) — nach Go portiert
+              <i class="bi bi-box-seam me-1 text-primary"></i> <strong>ZXing PDF417-Reader</strong> (Apache-2.0) — {$t('libPdf417')}
             </li>
             <li class="mb-1">
-              <i class="bi bi-box-seam me-1 text-primary"></i> <strong>MCP Go-SDK</strong> (Apache-2.0 / MIT) — Model Context Protocol
+              <i class="bi bi-box-seam me-1 text-primary"></i> <strong>MCP Go-SDK</strong> (Apache-2.0 / MIT) — {$t('libMcp')}
             </li>
             <li>
-              <i class="bi bi-box-seam me-1 text-primary"></i> <strong>Bootstrap 5.3 &amp; Bootstrap Icons</strong> (MIT) — UI Styling & Icons
+              <i class="bi bi-box-seam me-1 text-primary"></i> <strong>Bootstrap 5.3 &amp; Bootstrap Icons</strong> (MIT) — {$t('libBootstrap')}
             </li>
             <li class="mt-1">
-              <i class="bi bi-box-seam me-1 text-primary"></i> <strong>Inter</strong> (SIL OFL 1.1) — Schrift der Oberfläche
+              <i class="bi bi-box-seam me-1 text-primary"></i> <strong>Inter</strong> (SIL OFL 1.1) — {$t('libInter')}
             </li>
             <li class="mt-1">
-              <i class="bi bi-box-seam me-1 text-primary"></i> <strong>golang.org/x/image &amp; Go-Schriften</strong> (BSD-3-Clause) — Beschriftung im PNG
+              <i class="bi bi-box-seam me-1 text-primary"></i> <strong>{$t('libGoImageName')}</strong> (BSD-3-Clause) — {$t('libGoImage')}
             </li>
           </ul>
         </div>

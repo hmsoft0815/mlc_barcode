@@ -4,7 +4,11 @@
   import type { DecodeImageResult } from '../../../bindings/github.com/mlcmcp/mlc_barcode/internal/gui/models';
   import { BARCODE_TYPES } from '../types';
   import { formatError } from '../i18n/errors';
-  import { KIND_LABELS, fieldLabel, formatFieldValue, isCheckKey, sortedFieldKeys } from '../i18n/fields';
+  import { kindLabel } from '../i18n/fields';
+  import { lang } from '../i18n/lang';
+  import { t } from '../i18n/text/checker';
+  import CodeDetails from './CodeDetails.svelte';
+  import { CameraScanner, cameraErrorText, cameraSupported, grab, insetGuide, FRAME_MAX_SIDE, type ScanHit } from '../scan/camera';
 
   // Tabs stay mounted; paste (Ctrl+V) is only taken while this one is shown.
   export let active = false;
@@ -18,29 +22,13 @@
 
   // Camera: live preview, frames go to the same decoder as files. The first
   // frame with a code stops the camera and stays as the checked image.
-  const cameraSupported = typeof navigator !== 'undefined' && !!navigator.mediaDevices?.getUserMedia;
+  const GUIDE_INSET = 0.18; // matches .camera-frame
   let video: HTMLVideoElement;
-  let stream: MediaStream | null = null;
   let cameraOn = false;
   let cameraError = '';
-  let scanTimer: ReturnType<typeof setTimeout> | undefined;
-  let cameras: MediaDeviceInfo[] = [];
-  let facingUser = false; // front camera: preview is mirrored like a mirror
-  let scanTick = 0;
-  const SCAN_INTERVAL_MS = 300;
-  const FRAME_MAX_SIDE = 1600;
-  const GUIDE_INSET = 0.18; // matches .camera-frame
+  let scanner = new CameraScanner(onCameraHit, insetGuide(GUIDE_INSET));
 
-  // Copies a rectangle of an image or video frame into a JPEG data URL,
-  // at most FRAME_MAX_SIDE on the long side.
-  function grab(source: CanvasImageSource, r: { x: number; y: number; w: number; h: number }) {
-    const scale = Math.min(1, FRAME_MAX_SIDE / Math.max(r.w, r.h));
-    const canvas = document.createElement('canvas');
-    canvas.width = Math.max(1, Math.round(r.w * scale));
-    canvas.height = Math.max(1, Math.round(r.h * scale));
-    canvas.getContext('2d')!.drawImage(source, r.x, r.y, r.w, r.h, 0, 0, canvas.width, canvas.height);
-    return canvas.toDataURL('image/jpeg', 0.92);
-  }
+  $: if (!active && cameraOn) stopCamera();
 
   // Region selection on a still image: drag a rectangle, only that part is
   // decoded; the marks are shifted back onto the whole image.
@@ -94,7 +82,45 @@
     }
   }
 
-  $: if (!active && cameraOn) stopCamera();
+  async function startCamera() {
+    cameraError = '';
+    cropMode = false;
+    imageUrl = '';
+    result = null;
+    cameraOn = true;
+    await tick(); // the video element exists only after this render
+    try {
+      await scanner.start(video);
+      scanner = scanner; // cameras and facing are known now
+    } catch (e: any) {
+      cameraError = cameraErrorText(e, $lang);
+      cameraOn = false;
+    }
+  }
+
+  async function switchCamera() {
+    try {
+      await scanner.switchCamera();
+      scanner = scanner;
+    } catch (e: any) {
+      cameraError = cameraErrorText(e, $lang);
+      stopCamera();
+    }
+  }
+
+  function stopCamera() {
+    scanner.stop();
+    cameraOn = false;
+  }
+
+  function onCameraHit(hit: ScanHit) {
+    stopCamera();
+    imageUrl = hit.dataUrl;
+    fileName = hit.guide ? $t('cameraGuide') : $t('camera');
+    result = hit.result;
+  }
+
+  onDestroy(stopCamera);
 
   const typeName = (id: string) => BARCODE_TYPES.find((t) => t.id === id)?.name ?? id.toUpperCase();
 
@@ -113,85 +139,6 @@
       busy = false;
     }
   }
-
-  async function startCamera(deviceId?: string) {
-    cameraError = '';
-    try {
-      stream = await navigator.mediaDevices.getUserMedia({
-        video: {
-          ...(deviceId ? { deviceId: { exact: deviceId } } : { facingMode: { ideal: 'environment' } }),
-          width: { ideal: 1920 },
-          height: { ideal: 1080 },
-        },
-        audio: false,
-      });
-      // Labels and the full list are only available once access was granted.
-      cameras = (await navigator.mediaDevices.enumerateDevices()).filter((d) => d.kind === 'videoinput');
-      facingUser = stream.getVideoTracks()[0]?.getSettings().facingMode === 'user';
-    } catch (e: any) {
-      cameraError =
-        e?.name === 'NotAllowedError' ? 'Der Zugriff auf die Kamera wurde nicht erlaubt.'
-        : e?.name === 'NotFoundError' || e?.name === 'OverconstrainedError' ? 'Keine Kamera gefunden.'
-        : e?.name === 'NotReadableError' ? 'Die Kamera wird gerade von einem anderen Programm verwendet.'
-        : `Kamera nicht verfügbar (${e?.name ?? e}).`;
-      return;
-    }
-    cameraOn = true;
-    cropMode = false;
-    imageUrl = '';
-    result = null;
-    await tick(); // the video element exists only after this render
-    if (!video || !stream) return;
-    video.srcObject = stream;
-    video.play().catch(() => {});
-    scanTimer = setTimeout(scanFrame, SCAN_INTERVAL_MS);
-  }
-
-  async function switchCamera() {
-    const current = stream?.getVideoTracks()[0]?.getSettings().deviceId;
-    const i = cameras.findIndex((c) => c.deviceId === current);
-    const next = cameras[(i + 1) % cameras.length];
-    stopCamera();
-    await startCamera(next?.deviceId);
-  }
-
-  function stopCamera() {
-    clearTimeout(scanTimer);
-    stream?.getTracks().forEach((t) => t.stop());
-    stream = null;
-    cameraOn = false;
-    if (video) video.srcObject = null;
-  }
-
-  // One frame at a time: the next is taken only after the decoder answered,
-  // so a slow device never builds up a queue.
-  async function scanFrame() {
-    if (!cameraOn || !video) return;
-    const w = video.videoWidth, h = video.videoHeight;
-    if (w > 0 && h > 0) {
-      // Every other frame only the area inside the guide frame, at full
-      // camera resolution: small codes (DataMatrix on a pack) get more
-      // pixels there than in the downscaled whole frame.
-      const guide = scanTick++ % 2 === 0;
-      const src = guide ? { x: w * GUIDE_INSET, y: h * GUIDE_INSET, w: w * (1 - 2 * GUIDE_INSET), h: h * (1 - 2 * GUIDE_INSET) } : { x: 0, y: 0, w, h };
-      const dataUrl = grab(video, src);
-      try {
-        const r = await DecodeImage(dataUrl);
-        if (cameraOn && r.success && (r.codes?.length ?? 0) > 0) {
-          stopCamera();
-          imageUrl = dataUrl;
-          fileName = guide ? 'Kamera (Zielrahmen)' : 'Kamera';
-          result = r;
-          return;
-        }
-      } catch {
-        // A single bad frame is no reason to stop scanning.
-      }
-    }
-    if (cameraOn) scanTimer = setTimeout(scanFrame, SCAN_INTERVAL_MS);
-  }
-
-  onDestroy(stopCamera);
 
   function readFile(file: File | null | undefined) {
     if (!file) return;
@@ -248,14 +195,14 @@
       <div class="card shadow-sm border h-100">
         <div class="card-header bg-body border-bottom py-2">
           <h6 class="mb-0 fw-semibold text-body">
-            <i class="bi bi-qr-code-scan me-1 text-primary"></i> Barcode prüfen
+            <i class="bi bi-qr-code-scan me-1 text-primary"></i> {$t('title')}
           </h6>
         </div>
         <div class="card-body">
           <div
             class="drop-zone rounded border p-3 text-center {dragOver ? 'drag-over' : ''}"
             role="region"
-            aria-label="Bild ablegen"
+            aria-label={$t('dropLabel')}
             on:dragover|preventDefault={() => (dragOver = true)}
             on:dragleave={() => (dragOver = false)}
             on:drop={onDrop}
@@ -263,11 +210,11 @@
             {#if cameraOn}
               <div class="camera">
                 <!-- svelte-ignore a11y-media-has-caption -->
-                <video bind:this={video} class:mirrored={facingUser} autoplay playsinline muted></video>
+                <video bind:this={video} class:mirrored={scanner.facingUser} autoplay playsinline muted disablepictureinpicture></video>
                 <div class="camera-frame" aria-hidden="true"></div>
               </div>
               <div class="small text-body-secondary mt-2">
-                <span class="spinner-grow spinner-grow-sm text-primary me-1"></span> Code ins Bild halten …
+                <span class="spinner-grow spinner-grow-sm text-primary me-1"></span> {$t('holdInImage')}
               </div>
             {:else if imageUrl}
               <div class="preview" class:cropping={cropMode}>
@@ -302,17 +249,17 @@
                 {/if}
               </div>
               <div class="small text-body-secondary mt-2 text-truncate">
-                {cropMode ? 'Rahmen um den Code ziehen …' : fileName}
+                {cropMode ? $t('dragFrame') : fileName}
               </div>
             {:else}
               <i class="bi bi-image fs-1 d-block mb-2 opacity-50"></i>
-              <p class="mb-1 text-body">Bild hierher ziehen, auswählen oder mit <kbd>Strg</kbd>+<kbd>V</kbd> einfügen</p>
-              <p class="small text-body-secondary mb-0">PNG, JPEG, GIF oder WebP · Fotos, Scans, Screenshots</p>
+              <p class="mb-1 text-body">{$t('dropHint', { key: $t('pasteKey') })}</p>
+              <p class="small text-body-secondary mb-0">{$t('formats')}</p>
             {/if}
           </div>
           <div class="d-flex flex-wrap gap-2 mt-3">
             <label class="btn btn-outline-primary btn-sm mb-0">
-              <i class="bi bi-folder2-open me-1"></i> Bild auswählen …
+              <i class="bi bi-folder2-open me-1"></i> {$t('pickImage')}
               <input
                 type="file"
                 accept="image/png,image/jpeg,image/gif,image/webp"
@@ -322,17 +269,17 @@
             </label>
             {#if cameraSupported}
               {#if cameraOn}
-                {#if cameras.length > 1}
+                {#if scanner.cameras.length > 1}
                   <button type="button" class="btn btn-outline-primary btn-sm" on:click={switchCamera}>
-                    <i class="bi bi-arrow-repeat me-1"></i> Kamera wechseln
+                    <i class="bi bi-arrow-repeat me-1"></i> {$t('switchCamera')}
                   </button>
                 {/if}
                 <button type="button" class="btn btn-outline-secondary btn-sm" on:click={stopCamera}>
-                  <i class="bi bi-camera-video-off me-1"></i> Kamera beenden
+                  <i class="bi bi-camera-video-off me-1"></i> {$t('stopCamera')}
                 </button>
               {:else}
-                <button type="button" class="btn btn-outline-primary btn-sm" on:click={() => startCamera()}>
-                  <i class="bi bi-camera me-1"></i> Mit Kamera scannen
+                <button type="button" class="btn btn-outline-primary btn-sm" on:click={startCamera}>
+                  <i class="bi bi-camera me-1"></i> {$t('scanWithCamera')}
                 </button>
               {/if}
             {/if}
@@ -342,7 +289,7 @@
                 class="btn btn-sm {cropMode ? 'btn-primary' : 'btn-outline-primary'}"
                 on:click={() => ((cropMode = !cropMode), (sel = null))}
               >
-                <i class="bi bi-crop me-1"></i> {cropMode ? 'Auswahl abbrechen' : 'Ausschnitt wählen'}
+                <i class="bi bi-crop me-1"></i> {cropMode ? $t('cancelSelection') : $t('selectRegion')}
               </button>
             {/if}
           </div>
@@ -360,20 +307,20 @@
       <div class="card shadow-sm border h-100">
         <div class="card-header bg-body border-bottom py-2 d-flex justify-content-between align-items-center">
           <h6 class="mb-0 fw-semibold text-body">
-            <i class="bi bi-list-check me-1 text-primary"></i> Ergebnis
+            <i class="bi bi-list-check me-1 text-primary"></i> {$t('result')}
           </h6>
           {#if busy}
             <span class="badge bg-primary-subtle text-primary small">
-              <span class="spinner-border spinner-border-sm me-1"></span> Lese …
+              <span class="spinner-border spinner-border-sm me-1"></span> {$t('reading')}
             </span>
           {:else if result?.success}
-            <span class="badge bg-success-subtle text-success small">{result.codes?.length ?? 0} Code{result.codes?.length === 1 ? '' : 's'} gefunden</span>
+            <span class="badge bg-success-subtle text-success small">{result.codes?.length === 1 ? $t('foundOne') : $t('foundMany', { n: result.codes?.length ?? 0 })}</span>
           {/if}
         </div>
         <div class="card-body">
           {#if result && !result.success}
             <div class="alert alert-warning mb-0">
-              <i class="bi bi-exclamation-triangle me-1"></i> {formatError(result)}
+              <i class="bi bi-exclamation-triangle me-1"></i> {formatError(result, $lang)}
             </div>
           {:else if result?.success}
             {#each result.codes ?? [] as code, i}
@@ -383,42 +330,19 @@
                     <span class="badge bg-primary me-1">{i + 1}</span>
                     <span class="fw-semibold text-body">{typeName(code.type)}</span>
                     {#if code.content}
-                      <span class="badge bg-info-subtle text-info-emphasis ms-1">{KIND_LABELS[code.content.kind] ?? code.content.kind}</span>
+                      <span class="badge bg-info-subtle text-info-emphasis ms-1">{kindLabel(code.content.kind, $lang)}</span>
                     {/if}
                   </div>
                   <button type="button" class="btn btn-sm btn-outline-secondary" on:click={() => copyText(code.text, i)}>
-                    <i class="bi {copied === i ? 'bi-check2' : 'bi-clipboard'} me-1"></i>{copied === i ? 'Kopiert' : 'Inhalt kopieren'}
+                    <i class="bi {copied === i ? 'bi-check2' : 'bi-clipboard'} me-1"></i>{copied === i ? $t('copied') : $t('copyContent')}
                   </button>
                 </div>
-                {#if code.content?.fields}
-                  <table class="table table-sm mb-2">
-                    <tbody>
-                      {#each sortedFieldKeys(code.content.fields) as key}
-                        <tr>
-                          <th class="text-body-secondary fw-normal small" style="width: 40%">{fieldLabel(key)}</th>
-                          <td
-                            class="small {(isCheckKey(key) && code.content.fields[key] === 'false') || (key === 'expiry' && formatFieldValue(key, code.content.fields[key]).endsWith('abgelaufen'))
-                              ? 'text-danger fw-semibold'
-                              : ''}"
-                          >
-                            <span class="value">{formatFieldValue(key, code.content.fields[key])}</span>
-                          </td>
-                        </tr>
-                      {/each}
-                    </tbody>
-                  </table>
-                {/if}
-                <details open={!code.content}>
-                  <summary class="small text-body-secondary">Rohinhalt</summary>
-                  <pre class="raw bg-body-secondary border rounded p-2 mt-1 mb-0">{code.text}</pre>
-                </details>
+                <CodeDetails {code} lang={$lang} />
               </div>
             {/each}
           {:else if !busy}
             <p class="text-body-secondary small mb-0">
-              Liest QR, DataMatrix, Aztec, PDF417, EAN-13/8, UPC-A, Code 128, Code 39 und ITF – auch mehrere Codes pro Bild.
-              Bekannte Inhalte wie GiroCode, Visitenkarte, WLAN oder Termin werden in ihre Felder zerlegt;
-              beim GiroCode wird die IBAN-Prüfsumme kontrolliert, bei Arzneimittel-Codes (securPharm) PZN, Charge, Verfall und Seriennummer angezeigt.
+              {$t('intro')}
             </p>
           {/if}
         </div>
@@ -509,16 +433,5 @@
   .mark-label {
     fill: var(--bs-primary);
     font-weight: 700;
-  }
-  .raw {
-    white-space: pre-wrap;
-    word-break: break-all;
-    font-size: 0.75rem;
-    max-height: 12rem;
-    overflow-y: auto;
-  }
-  .value {
-    white-space: pre-wrap;
-    word-break: break-word;
   }
 </style>

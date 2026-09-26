@@ -2,6 +2,9 @@
   import { onMount } from 'svelte';
   import { BARCODE_TYPES, type BarcodeType } from '../types';
   import { formatError } from '../i18n/errors';
+  import { lang } from '../i18n/lang';
+  import { t, type SingleKey } from '../i18n/text/single';
+  import { typeText, typeDescKey } from '../i18n/text/types';
   import {
     GenerateBarcode,
     FormatWifi,
@@ -36,7 +39,7 @@
   let epcIBAN = 'DE89370400440532013000';
   let epcBIC = '';
   let epcAmount: number | string = 19.99;
-  let epcRef = 'Rechnung-1002';
+  let epcRef = $t('sampleEpcRef');
 
   // Structured QR inputs: WIFI
   let wifiSSID = '';
@@ -65,22 +68,22 @@
   let cryptoCoin = 'bitcoin';
   let cryptoAddress = '1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa';
   let cryptoAmount: number | string = 0.005;
-  let cryptoMessage = 'Spende';
+  let cryptoMessage = $t('sampleCryptoMessage');
 
   // Structured QR inputs: Geo
   let geoLat = 52.5200;
   let geoLon = 13.4050;
-  let geoQuery = 'Berlin Fernsehturm';
+  let geoQuery = $t('sampleGeoQuery');
 
   // Structured QR inputs: Tel & SMS
   let telNumber = '+49 170 1234567';
   let smsNumber = '+49 170 1234567';
-  let smsMessage = 'Hallo, ich interessiere mich für MLC Barcode!';
+  let smsMessage = $t('sampleSms');
 
   // Structured QR inputs: Email
   let mailTo = 'support@mlcgo.eu';
-  let mailSubject = 'Anfrage Barcode Software';
-  let mailBody = 'Guten Tag,\n\nich habe eine Frage zum Produkt.';
+  let mailSubject = $t('sampleMailSubject');
+  let mailBody = $t('sampleMailBody');
 
   // Styling options
   let fgColor = '#000000';
@@ -94,19 +97,19 @@
 
   // Preset Color Palettes
   const PRESET_BG_COLORS = [
-    { label: 'Weiß', value: '#ffffff' },
-    { label: 'Gelb', value: '#fff59d' },
-    { label: 'Hellblau', value: '#e1f5fe' },
-    { label: 'Hellgrün', value: '#e8f5e9' },
-    { label: 'Hellgrau', value: '#f8f9fa' }
-  ];
+    { label: 'colorWhite', value: '#ffffff' },
+    { label: 'colorYellow', value: '#fff59d' },
+    { label: 'colorLightBlue', value: '#e1f5fe' },
+    { label: 'colorLightGreen', value: '#e8f5e9' },
+    { label: 'colorLightGray', value: '#f8f9fa' }
+  ] satisfies { label: SingleKey; value: string }[];
 
   const PRESET_FG_COLORS = [
-    { label: 'Schwarz', value: '#000000' },
-    { label: 'Dunkelblau', value: '#0d47a1' },
-    { label: 'Dunkelrot', value: '#b71c1c' },
-    { label: 'Dunkelgrün', value: '#1b5e20' }
-  ];
+    { label: 'colorBlack', value: '#000000' },
+    { label: 'colorDarkBlue', value: '#0d47a1' },
+    { label: 'colorDarkRed', value: '#b71c1c' },
+    { label: 'colorDarkGreen', value: '#1b5e20' }
+  ] satisfies { label: SingleKey; value: string }[];
 
   function setBgColor(color: string) {
     bgColor = color;
@@ -157,7 +160,10 @@
         purpose: ''
       });
       if (!customLabelTouched) {
-        customLabelText = numAmount > 0 ? `Überweisung: ${numAmount.toFixed(2)} € an ${epcName}` : `GiroCode: ${epcName}`;
+        customLabelText =
+          numAmount > 0
+            ? $t('captionTransfer', { amount: numAmount.toFixed(2), name: epcName })
+            : $t('captionGiro', { name: epcName });
       }
     } else if (qrMode === 'crypto') {
       if (!cryptoAddress) return;
@@ -206,7 +212,7 @@
         body: mailBody
       });
       if (!customLabelTouched) {
-        customLabelText = `E-Mail: ${mailTo}`;
+        customLabelText = $t('captionEmail', { to: mailTo });
       }
     } else if (qrMode === 'wifi') {
       if (!wifiSSID) return;
@@ -217,7 +223,7 @@
         hidden: wifiHidden
       });
       if (!customLabelTouched) {
-        customLabelText = wifiSSID ? `WLAN: ${wifiSSID}` : '';
+        customLabelText = wifiSSID ? $t('captionWifi', { ssid: wifiSSID }) : '';
       }
     } else if (qrMode === 'vcard') {
       if (!vcardFirst && !vcardLast) return;
@@ -340,7 +346,7 @@
         type: selectedType,
         data: rawData,
         success: false,
-        error: e?.message || 'Unbekannter Fehler bei der Generierung'
+        error: e?.message || $t('generateError')
       };
     } finally {
       isGenerating = false;
@@ -362,7 +368,7 @@
 
   function handleTypeChange(newType: BarcodeType) {
     selectedType = newType;
-    const opt = BARCODE_TYPES.find((t) => t.id === newType);
+    const opt = BARCODE_TYPES.find((b) => b.id === newType);
     if (opt && rawData === 'https://mlcgo.eu' && newType !== 'qr') {
       rawData = opt.sample;
     }
@@ -373,10 +379,10 @@
     if (!result?.svg) return;
     const ok = await CopyToClipboard(result.svg);
     if (ok) {
-      showFeedback('SVG erfolgreich in Zwischenablage kopiert!');
+      showFeedback($t('svgCopiedNative'));
     } else {
       await navigator.clipboard.writeText(result.svg);
-      showFeedback('SVG in Zwischenablage kopiert!');
+      showFeedback($t('svgCopied'));
     }
   }
 
@@ -388,9 +394,9 @@
       await navigator.clipboard.write([
         new ClipboardItem({ 'image/png': blob })
       ]);
-      showFeedback('PNG-Grafik in Zwischenablage kopiert!');
+      showFeedback($t('pngCopied'));
     } catch (err) {
-      showFeedback('Kopieren als Bild fehlgeschlagen', 'danger');
+      showFeedback($t('pngCopyFailed'), 'danger');
     }
   }
 
@@ -403,10 +409,10 @@
         content: result.svg
       });
       if (savedPath) {
-        showFeedback(`Gespeichert unter: ${savedPath}`);
+        showFeedback($t('savedTo', { path: savedPath }));
       }
     } catch (e: any) {
-      showFeedback(`Fehler beim Speichern: ${e?.message}`, 'danger');
+      showFeedback($t('saveError', { msg: e?.message ?? '' }), 'danger');
     }
   }
 
@@ -419,10 +425,10 @@
         content: result.pngData
       });
       if (savedPath) {
-        showFeedback(`Gespeichert unter: ${savedPath}`);
+        showFeedback($t('savedTo', { path: savedPath }));
       }
     } catch (e: any) {
-      showFeedback(`Fehler beim Speichern: ${e?.message}`, 'danger');
+      showFeedback($t('saveError', { msg: e?.message ?? '' }), 'danger');
     }
   }
 
@@ -434,6 +440,16 @@
         type: selectedType
       });
     }
+  }
+
+  // Type descriptions in the current language.
+  $: typeDesc = (id: string) => $typeText(typeDescKey(id));
+
+  // A language switch rewords the default caption of a structured code.
+  let captionLang = $lang;
+  $: if ($lang !== captionLang) {
+    captionLang = $lang;
+    if (qrMode !== 'text' && !customLabelTouched) updateStructuredQR();
   }
 
   onMount(() => {
@@ -455,34 +471,34 @@
       <div class="card shadow-sm border mb-3">
         <div class="card-header bg-body border-bottom py-2">
           <h6 class="mb-0 fw-semibold text-body">
-            <i class="bi bi-sliders me-1 text-primary"></i> Barcode-Inhalt & Format
+            <i class="bi bi-sliders me-1 text-primary"></i> {$t('contentHeading')}
           </h6>
         </div>
         <div class="card-body">
           <!-- Inhaltsformat / Typ-Modus Switcher -->
           <div class="mb-3">
-            <span class="form-label fw-medium small text-body-secondary d-block mb-1">Inhaltstyp / Vorlage</span>
+            <span class="form-label fw-medium small text-body-secondary d-block mb-1">{$t('contentType')}</span>
             <div class="d-flex flex-wrap gap-1 bg-body-secondary p-1 rounded">
               <button
                 class="btn btn-sm {qrMode === 'text' ? 'btn-primary' : 'btn-light border-0'} py-1 px-2"
                 type="button"
                 on:click={() => handleModeChange('text')}
               >
-                <i class="bi bi-fonts"></i> Freitext/URL
+                <i class="bi bi-fonts"></i> {$t('modeText')}
               </button>
               <button
                 class="btn btn-sm {qrMode === 'epc' ? 'btn-primary' : 'btn-light border-0'} py-1 px-2"
                 type="button"
                 on:click={() => handleModeChange('epc')}
               >
-                <i class="bi bi-bank"></i> GiroCode / SEPA
+                <i class="bi bi-bank"></i> {$t('modeEpc')}
               </button>
               <button
                 class="btn btn-sm {qrMode === 'wifi' ? 'btn-primary' : 'btn-light border-0'} py-1 px-2"
                 type="button"
                 on:click={() => handleModeChange('wifi')}
               >
-                <i class="bi bi-wifi"></i> WLAN
+                <i class="bi bi-wifi"></i> {$t('modeWifi')}
               </button>
               <button
                 class="btn btn-sm {qrMode === 'vcard' ? 'btn-primary' : 'btn-light border-0'} py-1 px-2"
@@ -496,14 +512,14 @@
                 type="button"
                 on:click={() => handleModeChange('event')}
               >
-                <i class="bi bi-calendar-event"></i> Termin
+                <i class="bi bi-calendar-event"></i> {$t('modeEvent')}
               </button>
               <button
                 class="btn btn-sm {qrMode === 'crypto' ? 'btn-primary' : 'btn-light border-0'} py-1 px-2"
                 type="button"
                 on:click={() => handleModeChange('crypto')}
               >
-                <i class="bi bi-currency-bitcoin"></i> Krypto
+                <i class="bi bi-currency-bitcoin"></i> {$t('modeCrypto')}
               </button>
               <button
                 class="btn btn-sm {qrMode === 'geo' ? 'btn-primary' : 'btn-light border-0'} py-1 px-2"
@@ -517,7 +533,7 @@
                 type="button"
                 on:click={() => handleModeChange('tel')}
               >
-                <i class="bi bi-telephone"></i> Telefon
+                <i class="bi bi-telephone"></i> {$t('modeTel')}
               </button>
               <button
                 class="btn btn-sm {qrMode === 'sms' ? 'btn-primary' : 'btn-light border-0'} py-1 px-2"
@@ -531,7 +547,7 @@
                 type="button"
                 on:click={() => handleModeChange('email')}
               >
-                <i class="bi bi-envelope"></i> E-Mail
+                <i class="bi bi-envelope"></i> {$t('email')}
               </button>
             </div>
           </div>
@@ -539,9 +555,9 @@
           <!-- Symbology Selection -->
           <div class="mb-3">
             <div class="d-flex justify-content-between align-items-center mb-1">
-              <label for="singleTypeSelect" class="form-label fw-medium small text-body-secondary mb-0">Symbologie</label>
+              <label for="singleTypeSelect" class="form-label fw-medium small text-body-secondary mb-0">{$t('symbology')}</label>
               {#if qrMode !== 'text'}
-                <span class="badge bg-info-subtle text-info-emphasis small">2D Matrix empfohlen</span>
+                <span class="badge bg-info-subtle text-info-emphasis small">{$t('matrixRecommended')}</span>
               {/if}
             </div>
             <select
@@ -550,21 +566,21 @@
               value={selectedType}
               on:change={(e) => handleTypeChange(e.currentTarget.value as BarcodeType)}
             >
-              <optgroup label="2D Matrix (Mehrzeilig / Große Datenmengen)">
+              <optgroup label={$t('group2dMatrix')}>
                 <!-- Structured payloads (vCard, Wi-Fi, …) are read reliably by phones only as QR or DataMatrix. -->
-                {#each BARCODE_TYPES.filter((t) => t.category === '2D Matrix' && (qrMode === 'text' || t.id === 'qr' || t.id === 'datamatrix')) as t}
-                  <option value={t.id}>{t.name} ({t.description})</option>
+                {#each BARCODE_TYPES.filter((b) => b.category === '2D Matrix' && (qrMode === 'text' || b.id === 'qr' || b.id === 'datamatrix')) as bt}
+                  <option value={bt.id}>{bt.name} ({typeDesc(bt.id)})</option>
                 {/each}
               </optgroup>
               {#if qrMode === 'text'}
-                <optgroup label="2D gestapelt (Tickets, Bordkarten, Etiketten)">
-                  {#each BARCODE_TYPES.filter((t) => t.category === '2D Stacked') as t}
-                    <option value={t.id}>{t.name} - {t.description}</option>
+                <optgroup label={$t('group2dStacked')}>
+                  {#each BARCODE_TYPES.filter((b) => b.category === '2D Stacked') as bt}
+                    <option value={bt.id}>{bt.name} - {typeDesc(bt.id)}</option>
                   {/each}
                 </optgroup>
-                <optgroup label="1D Linear (Einzelhandels- & Industrie-Codes)">
-                  {#each BARCODE_TYPES.filter((t) => t.category === '1D Linear') as t}
-                    <option value={t.id}>{t.name} - {t.description}</option>
+                <optgroup label={$t('group1dLinear')}>
+                  {#each BARCODE_TYPES.filter((b) => b.category === '1D Linear') as bt}
+                    <option value={bt.id}>{bt.name} - {typeDesc(bt.id)}</option>
                   {/each}
                 </optgroup>
               {/if}
@@ -577,22 +593,22 @@
             <div class="p-3 bg-body-secondary rounded mb-3 border">
               <div class="d-flex align-items-center mb-2">
                 <i class="bi bi-bank text-primary me-2"></i>
-                <span class="fw-medium small">GiroCode / SEPA-Überweisung (EPC-QR)</span>
+                <span class="fw-medium small">{$t('epcTitle')}</span>
               </div>
               <div class="row g-2 mb-2">
                 <div class="col-7">
-                  <label for="epcNameInput" class="form-label small mb-1 fw-medium">Empfängername</label>
+                  <label for="epcNameInput" class="form-label small mb-1 fw-medium">{$t('epcName')}</label>
                   <input
                     id="epcNameInput"
                     type="text"
                     class="form-control form-control-sm"
-                    placeholder="z.B. Mustermann GmbH"
+                    placeholder={$t('epcNamePh')}
                     bind:value={epcName}
                     on:input={updateStructuredQR}
                   />
                 </div>
                 <div class="col-5">
-                  <label for="epcAmountInput" class="form-label small mb-1 fw-medium">Betrag (€)</label>
+                  <label for="epcAmountInput" class="form-label small mb-1 fw-medium">{$t('epcAmount')}</label>
                   <input
                     id="epcAmountInput"
                     type="number"
@@ -629,12 +645,12 @@
                 </div>
               </div>
               <div>
-                <label for="epcRefInput" class="form-label small mb-1 fw-medium">Verwendungszweck</label>
+                <label for="epcRefInput" class="form-label small mb-1 fw-medium">{$t('epcRef')}</label>
                 <input
                   id="epcRefInput"
                   type="text"
                   class="form-control form-control-sm"
-                  placeholder="z.B. Rechnungsnummer 1002"
+                  placeholder={$t('epcRefPh')}
                   bind:value={epcRef}
                   on:input={updateStructuredQR}
                 />
@@ -645,11 +661,11 @@
             <div class="p-3 bg-body-secondary rounded mb-3 border">
               <div class="d-flex align-items-center mb-2">
                 <i class="bi bi-currency-bitcoin text-warning me-2"></i>
-                <span class="fw-medium small">Krypto Wallet & Zahlungsadresse</span>
+                <span class="fw-medium small">{$t('cryptoTitle')}</span>
               </div>
               <div class="row g-2 mb-2">
                 <div class="col-4">
-                  <label for="cryptoCoinSelect" class="form-label small mb-1 fw-medium">Kryptowährung</label>
+                  <label for="cryptoCoinSelect" class="form-label small mb-1 fw-medium">{$t('cryptoCoin')}</label>
                   <select
                     id="cryptoCoinSelect"
                     class="form-select form-select-sm"
@@ -664,12 +680,12 @@
                   </select>
                 </div>
                 <div class="col-8">
-                  <label for="cryptoAddressInput" class="form-label small mb-1 fw-medium">Wallet-Adresse</label>
+                  <label for="cryptoAddressInput" class="form-label small mb-1 fw-medium">{$t('cryptoAddress')}</label>
                   <input
                     id="cryptoAddressInput"
                     type="text"
                     class="form-control form-control-sm font-monospace"
-                    placeholder="Adresse einfügen"
+                    placeholder={$t('cryptoAddressPh')}
                     bind:value={cryptoAddress}
                     on:input={updateStructuredQR}
                   />
@@ -677,7 +693,7 @@
               </div>
               <div class="row g-2">
                 <div class="col-5">
-                  <label for="cryptoAmountInput" class="form-label small mb-1 fw-medium">Betrag (optional)</label>
+                  <label for="cryptoAmountInput" class="form-label small mb-1 fw-medium">{$t('cryptoAmount')}</label>
                   <input
                     id="cryptoAmountInput"
                     type="number"
@@ -689,12 +705,12 @@
                   />
                 </div>
                 <div class="col-7">
-                  <label for="cryptoMessageInput" class="form-label small mb-1 fw-medium">Nachricht / Verwendungszweck</label>
+                  <label for="cryptoMessageInput" class="form-label small mb-1 fw-medium">{$t('cryptoMessage')}</label>
                   <input
                     id="cryptoMessageInput"
                     type="text"
                     class="form-control form-control-sm"
-                    placeholder="z.B. Spende"
+                    placeholder={$t('cryptoMessagePh')}
                     bind:value={cryptoMessage}
                     on:input={updateStructuredQR}
                   />
@@ -706,11 +722,11 @@
             <div class="p-3 bg-body-secondary rounded mb-3 border">
               <div class="d-flex align-items-center mb-2">
                 <i class="bi bi-geo-alt text-danger me-2"></i>
-                <span class="fw-medium small">Geo-Koordinaten (Google Maps & Apple Maps)</span>
+                <span class="fw-medium small">{$t('geoTitle')}</span>
               </div>
               <div class="row g-2 mb-2">
                 <div class="col-6">
-                  <label for="geoLatInput" class="form-label small mb-1 fw-medium">Breitengrad (Latitude)</label>
+                  <label for="geoLatInput" class="form-label small mb-1 fw-medium">{$t('geoLat')}</label>
                   <input
                     id="geoLatInput"
                     type="number"
@@ -722,7 +738,7 @@
                   />
                 </div>
                 <div class="col-6">
-                  <label for="geoLonInput" class="form-label small mb-1 fw-medium">Längengrad (Longitude)</label>
+                  <label for="geoLonInput" class="form-label small mb-1 fw-medium">{$t('geoLon')}</label>
                   <input
                     id="geoLonInput"
                     type="number"
@@ -735,12 +751,12 @@
                 </div>
               </div>
               <div>
-                <label for="geoQueryInput" class="form-label small mb-1 fw-medium">Ortsname / Suchbegriff (optional)</label>
+                <label for="geoQueryInput" class="form-label small mb-1 fw-medium">{$t('geoQuery')}</label>
                 <input
                   id="geoQueryInput"
                   type="text"
                   class="form-control form-control-sm"
-                  placeholder="z.B. Berliner Fernsehturm"
+                  placeholder={$t('geoQueryPh')}
                   bind:value={geoQuery}
                   on:input={updateStructuredQR}
                 />
@@ -751,10 +767,10 @@
             <div class="p-3 bg-body-secondary rounded mb-3 border">
               <div class="d-flex align-items-center mb-2">
                 <i class="bi bi-telephone text-success me-2"></i>
-                <span class="fw-medium small">Telefonanruf (tel:)</span>
+                <span class="fw-medium small">{$t('telTitle')}</span>
               </div>
               <div>
-                <label for="telInput" class="form-label small mb-1 fw-medium">Telefonnummer</label>
+                <label for="telInput" class="form-label small mb-1 fw-medium">{$t('telNumber')}</label>
                 <input
                   id="telInput"
                   type="tel"
@@ -770,10 +786,10 @@
             <div class="p-3 bg-body-secondary rounded mb-3 border">
               <div class="d-flex align-items-center mb-2">
                 <i class="bi bi-chat-dots text-info me-2"></i>
-                <span class="fw-medium small">SMS-Nachricht (smsto:)</span>
+                <span class="fw-medium small">{$t('smsTitle')}</span>
               </div>
               <div class="mb-2">
-                <label for="smsNumberInput" class="form-label small mb-1 fw-medium">Empfängernummer</label>
+                <label for="smsNumberInput" class="form-label small mb-1 fw-medium">{$t('smsNumber')}</label>
                 <input
                   id="smsNumberInput"
                   type="tel"
@@ -784,12 +800,12 @@
                 />
               </div>
               <div>
-                <label for="smsMsgInput" class="form-label small mb-1 fw-medium">SMS-Text</label>
+                <label for="smsMsgInput" class="form-label small mb-1 fw-medium">{$t('smsText')}</label>
                 <input
                   id="smsMsgInput"
                   type="text"
                   class="form-control form-control-sm"
-                  placeholder="Vorgefertigte Nachricht..."
+                  placeholder={$t('smsTextPh')}
                   bind:value={smsMessage}
                   on:input={updateStructuredQR}
                 />
@@ -800,37 +816,37 @@
             <div class="p-3 bg-body-secondary rounded mb-3 border">
               <div class="d-flex align-items-center mb-2">
                 <i class="bi bi-envelope text-primary me-2"></i>
-                <span class="fw-medium small">E-Mail verfassen (mailto:)</span>
+                <span class="fw-medium small">{$t('mailTitle')}</span>
               </div>
               <div class="mb-2">
-                <label for="mailToInput" class="form-label small mb-1 fw-medium">Empfängeradresse</label>
+                <label for="mailToInput" class="form-label small mb-1 fw-medium">{$t('mailTo')}</label>
                 <input
                   id="mailToInput"
                   type="email"
                   class="form-control form-control-sm"
-                  placeholder="info@beispiel.de"
+                  placeholder={$t('mailToPh')}
                   bind:value={mailTo}
                   on:input={updateStructuredQR}
                 />
               </div>
               <div class="mb-2">
-                <label for="mailSubInput" class="form-label small mb-1 fw-medium">Betreffzeile</label>
+                <label for="mailSubInput" class="form-label small mb-1 fw-medium">{$t('mailSubject')}</label>
                 <input
                   id="mailSubInput"
                   type="text"
                   class="form-control form-control-sm"
-                  placeholder="Betreff eingeben"
+                  placeholder={$t('mailSubjectPh')}
                   bind:value={mailSubject}
                   on:input={updateStructuredQR}
                 />
               </div>
               <div>
-                <label for="mailBodyInput" class="form-label small mb-1 fw-medium">Nachrichtentext</label>
+                <label for="mailBodyInput" class="form-label small mb-1 fw-medium">{$t('mailBody')}</label>
                 <textarea
                   id="mailBodyInput"
                   rows="2"
                   class="form-control form-control-sm"
-                  placeholder="Mailtext..."
+                  placeholder={$t('mailBodyPh')}
                   bind:value={mailBody}
                   on:input={updateStructuredQR}
                 ></textarea>
@@ -841,18 +857,18 @@
             <div class="p-3 bg-body-secondary rounded mb-3 border">
               <div class="row g-2 mb-2">
                 <div class="col-8">
-                  <label for="wifiSsidInput" class="form-label small mb-1 fw-medium">WLAN-Name (SSID)</label>
+                  <label for="wifiSsidInput" class="form-label small mb-1 fw-medium">{$t('wifiSsid')}</label>
                   <input
                     id="wifiSsidInput"
                     type="text"
                     class="form-control form-control-sm"
-                    placeholder="z.B. MeinWLAN"
+                    placeholder={$t('wifiSsidPh')}
                     bind:value={wifiSSID}
                     on:input={updateStructuredQR}
                   />
                 </div>
                 <div class="col-4">
-                  <label for="wifiEncSelect" class="form-label small mb-1 fw-medium">Verschlüsselung</label>
+                  <label for="wifiEncSelect" class="form-label small mb-1 fw-medium">{$t('wifiEnc')}</label>
                   <select
                     id="wifiEncSelect"
                     class="form-select form-select-sm"
@@ -861,18 +877,18 @@
                   >
                     <option value="WPA">WPA / WPA2 / WPA3</option>
                     <option value="WEP">WEP</option>
-                    <option value="nopass">Offen (Kein Passwort)</option>
+                    <option value="nopass">{$t('wifiOpen')}</option>
                   </select>
                 </div>
               </div>
               {#if wifiEnc !== 'nopass'}
                 <div class="mb-2">
-                  <label for="wifiPassInput" class="form-label small mb-1 fw-medium">WLAN-Passwort</label>
+                  <label for="wifiPassInput" class="form-label small mb-1 fw-medium">{$t('wifiPass')}</label>
                   <input
                     id="wifiPassInput"
                     type="password"
                     class="form-control form-control-sm font-monospace"
-                    placeholder="Passwort eingeben"
+                    placeholder={$t('wifiPassPh')}
                     bind:value={wifiPass}
                     on:input={updateStructuredQR}
                   />
@@ -884,23 +900,23 @@
             <div class="p-3 bg-body-secondary rounded mb-3 border">
               <div class="row g-2 mb-2">
                 <div class="col-6">
-                  <label for="vcardFirstInput" class="form-label small mb-1 fw-medium">Vorname</label>
+                  <label for="vcardFirstInput" class="form-label small mb-1 fw-medium">{$t('vcardFirst')}</label>
                   <input
                     id="vcardFirstInput"
                     type="text"
                     class="form-control form-control-sm"
-                    placeholder="Max"
+                    placeholder={$t('vcardFirstPh')}
                     bind:value={vcardFirst}
                     on:input={updateStructuredQR}
                   />
                 </div>
                 <div class="col-6">
-                  <label for="vcardLastInput" class="form-label small mb-1 fw-medium">Nachname</label>
+                  <label for="vcardLastInput" class="form-label small mb-1 fw-medium">{$t('vcardLast')}</label>
                   <input
                     id="vcardLastInput"
                     type="text"
                     class="form-control form-control-sm"
-                    placeholder="Mustermann"
+                    placeholder={$t('vcardLastPh')}
                     bind:value={vcardLast}
                     on:input={updateStructuredQR}
                   />
@@ -908,18 +924,18 @@
               </div>
               <div class="row g-2">
                 <div class="col-6">
-                  <label for="vcardEmailInput" class="form-label small mb-1 fw-medium">E-Mail</label>
+                  <label for="vcardEmailInput" class="form-label small mb-1 fw-medium">{$t('email')}</label>
                   <input
                     id="vcardEmailInput"
                     type="email"
                     class="form-control form-control-sm"
-                    placeholder="max@beispiel.de"
+                    placeholder={$t('vcardEmailPh')}
                     bind:value={vcardEmail}
                     on:input={updateStructuredQR}
                   />
                 </div>
                 <div class="col-6">
-                  <label for="vcardPhoneInput" class="form-label small mb-1 fw-medium">Telefon</label>
+                  <label for="vcardPhoneInput" class="form-label small mb-1 fw-medium">{$t('phone')}</label>
                   <input
                     id="vcardPhoneInput"
                     type="tel"
@@ -935,12 +951,12 @@
             <!-- Event -->
             <div class="p-3 bg-body-secondary rounded mb-3 border">
               <div class="mb-2">
-                <label for="eventSummaryInput" class="form-label small mb-1 fw-medium">Titel / Anlass</label>
+                <label for="eventSummaryInput" class="form-label small mb-1 fw-medium">{$t('eventTitle')}</label>
                 <input
                   id="eventSummaryInput"
                   type="text"
                   class="form-control form-control-sm"
-                  placeholder="z.B. Jahres-Hauptversammlung"
+                  placeholder={$t('eventTitlePh')}
                   bind:value={eventSummary}
                   on:input={updateStructuredQR}
                 />
@@ -953,11 +969,11 @@
                   bind:checked={eventAllDay}
                   on:change={updateStructuredQR}
                 />
-                <label for="eventAllDay" class="form-check-label small">Ganztägig</label>
+                <label for="eventAllDay" class="form-check-label small">{$t('allDay')}</label>
               </div>
               <div class="row g-2">
                 <div class="col-6">
-                  <label for="eventStartInput" class="form-label small mb-1 fw-medium">Beginn</label>
+                  <label for="eventStartInput" class="form-label small mb-1 fw-medium">{$t('start')}</label>
                   {#if eventAllDay}
                     <input
                       id="eventStartInput"
@@ -977,7 +993,7 @@
                   {/if}
                 </div>
                 <div class="col-6">
-                  <label for="eventEndInput" class="form-label small mb-1 fw-medium">Ende</label>
+                  <label for="eventEndInput" class="form-label small mb-1 fw-medium">{$t('end')}</label>
                   {#if eventAllDay}
                     <input
                       id="eventEndInput"
@@ -1006,17 +1022,17 @@
           <div class="mb-3">
             <div class="d-flex justify-content-between align-items-center mb-1">
               <label for="singleDataInput" class="form-label fw-medium small text-body-secondary mb-0">
-                {qrMode === 'text' ? 'Inhalt / Nutzdaten' : 'Generierte Nutzdaten (Raw)'}
+                {qrMode === 'text' ? $t('dataLabel') : $t('dataLabelRaw')}
               </label>
               <span class="badge bg-secondary-subtle text-secondary-emphasis small font-monospace">
-                {rawData.length} Zeichen
+                {$t('chars', { n: rawData.length })}
               </span>
             </div>
             <textarea
               id="singleDataInput"
               class="form-control form-control-sm font-monospace"
               rows={qrMode === 'text' ? 3 : 2}
-              placeholder="Text oder Link eingeben..."
+              placeholder={$t('dataPh')}
               class:is-invalid={retailCheck && !retailCheck.valid}
               class:is-valid={retailCheck?.valid}
               bind:value={rawData}
@@ -1024,32 +1040,36 @@
               readonly={qrMode !== 'text'}
             ></textarea>
             {#if retailCheck}
-              {@const typeName = BARCODE_TYPES.find((t) => t.id === selectedType)?.name ?? selectedType}
+              {@const typeName = BARCODE_TYPES.find((b) => b.id === selectedType)?.name ?? selectedType}
               {#if retailCheck.valid}
                 <div class="valid-feedback d-block">
                   {#if retailCheck.checkDigitAdded}
-                    Prüfziffer <strong>{retailCheck.code.slice(-1)}</strong> wird ergänzt →
+                    {$t('checkDigitAddedPre')} <strong>{retailCheck.code.slice(-1)}</strong> {$t('checkDigitAddedPost')}
                     <span class="font-monospace">{retailCheck.code}</span>
                   {:else}
-                    Prüfziffer korrekt.
+                    {$t('checkDigitOk')}
                   {/if}
                 </div>
               {:else}
                 <div class="invalid-feedback d-block">
                   {#if retailCheck.reason === 'non_digit'}
-                    {typeName} erlaubt nur Ziffern.
+                    {$t('retailNonDigit', { type: typeName })}
                   {:else if retailCheck.reason === 'length'}
-                    {typeName} braucht {retailCheck.maxLength} Ziffern (oder {retailCheck.minLength} ohne
-                    Prüfziffer) — eingegeben: {rawData.trim().length}.
+                    {$t('retailLength', {
+                      type: typeName,
+                      max: retailCheck.maxLength,
+                      min: retailCheck.minLength,
+                      n: rawData.trim().length
+                    })}
                   {:else}
-                    Prüfziffer {retailCheck.given} ist falsch, richtig wäre <strong>{retailCheck.expected}</strong>.
+                    {$t('retailChecksum', { given: retailCheck.given })} <strong>{retailCheck.expected}</strong>.
                     <button
                       type="button"
                       class="btn btn-link btn-sm p-0 align-baseline"
                       on:click={() => {
                         rawData = retailCheck?.code ?? rawData;
                         triggerGenerate();
-                      }}>Korrigieren → <span class="font-monospace">{retailCheck.code}</span></button
+                      }}>{$t('fixIt')} <span class="font-monospace">{retailCheck.code}</span></button
                     >
                   {/if}
                 </div>
@@ -1068,19 +1088,19 @@
                 on:change={triggerGenerate}
               />
               <label for="showTextCheck" class="form-check-label small fw-medium">
-                Klartext-Beschriftung unter dem Barcode anzeigen
+                {$t('showCaption')}
               </label>
             </div>
             {#if showText}
               <div>
                 <label for="customLabelInput" class="form-label small mb-1 text-body-secondary">
-                  Beschriftungstext (Freitext für Etikett oder Scan-Hinweis)
+                  {$t('captionText')}
                 </label>
                 <input
                   id="customLabelInput"
                   type="text"
                   class="form-control form-control-sm"
-                  placeholder={rawData.slice(0, 40) || 'z.B. Artikel-Nr. 12345'}
+                  placeholder={rawData.slice(0, 40) || $t('captionPh')}
                   bind:value={customLabelText}
                   on:input={() => {
                     customLabelTouched = true;
@@ -1088,7 +1108,7 @@
                   }}
                 />
                 <div class="d-flex justify-content-between align-items-center mt-2 mb-1">
-                  <label for="fontSizeRange" class="form-label small mb-0 text-body-secondary">Textgröße</label>
+                  <label for="fontSizeRange" class="form-label small mb-0 text-body-secondary">{$t('fontSize')}</label>
                   <div class="d-flex align-items-center gap-2 small">
                     <span class="font-monospace">{fontSize > 0 ? `${fontSize} px` : 'Auto'}</span>
                     {#if fontSize > 0}
@@ -1129,8 +1149,8 @@
               on:change={triggerGenerate}
             />
             <label for="quietZoneCheck" class="form-check-label small">
-              Ruhezone (Rand um den Code)
-              <span class="text-body-secondary">– von Scannern benötigt; nur abschalten, wenn Sie selbst Rand lassen</span>
+              {$t('quietZone')}
+              <span class="text-body-secondary">{$t('quietZoneHint')}</span>
             </label>
           </div>
 
@@ -1138,7 +1158,7 @@
           <div class="row g-2 mb-3">
             <!-- Background -->
             <div class="col-6">
-              <span class="form-label fw-medium small text-body-secondary mb-1 d-block">Hintergrund</span>
+              <span class="form-label fw-medium small text-body-secondary mb-1 d-block">{$t('background')}</span>
               <div class="d-flex align-items-center gap-2 mb-2">
                 <input
                   id="singleBgColor"
@@ -1165,7 +1185,7 @@
                     type="button"
                     class="btn btn-xs btn-outline-secondary p-1"
                     style="width: 22px; height: 22px; background-color: {preset.value}; border-radius: 4px;"
-                    title="Hintergrund: {preset.label}"
+                    title={$t('backgroundTitle', { color: $t(preset.label) })}
                     on:click={() => setBgColor(preset.value)}
                   ></button>
                 {/each}
@@ -1174,7 +1194,7 @@
 
             <!-- Foreground -->
             <div class="col-6">
-              <label for="singleFgColor" class="form-label fw-medium small text-body-secondary mb-1">Barcode-Farbe</label>
+              <label for="singleFgColor" class="form-label fw-medium small text-body-secondary mb-1">{$t('barcodeColor')}</label>
               <div class="d-flex align-items-center gap-2 mb-2">
                 <input
                   id="singleFgColor"
@@ -1191,7 +1211,7 @@
                     type="button"
                     class="btn btn-xs btn-outline-secondary p-1"
                     style="width: 22px; height: 22px; background-color: {preset.value}; border-radius: 4px;"
-                    title="Barcode-Farbe: {preset.label}"
+                    title={$t('barcodeColorTitle', { color: $t(preset.label) })}
                     on:click={() => setFgColor(preset.value)}
                   ></button>
                 {/each}
@@ -1207,14 +1227,14 @@
       <div class="card shadow-sm border h-100">
         <div class="card-header bg-body border-bottom py-2 d-flex justify-content-between align-items-center">
           <h6 class="mb-0 fw-semibold text-body">
-            <i class="bi bi-eye me-1 text-primary"></i> Live-Vorschau
+            <i class="bi bi-eye me-1 text-primary"></i> {$t('livePreview')}
           </h6>
           {#if isGenerating}
             <span class="badge bg-primary-subtle text-primary small">
-              <span class="spinner-border spinner-border-sm me-1"></span> Render...
+              <span class="spinner-border spinner-border-sm me-1"></span> {$t('rendering')}
             </span>
           {:else if result?.success}
-            <span class="badge bg-success-subtle text-success small">Bereit</span>
+            <span class="badge bg-success-subtle text-success small">{$t('ready')}</span>
           {/if}
         </div>
 
@@ -1230,39 +1250,39 @@
             <!-- Format Badge -->
             <div class="d-flex gap-2 mb-3">
               <span class="badge bg-body-secondary text-body border small">
-                Typ: <strong class="text-uppercase">{result.type}</strong>
+                {$t('typeBadge')} <strong class="text-uppercase">{result.type}</strong>
               </span>
               <span class="badge bg-body-secondary text-body border small">
-                Vektor: <strong>SVG / Crisp</strong>
+                {$t('vectorBadge')} <strong>SVG / Crisp</strong>
               </span>
               {#if result.readBack === 'ok'}
-                <span class="badge bg-success-subtle text-success-emphasis border border-success-subtle small" title="Der erzeugte Code wurde mit dem eingebauten Scanner gelesen und stimmt mit der Eingabe überein.">
-                  <i class="bi bi-check2-circle me-1"></i>Lesbar geprüft
+                <span class="badge bg-success-subtle text-success-emphasis border border-success-subtle small" title={$t('readOkTitle')}>
+                  <i class="bi bi-check2-circle me-1"></i>{$t('readOk')}
                 </span>
               {:else if result.readBack === 'unreadable'}
-                <span class="badge bg-danger-subtle text-danger-emphasis border border-danger-subtle small" title="Der eingebaute Scanner konnte diesen Code nicht lesen – meist zu wenig Kontrast zwischen Code- und Hintergrundfarbe.">
-                  <i class="bi bi-exclamation-triangle me-1"></i>Nicht lesbar – Farben prüfen
+                <span class="badge bg-danger-subtle text-danger-emphasis border border-danger-subtle small" title={$t('readUnreadableTitle')}>
+                  <i class="bi bi-exclamation-triangle me-1"></i>{$t('readUnreadable')}
                 </span>
               {:else if result.readBack === 'mismatch'}
-                <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle small" title="Der Scanner hat etwas anderes gelesen als eingegeben.">
-                  <i class="bi bi-exclamation-triangle me-1"></i>Gelesener Inhalt weicht ab
+                <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle small" title={$t('readMismatchTitle')}>
+                  <i class="bi bi-exclamation-triangle me-1"></i>{$t('readMismatch')}
                 </span>
               {:else if result.readBack === 'unsupported'}
-                <span class="badge bg-body-secondary text-body-secondary border small" title="Für dieses Format gibt es keinen eingebauten Scanner.">
-                  Lesbarkeit nicht prüfbar
+                <span class="badge bg-body-secondary text-body-secondary border small" title={$t('readUnsupportedTitle')}>
+                  {$t('readUnsupported')}
                 </span>
               {/if}
             </div>
           {:else if result?.error}
             <div class="alert alert-danger w-100 text-center py-4 my-auto">
               <i class="bi bi-exclamation-octagon fs-2 d-block mb-2 text-danger"></i>
-              <strong class="d-block mb-1">Ungültige Eingabedaten für {selectedType.toUpperCase()}</strong>
-              <small class="text-body-secondary">{formatError(result)}</small>
+              <strong class="d-block mb-1">{$t('invalidInput', { type: selectedType.toUpperCase() })}</strong>
+              <small class="text-body-secondary">{formatError(result, $lang)}</small>
             </div>
           {:else}
             <div class="text-center text-body-secondary py-5 my-auto">
               <i class="bi bi-upc-scan fs-1 d-block mb-2 opacity-50"></i>
-              <span>Geben Sie Daten ein, um den Barcode in Echtzeit zu generieren.</span>
+              <span>{$t('emptyHint')}</span>
             </div>
           {/if}
         </div>
@@ -1273,28 +1293,28 @@
             <div class="row g-2">
               <div class="col-6">
                 <button type="button" class="btn btn-outline-primary btn-sm w-100" on:click={copySVG}>
-                  <i class="bi bi-clipboard me-1"></i> SVG kopieren
+                  <i class="bi bi-clipboard me-1"></i> {$t('copySvg')}
                 </button>
               </div>
               <div class="col-6">
                 <button type="button" class="btn btn-outline-primary btn-sm w-100" on:click={copyPNG}>
-                  <i class="bi bi-image me-1"></i> PNG kopieren
+                  <i class="bi bi-image me-1"></i> {$t('copyPng')}
                 </button>
               </div>
               <div class="col-6">
                 <button type="button" class="btn btn-primary btn-sm w-100" on:click={saveSVG}>
-                  <i class="bi bi-download me-1"></i> SVG speichern...
+                  <i class="bi bi-download me-1"></i> {$t('saveSvg')}
                 </button>
               </div>
               <div class="col-6">
                 <button type="button" class="btn btn-primary btn-sm w-100" on:click={savePNG}>
-                  <i class="bi bi-download me-1"></i> PNG speichern...
+                  <i class="bi bi-download me-1"></i> {$t('savePng')}
                 </button>
               </div>
               {#if onSendToPrint}
                 <div class="col-12 mt-2">
                   <button type="button" class="btn btn-success btn-sm w-100" on:click={sendToLabelPrint}>
-                    <i class="bi bi-printer me-1"></i> Zum Etikettendruck (DIN A4) hinzufügen
+                    <i class="bi bi-printer me-1"></i> {$t('addToLabels')}
                   </button>
                 </div>
               {/if}

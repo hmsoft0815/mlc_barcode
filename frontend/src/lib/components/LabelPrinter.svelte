@@ -2,6 +2,7 @@
   import { onMount } from 'svelte';
   import { GenerateBatch, PickTableFile } from '../../../bindings/github.com/mlcmcp/mlc_barcode/internal/gui/barcodeapp';
   import { BARCODE_TYPES, type BarcodeType, type PrintItem } from '../types';
+  import { t, type LabelsKey } from '../i18n/text/labels';
 
   export let printItems: PrintItem[] = [];
   export let batchItems: PrintItem[] = [];
@@ -9,12 +10,14 @@
   // File import: first column = code, optional second column = label text.
   let importType: BarcodeType = 'qr';
   let skipHeader = false;
-  let importMessage = '';
+  // Message parts as key + params, so they follow a language switch.
+  type Msg = { key: LabelsKey; params?: Record<string, string | number> };
+  let importMessage: Msg[] = [];
   let importOk = true;
 
   function takeFromBatch() {
     printItems = [...batchItems];
-    importMessage = `${batchItems.length} Etiketten aus dem Batch-Generator übernommen.`;
+    importMessage = [{ key: 'takenFromBatch', params: { n: batchItems.length } }];
     importOk = true;
   }
 
@@ -25,7 +28,7 @@
       const all = (file.rows ?? []).map((r) => r ?? []);
       const rows = skipHeader ? all.slice(1) : all;
       if (rows.length === 0) {
-        importMessage = 'Die Datei enthält keine Zeilen.';
+        importMessage = [{ key: 'fileEmpty' }];
         importOk = false;
         return;
       }
@@ -46,11 +49,12 @@
         .map((it) => ({ data: rows[it.index - 1]?.[1] || it.data, svg: it.svg!, type: importType }));
 
       const name = file.path.split(/[\\/]/).pop();
-      importMessage = `${printItems.length} Etiketten aus ${name} importiert`;
-      if (res.errorCount) importMessage += `, ${res.errorCount} Zeilen ungültig für ${importType.toUpperCase()}`;
+      importMessage = [{ key: 'imported', params: { n: printItems.length, name: `${name}` } }];
+      if (res.errorCount)
+        importMessage = [...importMessage, { key: 'importedInvalid', params: { n: res.errorCount, type: importType.toUpperCase() } }];
       importOk = !res.errorCount;
     } catch (e: any) {
-      importMessage = `Import fehlgeschlagen: ${e?.message ?? e}`;
+      importMessage = [{ key: 'importFailed', params: { msg: `${e?.message ?? e}` } }];
       importOk = false;
     }
   }
@@ -61,12 +65,12 @@
   let showDataText = true;
 
   const PRESETS = [
-    { name: 'Avery 2x4 (8 Etiketten / 105x74mm)', cols: 2, rows: 4 },
-    { name: 'Avery 3x7 (21 Etiketten / 70x42mm)', cols: 3, rows: 7 },
-    { name: 'Avery 3x8 (24 Etiketten / 70x37mm)', cols: 3, rows: 8 },
-    { name: 'Avery 4x10 (40 Etiketten / 52x29mm)', cols: 4, rows: 10 },
-    { name: 'Einzel-Etikett / Sticker (1x1)', cols: 1, rows: 1 }
-  ];
+    { key: 'presetAvery2x4', cols: 2, rows: 4 },
+    { key: 'presetAvery3x7', cols: 3, rows: 7 },
+    { key: 'presetAvery3x8', cols: 3, rows: 8 },
+    { key: 'presetAvery4x10', cols: 4, rows: 10 },
+    { key: 'presetSingle', cols: 1, rows: 1 }
+  ] as const;
 
   function applyPreset(p: { cols: number; rows: number }) {
     columns = p.cols;
@@ -127,52 +131,52 @@
   <div class="card shadow-sm border mb-3 no-print">
     <div class="card-header bg-body border-bottom py-2 d-flex justify-content-between align-items-center">
       <h6 class="mb-0 fw-semibold text-body">
-        <i class="bi bi-printer me-1 text-primary"></i> Etikettenbogen-Layout & Druckeinstellungen
+        <i class="bi bi-printer me-1 text-primary"></i> {$t('title')}
       </h6>
       <div class="d-flex gap-2">
         <button
           class="btn btn-outline-primary btn-sm"
           disabled={batchItems.length === 0}
-          title={batchItems.length ? `${batchItems.length} Barcodes aus dem Batch-Generator` : 'Im Batch-Generator ist noch nichts erzeugt'}
+          title={batchItems.length ? $t('batchTitle', { n: batchItems.length }) : $t('batchEmpty')}
           on:click={takeFromBatch}
         >
-          <i class="bi bi-collection me-1"></i> Aus Batch-Generator übernehmen
+          <i class="bi bi-collection me-1"></i> {$t('takeFromBatch')}
         </button>
         <button class="btn btn-outline-secondary btn-sm" on:click={loadSampleLabels}>
-          <i class="bi bi-magic me-1"></i> Muster laden
+          <i class="bi bi-magic me-1"></i> {$t('loadSample')}
         </button>
         <button
           class="btn btn-primary btn-sm"
           disabled={expandedItems.length === 0}
           on:click={triggerPrint}
         >
-          <i class="bi bi-printer-fill me-1"></i> Drucken (Print Dialog)
+          <i class="bi bi-printer-fill me-1"></i> {$t('print')}
         </button>
       </div>
     </div>
     <div class="card-body">
       <div class="row g-3 align-items-center">
         <div class="col-md-4">
-          <label for="labelPresetSelect" class="form-label small text-body-secondary mb-1">Standard-Vorlagen (DIN A4)</label>
+          <label for="labelPresetSelect" class="form-label small text-body-secondary mb-1">{$t('presets')}</label>
           <select
             id="labelPresetSelect"
             class="form-select form-select-sm"
             on:change={(e) => {
               const val = e.currentTarget.value;
-              const found = PRESETS.find((p) => p.name === val);
+              const found = PRESETS.find((p) => p.key === val);
               if (found) applyPreset(found);
             }}
           >
             {#each PRESETS as p}
-              <option value={p.name} selected={p.cols === columns && p.rows === rows}>
-                {p.name}
+              <option value={p.key} selected={p.cols === columns && p.rows === rows}>
+                {$t(p.key)}
               </option>
             {/each}
           </select>
         </div>
 
         <div class="col-md-2 col-6">
-          <label for="labelColumnsInput" class="form-label small text-body-secondary mb-1">Spalten (Columns)</label>
+          <label for="labelColumnsInput" class="form-label small text-body-secondary mb-1">{$t('columns')}</label>
           <input
             id="labelColumnsInput"
             type="number"
@@ -184,7 +188,7 @@
         </div>
 
         <div class="col-md-2 col-6">
-          <label for="labelRowsInput" class="form-label small text-body-secondary mb-1">Zeilen (Rows)</label>
+          <label for="labelRowsInput" class="form-label small text-body-secondary mb-1">{$t('rows')}</label>
           <input
             id="labelRowsInput"
             type="number"
@@ -196,7 +200,7 @@
         </div>
 
         <div class="col-md-2 col-6">
-          <label for="labelRepeatInput" class="form-label small text-body-secondary mb-1">Wiederholungen</label>
+          <label for="labelRepeatInput" class="form-label small text-body-secondary mb-1">{$t('repeat')}</label>
           <input
             id="labelRepeatInput"
             type="number"
@@ -215,7 +219,7 @@
               id="showDataLabel"
               bind:checked={showDataText}
             />
-            <label class="form-check-label" for="showDataLabel">Text anzeigen</label>
+            <label class="form-check-label" for="showDataLabel">{$t('showText')}</label>
           </div>
         </div>
       </div>
@@ -223,27 +227,27 @@
       <div class="row g-2 align-items-end border-top pt-3 mt-2">
         <div class="col-md-4">
           <label for="labelImportType" class="form-label small text-body-secondary mb-1">
-            Datei importieren — TXT: eine Zeile = ein Code · CSV: Inhalt; optional Etikett-Text
+            {$t('importLabel')}
           </label>
           <select id="labelImportType" class="form-select form-select-sm" bind:value={importType}>
-            {#each BARCODE_TYPES as t}
-              <option value={t.id}>{t.name}</option>
+            {#each BARCODE_TYPES as bt}
+              <option value={bt.id}>{bt.name}</option>
             {/each}
           </select>
         </div>
         <div class="col-md-3 col-6">
           <div class="form-check form-switch small mb-1">
             <input class="form-check-input" type="checkbox" id="labelSkipHeader" bind:checked={skipHeader} />
-            <label class="form-check-label" for="labelSkipHeader">Erste Zeile ist Kopfzeile</label>
+            <label class="form-check-label" for="labelSkipHeader">{$t('skipHeader')}</label>
           </div>
         </div>
         <div class="col-md-2 col-6">
           <button class="btn btn-outline-primary btn-sm w-100" on:click={importFile}>
-            <i class="bi bi-filetype-csv me-1"></i> Importieren …
+            <i class="bi bi-filetype-csv me-1"></i> {$t('importButton')}
           </button>
         </div>
-        {#if importMessage}
-          <div class="col-12 small {importOk ? 'text-success' : 'text-warning'}">{importMessage}</div>
+        {#if importMessage.length}
+          <div class="col-12 small {importOk ? 'text-success' : 'text-warning'}">{importMessage.map((m) => $t(m.key, m.params)).join('')}</div>
         {/if}
       </div>
     </div>
@@ -272,13 +276,13 @@
   {:else}
     <div class="card shadow-sm border py-5 text-center text-body-secondary no-print">
       <i class="bi bi-printer fs-1 opacity-50 mb-2"></i>
-      <h5 class="text-body">Keine Etiketten in der Druck-Warteschlange</h5>
+      <h5 class="text-body">{$t('emptyTitle')}</h5>
       <p class="small text-body-secondary mb-3">
-        Erstelle Barcodes im <strong>Einzel-Generator</strong> oder <strong>Batch-Generator</strong> und klicke auf "Als Etikett drucken".
+        {$t('emptyHintBefore')} <strong>{$t('single')}</strong> {$t('or')} <strong>{$t('batch')}</strong> {$t('emptyHintAfter')}
       </p>
       <div>
         <button class="btn btn-outline-primary btn-sm" on:click={loadSampleLabels}>
-          <i class="bi bi-magic me-1"></i> Beispiel-Etiketten laden
+          <i class="bi bi-magic me-1"></i> {$t('loadExamples')}
         </button>
       </div>
     </div>

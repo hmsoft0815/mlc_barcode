@@ -2,6 +2,8 @@
   import { onMount } from 'svelte';
   import { BARCODE_TYPES, type BarcodeType, type PrintItem } from '../types';
   import { formatError } from '../i18n/errors';
+  import { lang } from '../i18n/lang';
+  import { t, type BatchKey } from '../i18n/text/batch';
   import {
     GenerateBatch,
     PickTableFile,
@@ -30,7 +32,8 @@
   let isGenerating = false;
   let batchResponse: BatchBarcodeResponse | null = null;
   let isExporting = false;
-  let exportMessage = '';
+  // Kept as key + params so the message follows a language switch.
+  let exportMessage: { key: BatchKey; params?: Record<string, string | number> } | null = null;
   let exportSuccess = false;
 
   // Export settings
@@ -49,7 +52,7 @@
         runBatchGenerate();
       }
     } catch (e: any) {
-      exportMessage = `Fehler beim Laden der Datei: ${e?.message}`;
+      exportMessage = { key: 'loadFileError', params: { msg: `${e?.message}` } };
       exportSuccess = false;
     }
   }
@@ -66,7 +69,7 @@
     }
 
     isGenerating = true;
-    exportMessage = '';
+    exportMessage = null;
     try {
       const res = await GenerateBatch({
         type: selectedType,
@@ -81,7 +84,7 @@
       batchResponse = res;
       onBatchGenerated?.(toPrintItems(res));
     } catch (e: any) {
-      exportMessage = `Fehler bei der Stapelgenerierung: ${e?.message}`;
+      exportMessage = { key: 'generateError', params: { msg: `${e?.message}` } };
       exportSuccess = false;
     } finally {
       isGenerating = false;
@@ -96,7 +99,7 @@
       if (!folderPath) return; // User cancelled
 
       isExporting = true;
-      exportMessage = '';
+      exportMessage = null;
 
       const res = await ExportBatchToFolder({
         folderPath,
@@ -107,14 +110,14 @@
       });
 
       if (res.error) {
-        exportMessage = `Export fehlgeschlagen: ${res.error}`;
+        exportMessage = { key: 'exportFailed', params: { msg: `${res.error}` } };
         exportSuccess = false;
       } else {
-        exportMessage = `✓ ${res.exportedCount} Barcodes erfolgreich im Ordner gespeichert: ${folderPath}`;
+        exportMessage = { key: 'exportDone', params: { n: `${res.exportedCount}`, folder: folderPath } };
         exportSuccess = true;
       }
     } catch (e: any) {
-      exportMessage = `Export-Fehler: ${e?.message}`;
+      exportMessage = { key: 'exportError', params: { msg: `${e?.message}` } };
       exportSuccess = false;
     } finally {
       isExporting = false;
@@ -146,7 +149,7 @@
   {#if exportMessage}
     <div class="alert alert-{exportSuccess ? 'success' : 'danger'} alert-dismissible fade show py-2 px-3 mb-3 shadow-sm" role="alert">
       <i class="bi bi-{exportSuccess ? 'check-circle' : 'exclamation-triangle'} me-2"></i>
-      {exportMessage}
+      {$t(exportMessage.key, exportMessage.params)}
     </div>
   {/if}
 
@@ -156,10 +159,10 @@
       <div class="card shadow-sm border mb-3">
         <div class="card-header bg-body border-bottom py-2 d-flex justify-content-between align-items-center">
           <h6 class="mb-0 fw-semibold text-body">
-            <i class="bi bi-file-earmark-text me-1 text-primary"></i> Datenquelle (1 Zeile = 1 Barcode)
+            <i class="bi bi-file-earmark-text me-1 text-primary"></i> {$t('dataSource')}
           </h6>
           <button class="btn btn-outline-primary btn-sm" on:click={loadFile}>
-            <i class="bi bi-folder2-open me-1"></i> Textdatei laden...
+            <i class="bi bi-folder2-open me-1"></i> {$t('loadTextFile')}
           </button>
         </div>
         <div class="card-body">
@@ -173,43 +176,43 @@
             <textarea
               class="form-control font-monospace small"
               rows={8}
-              placeholder="Zeile 1\nZeile 2\nZeile 3..."
+              placeholder={$t('linesPlaceholder')}
               bind:value={rawText}
               on:input={runBatchGenerate}
             ></textarea>
             <div class="form-text small">
-              Jede Zeile wird als separater Barcode generiert.
+              {$t('linesHint')}
             </div>
           </div>
 
           <!-- Configuration -->
           <div class="row g-2 mb-3">
             <div class="col-6">
-              <label for="batchTypeSelect" class="form-label small text-body-secondary mb-1">Barcode-Typ</label>
+              <label for="batchTypeSelect" class="form-label small text-body-secondary mb-1">{$t('barcodeType')}</label>
               <select
                 id="batchTypeSelect"
                 class="form-select form-select-sm"
                 bind:value={selectedType}
                 on:change={runBatchGenerate}
               >
-                {#each BARCODE_TYPES as t}
-                  <option value={t.id}>{t.name}</option>
+                {#each BARCODE_TYPES as bt}
+                  <option value={bt.id}>{bt.name}</option>
                 {/each}
               </select>
             </div>
             <div class="col-3">
-              <label for="batchFgColor" class="form-label small text-body-secondary mb-1">Vordergrund</label>
+              <label for="batchFgColor" class="form-label small text-body-secondary mb-1">{$t('foreground')}</label>
               <input
                 id="batchFgColor"
                 type="color"
                 class="form-control form-control-sm form-control-color w-100"
                 bind:value={fgColor}
                 on:input={runBatchGenerate}
-                aria-label="Vordergrundfarbe"
+                aria-label={$t('foregroundColor')}
               />
             </div>
             <div class="col-3">
-              <label for="batchBgColor" class="form-label small text-body-secondary mb-1">Hintergrund</label>
+              <label for="batchBgColor" class="form-label small text-body-secondary mb-1">{$t('background')}</label>
               <input
                 id="batchBgColor"
                 type="color"
@@ -217,7 +220,7 @@
                 disabled={isTransparent}
                 bind:value={bgColor}
                 on:input={runBatchGenerate}
-                aria-label="Hintergrundfarbe"
+                aria-label={$t('backgroundColor')}
               />
             </div>
           </div>
@@ -232,7 +235,7 @@
                   bind:checked={isTransparent}
                   on:change={runBatchGenerate}
                 />
-                <label class="form-check-label" for="batchTransparent">Transparent</label>
+                <label class="form-check-label" for="batchTransparent">{$t('transparent')}</label>
               </div>
             </div>
             <div class="col-6">
@@ -244,11 +247,11 @@
                   bind:checked={showText}
                   on:change={runBatchGenerate}
                 />
-                <label class="form-check-label" for="batchShowText">Text anzeigen</label>
+                <label class="form-check-label" for="batchShowText">{$t('showText')}</label>
               </div>
               {#if showText}
                 <label for="batchFontSize" class="form-label small mb-0 mt-1 text-body-secondary">
-                  Textgröße: <span class="font-monospace">{fontSize > 0 ? `${fontSize} px` : 'Auto'}</span>
+                  {$t('fontSize')} <span class="font-monospace">{fontSize > 0 ? `${fontSize} px` : $t('fontAuto')}</span>
                 </label>
                 <input
                   id="batchFontSize"
@@ -270,9 +273,9 @@
             on:click={runBatchGenerate}
           >
             {#if isGenerating}
-              <span class="spinner-border spinner-border-sm me-1"></span> Generiere...
+              <span class="spinner-border spinner-border-sm me-1"></span> {$t('generating')}
             {:else}
-              <i class="bi bi-arrow-repeat me-1"></i> Barcodes neu generieren
+              <i class="bi bi-arrow-repeat me-1"></i> {$t('regenerate')}
             {/if}
           </button>
         </div>
@@ -282,35 +285,35 @@
       <div class="card shadow-sm border">
         <div class="card-header bg-body border-bottom py-2">
           <h6 class="mb-0 fw-semibold text-body">
-            <i class="bi bi-box-arrow-up-right me-1 text-primary"></i> Batch-Export Einstellungen
+            <i class="bi bi-box-arrow-up-right me-1 text-primary"></i> {$t('exportSettings')}
           </h6>
         </div>
         <div class="card-body">
           <div class="row g-2 mb-3">
             <div class="col-6">
-              <label for="exportFormatSelect" class="form-label small text-body-secondary mb-1">Format</label>
+              <label for="exportFormatSelect" class="form-label small text-body-secondary mb-1">{$t('format')}</label>
               <select id="exportFormatSelect" class="form-select form-select-sm" bind:value={exportFormat}>
-                <option value="png">PNG (Rastergrafik)</option>
-                <option value="svg">SVG (Vektorgrafik)</option>
+                <option value="png">{$t('formatPng')}</option>
+                <option value="svg">{$t('formatSvg')}</option>
               </select>
             </div>
             <div class="col-6">
-              <label for="namingSchemeSelect" class="form-label small text-body-secondary mb-1">Dateibenennung</label>
+              <label for="namingSchemeSelect" class="form-label small text-body-secondary mb-1">{$t('naming')}</label>
               <select id="namingSchemeSelect" class="form-select form-select-sm" bind:value={namingScheme}>
-                <option value="data_slug">Nummer + Inhalt</option>
-                <option value="index">Nur Nummer (001, 002...)</option>
-                <option value="data_raw">Nur Inhalt</option>
+                <option value="data_slug">{$t('namingSlug')}</option>
+                <option value="index">{$t('namingIndex')}</option>
+                <option value="data_raw">{$t('namingRaw')}</option>
               </select>
             </div>
           </div>
 
           <div class="mb-3">
-            <label for="exportPrefixInput" class="form-label small text-body-secondary mb-1">Dateinamen-Präfix</label>
+            <label for="exportPrefixInput" class="form-label small text-body-secondary mb-1">{$t('prefix')}</label>
             <input
               id="exportPrefixInput"
               type="text"
               class="form-control form-control-sm font-monospace"
-              placeholder="z.B. code_"
+              placeholder={$t('prefixPlaceholder')}
               bind:value={exportPrefix}
             />
           </div>
@@ -322,9 +325,9 @@
               on:click={startFolderExport}
             >
               {#if isExporting}
-                <span class="spinner-border spinner-border-sm me-1"></span> Exportiere...
+                <span class="spinner-border spinner-border-sm me-1"></span> {$t('exporting')}
               {:else}
-                <i class="bi bi-folder-symlink me-1"></i> In Ordner exportieren...
+                <i class="bi bi-folder-symlink me-1"></i> {$t('exportToFolder')}
               {/if}
             </button>
 
@@ -334,7 +337,7 @@
                 disabled={!batchResponse?.validCount}
                 on:click={sendToPrintSheet}
               >
-                <i class="bi bi-printer me-1"></i> Druckbogen
+                <i class="bi bi-printer me-1"></i> {$t('printSheet')}
               </button>
             {/if}
           </div>
@@ -347,16 +350,16 @@
       <div class="card shadow-sm border h-100 d-flex flex-column">
         <div class="card-header bg-body border-bottom py-2 d-flex justify-content-between align-items-center">
           <h6 class="mb-0 fw-semibold text-body">
-            <i class="bi bi-list-check me-1 text-primary"></i> Generierte Barcodes
+            <i class="bi bi-list-check me-1 text-primary"></i> {$t('generated')}
           </h6>
           {#if batchResponse}
             <div class="d-flex gap-2">
               <span class="badge bg-success-subtle text-success border border-success-subtle">
-                {batchResponse.validCount} Gültig
+                {$t('validCount', { n: batchResponse.validCount })}
               </span>
               {#if batchResponse.errorCount > 0}
                 <span class="badge bg-danger-subtle text-danger border border-danger-subtle">
-                  {batchResponse.errorCount} Fehler
+                  {$t('errorCount', { n: batchResponse.errorCount })}
                 </span>
               {/if}
             </div>
@@ -370,10 +373,10 @@
                 <thead class="table-light sticky-top">
                   <tr>
                     <th style="width: 45px;">#</th>
-                    <th style="width: 100px;">Vorschau</th>
-                    <th>Inhalt</th>
-                    <th style="width: 90px;">Status</th>
-                    <th style="width: 60px;">Aktion</th>
+                    <th style="width: 100px;">{$t('colPreview')}</th>
+                    <th>{$t('colContent')}</th>
+                    <th style="width: 90px;">{$t('colStatus')}</th>
+                    <th style="width: 60px;">{$t('colAction')}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -393,21 +396,21 @@
                       <td>
                         <span class="font-monospace small text-break">{item.data}</span>
                         {#if !item.success && item.error}
-                          <div class="text-danger small">{formatError(item)}</div>
+                          <div class="text-danger small">{formatError(item, $lang)}</div>
                         {/if}
                       </td>
                       <td>
                         {#if item.success}
                           <span class="badge bg-success-subtle text-success">OK</span>
                         {:else}
-                          <span class="badge bg-danger-subtle text-danger">Fehler</span>
+                          <span class="badge bg-danger-subtle text-danger">{$t('statusError')}</span>
                         {/if}
                       </td>
                       <td>
                         {#if item.success}
                           <button
                             class="btn btn-outline-secondary btn-sm p-1"
-                            title="SVG kopieren"
+                            title={$t('copySvg')}
                             on:click={() => copyItemSVG(item.svg)}
                           >
                             <i class="bi bi-clipboard"></i>
@@ -422,7 +425,7 @@
           {:else}
             <div class="text-body-secondary text-center py-5">
               <i class="bi bi-collection fs-1 opacity-50 mb-2 d-block"></i>
-              <span>Keine Barcode-Daten geladen</span>
+              <span>{$t('empty')}</span>
             </div>
           {/if}
         </div>
