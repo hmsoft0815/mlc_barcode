@@ -5,13 +5,16 @@
   import BatchGenerator from './lib/components/BatchGenerator.svelte';
   import LabelPrinter from './lib/components/LabelPrinter.svelte';
   import AboutView from './lib/components/AboutView.svelte';
+  import type { PrintItem } from './lib/types';
   import { GetVersion } from '../bindings/github.com/mlcmcp/mlc_barcode/internal/gui/barcodeapp';
 
   let activeTab: 'single' | 'batch' | 'print' | 'about' = 'single';
   let appVersion = __APP_VERSION__;
   let theme: 'light' | 'dark' = 'dark';
 
-  let printItems: Array<{ data: string; svg: string; type: string }> = [];
+  let printItems: PrintItem[] = [];
+  // Last finished batch, offered on the label printer page.
+  let lastBatchItems: PrintItem[] = [];
 
   function applyTheme(newTheme: 'light' | 'dark') {
     theme = newTheme;
@@ -27,12 +30,12 @@
     applyTheme(theme === 'dark' ? 'light' : 'dark');
   }
 
-  function handleSendSingleToPrint(item: { data: string; svg: string; type: string }) {
+  function handleSendSingleToPrint(item: PrintItem) {
     printItems = [item];
     activeTab = 'print';
   }
 
-  function handleSendBatchToPrint(items: Array<{ data: string; svg: string; type: string }>) {
+  function handleSendBatchToPrint(items: PrintItem[]) {
     printItems = items;
     activeTab = 'print';
   }
@@ -59,15 +62,22 @@
   <Navbar bind:activeTab {appVersion} {theme} onToggleTheme={handleToggleTheme} />
 
   <main class="flex-grow-1">
-    {#if activeTab === 'single'}
+    <!-- Tabs stay mounted and are only hidden, so input survives a tab switch. -->
+    <div class:d-none={activeTab !== 'single'}>
       <SingleGenerator onSendToPrint={handleSendSingleToPrint} />
-    {:else if activeTab === 'batch'}
-      <BatchGenerator onSendBatchToPrint={handleSendBatchToPrint} />
-    {:else if activeTab === 'print'}
-      <LabelPrinter {printItems} />
-    {:else if activeTab === 'about'}
+    </div>
+    <div class:d-none={activeTab !== 'batch'}>
+      <BatchGenerator
+        onSendBatchToPrint={handleSendBatchToPrint}
+        onBatchGenerated={(items) => (lastBatchItems = items)}
+      />
+    </div>
+    <div class:d-none={activeTab !== 'print'}>
+      <LabelPrinter {printItems} batchItems={lastBatchItems} />
+    </div>
+    <div class:d-none={activeTab !== 'about'}>
       <AboutView {appVersion} />
-    {/if}
+    </div>
   </main>
 
   <footer class="py-2 px-3 border-top bg-body text-body-secondary small d-flex flex-wrap justify-content-between align-items-center">

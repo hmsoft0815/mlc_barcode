@@ -21,6 +21,13 @@ export const BARCODE_TYPES: BarcodeTypeOption[] = [
   { id: 'itf', name: 'ITF (Interleaved 2 of 5)', category: '1D Linear', description: 'Kompakter numerischer Barcode (nur Ziffern, gerade Anzahl)', sample: '12345678' }
 ];
 
+// One label on the print sheet; data is the text printed under the code.
+export interface PrintItem {
+  data: string;
+  svg: string;
+  type: string;
+}
+
 export interface PrintLabelConfig {
   columns: number;
   rows: number;

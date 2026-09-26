@@ -49,8 +49,13 @@
 
   // Structured QR inputs: Event
   let eventSummary = '';
-  let eventStart = '';
-  let eventEnd = '';
+  const HOUR_MS = 3_600_000;
+  const DAY_MS = 24 * HOUR_MS;
+
+  // Held as <input type="datetime-local"> values (YYYY-MM-DDTHH:MM, local time).
+  let eventAllDay = false;
+  let eventStart = toLocalInput(nextFullHour());
+  let eventEnd = shiftLocal(eventStart, HOUR_MS);
   let eventTZ = 'Europe/Berlin';
 
   // Structured QR inputs: Crypto
@@ -225,8 +230,9 @@
       if (!eventSummary) return;
       rawData = await FormatEvent({
         summary: eventSummary,
-        startTime: eventStart.replace(/[-:]/g, ''),
-        endTime: eventEnd.replace(/[-:]/g, ''),
+        startTime: eventAllDay ? icalDate(eventStart) : icalDateTime(eventStart),
+        // iCal all-day DTEND is exclusive: the day after the last day.
+        endTime: eventAllDay ? icalDate(shiftLocal(eventEnd, DAY_MS)) : icalDateTime(eventEnd),
         timeZone: eventTZ
       });
       if (!customLabelTouched) {
@@ -234,6 +240,55 @@
       }
     }
     triggerGenerate();
+  }
+
+  function pad2(n: number): string {
+    return String(n).padStart(2, '0');
+  }
+
+  function toLocalInput(d: Date): string {
+    return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}T${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
+  }
+
+  function nextFullHour(): Date {
+    const d = new Date();
+    d.setHours(d.getHours() + 1, 0, 0, 0);
+    return d;
+  }
+
+  function shiftLocal(value: string, ms: number): string {
+    const d = new Date(value);
+    return isNaN(d.getTime()) ? value : toLocalInput(new Date(d.getTime() + ms));
+  }
+
+  // YYYY-MM-DDTHH:MM → YYYYMMDDTHHMM00
+  function icalDateTime(value: string): string {
+    return value ? value.replace(/[-:]/g, '').slice(0, 13) + '00' : '';
+  }
+
+  // YYYY-MM-DD… → YYYYMMDD
+  function icalDate(value: string): string {
+    return value ? value.slice(0, 10).replace(/-/g, '') : '';
+  }
+
+  // Moving the start moves the end along and keeps the duration.
+  function setEventStart(value: string) {
+    if (!value) return;
+    const duration = new Date(eventEnd).getTime() - new Date(eventStart).getTime();
+    eventStart = value;
+    eventEnd = shiftLocal(value, duration > 0 ? duration : eventAllDay ? 0 : HOUR_MS);
+    updateStructuredQR();
+  }
+
+  function setEventEnd(value: string) {
+    if (!value) return;
+    eventEnd = value < eventStart ? eventStart : value;
+    updateStructuredQR();
+  }
+
+  // Date inputs only change the date part and keep the time.
+  function withDate(current: string, date: string): string {
+    return date ? date + current.slice(10) : current;
   }
 
   let debounceTimer: ReturnType<typeof setTimeout> | null = null;
@@ -868,28 +923,58 @@
                   on:input={updateStructuredQR}
                 />
               </div>
+              <div class="form-check form-switch mb-2">
+                <input
+                  id="eventAllDay"
+                  type="checkbox"
+                  class="form-check-input"
+                  bind:checked={eventAllDay}
+                  on:change={updateStructuredQR}
+                />
+                <label for="eventAllDay" class="form-check-label small">Ganztägig</label>
+              </div>
               <div class="row g-2">
                 <div class="col-6">
-                  <label for="eventStartInput" class="form-label small mb-1 fw-medium">Beginn (YYYYMMDDTHHMMSS)</label>
-                  <input
-                    id="eventStartInput"
-                    type="text"
-                    class="form-control form-control-sm font-monospace"
-                    placeholder="20260901T100000"
-                    bind:value={eventStart}
-                    on:input={updateStructuredQR}
-                  />
+                  <label for="eventStartInput" class="form-label small mb-1 fw-medium">Beginn</label>
+                  {#if eventAllDay}
+                    <input
+                      id="eventStartInput"
+                      type="date"
+                      class="form-control form-control-sm"
+                      value={eventStart.slice(0, 10)}
+                      on:change={(e) => setEventStart(withDate(eventStart, e.currentTarget.value))}
+                    />
+                  {:else}
+                    <input
+                      id="eventStartInput"
+                      type="datetime-local"
+                      class="form-control form-control-sm"
+                      value={eventStart}
+                      on:change={(e) => setEventStart(e.currentTarget.value)}
+                    />
+                  {/if}
                 </div>
                 <div class="col-6">
-                  <label for="eventEndInput" class="form-label small mb-1 fw-medium">Ende (YYYYMMDDTHHMMSS)</label>
-                  <input
-                    id="eventEndInput"
-                    type="text"
-                    class="form-control form-control-sm font-monospace"
-                    placeholder="20260901T120000"
-                    bind:value={eventEnd}
-                    on:input={updateStructuredQR}
-                  />
+                  <label for="eventEndInput" class="form-label small mb-1 fw-medium">Ende</label>
+                  {#if eventAllDay}
+                    <input
+                      id="eventEndInput"
+                      type="date"
+                      class="form-control form-control-sm"
+                      min={eventStart.slice(0, 10)}
+                      value={eventEnd.slice(0, 10)}
+                      on:change={(e) => setEventEnd(withDate(eventEnd, e.currentTarget.value))}
+                    />
+                  {:else}
+                    <input
+                      id="eventEndInput"
+                      type="datetime-local"
+                      class="form-control form-control-sm"
+                      min={eventStart}
+                      value={eventEnd}
+                      on:change={(e) => setEventEnd(e.currentTarget.value)}
+                    />
+                  {/if}
                 </div>
               </div>
             </div>

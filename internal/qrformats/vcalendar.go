@@ -10,8 +10,8 @@ type VCalendarOptions struct {
 	Summary     string
 	Description string
 	Location    string
-	StartTime   string // Format: YYYYMMDDTHHMMSS (local) or YYYYMMDDTHHMMSSZ (UTC)
-	EndTime     string // Format: YYYYMMDDTHHMMSS (local) or YYYYMMDDTHHMMSSZ (UTC)
+	StartTime   string // YYYYMMDDTHHMMSS (local), YYYYMMDDTHHMMSSZ (UTC) or YYYYMMDD (all day)
+	EndTime     string // same formats; for all-day events the day after the last day
 	TimeZone    string // e.g. Europe/Berlin
 	Latitude    float64
 	Longitude   float64
@@ -28,27 +28,8 @@ func FormatVCalendar(opts VCalendarOptions) string {
 		fmt.Fprintf(&sb, "SUMMARY:%s\n", opts.Summary)
 	}
 
-	tzPrefix := ""
-	if opts.TimeZone != "" {
-		tzPrefix = fmt.Sprintf(";TZID=%s", opts.TimeZone)
-	}
-
-	if opts.StartTime != "" {
-		// If TimeZone is set and StartTime doesn't end with Z, use TZID
-		if opts.TimeZone != "" && !strings.HasSuffix(opts.StartTime, "Z") {
-			fmt.Fprintf(&sb, "DTSTART%s:%s\n", tzPrefix, opts.StartTime)
-		} else {
-			fmt.Fprintf(&sb, "DTSTART:%s\n", opts.StartTime)
-		}
-	}
-
-	if opts.EndTime != "" {
-		if opts.TimeZone != "" && !strings.HasSuffix(opts.EndTime, "Z") {
-			fmt.Fprintf(&sb, "DTEND%s:%s\n", tzPrefix, opts.EndTime)
-		} else {
-			fmt.Fprintf(&sb, "DTEND:%s\n", opts.EndTime)
-		}
-	}
+	writeDateTime(&sb, "DTSTART", opts.StartTime, opts.TimeZone)
+	writeDateTime(&sb, "DTEND", opts.EndTime, opts.TimeZone)
 
 	if opts.Location != "" {
 		fmt.Fprintf(&sb, "LOCATION:%s\n", opts.Location)
@@ -65,4 +46,20 @@ func FormatVCalendar(opts VCalendarOptions) string {
 	sb.WriteString("END:VEVENT\n")
 	sb.WriteString("END:VCALENDAR")
 	return sb.String()
+}
+
+// writeDateTime writes DTSTART/DTEND. An 8-digit date (YYYYMMDD) is an
+// all-day value and gets VALUE=DATE instead of a time zone; a UTC time
+// (suffix Z) never gets a TZID.
+func writeDateTime(sb *strings.Builder, prop, value, tz string) {
+	switch {
+	case value == "":
+		return
+	case len(value) == 8:
+		fmt.Fprintf(sb, "%s;VALUE=DATE:%s\n", prop, value)
+	case tz != "" && !strings.HasSuffix(value, "Z"):
+		fmt.Fprintf(sb, "%s;TZID=%s:%s\n", prop, tz, value)
+	default:
+		fmt.Fprintf(sb, "%s:%s\n", prop, value)
+	}
 }

@@ -285,3 +285,15 @@ func TestFormatSMSDoesNotEscapeTheMessage(t *testing.T) {
 		t.Errorf("got %q", got)
 	}
 }
+
+func TestFormatVCalendarAllDay(t *testing.T) {
+	got := FormatVCalendar(VCalendarOptions{Summary: "Fest", StartTime: "20260901", EndTime: "20260902", TimeZone: "Europe/Berlin"})
+	for _, s := range []string{"DTSTART;VALUE=DATE:20260901", "DTEND;VALUE=DATE:20260902"} {
+		if !strings.Contains(got, s) {
+			t.Errorf("FormatVCalendar() = %v, must contain %v", got, s)
+		}
+	}
+	if strings.Contains(got, "TZID") {
+		t.Errorf("all-day event must not carry a TZID: %v", got)
+	}
+}

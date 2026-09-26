@@ -1,8 +1,65 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import { GenerateBatch } from '../../../bindings/github.com/mlcmcp/mlc_barcode/internal/gui/barcodeapp';
+  import { GenerateBatch, PickTextFile } from '../../../bindings/github.com/mlcmcp/mlc_barcode/internal/gui/barcodeapp';
+  import { BARCODE_TYPES, type BarcodeType, type PrintItem } from '../types';
 
-  export let printItems: Array<{ data: string; svg: string; type: string }> = [];
+  export let printItems: PrintItem[] = [];
+  export let batchItems: PrintItem[] = [];
+
+  // File import: first column = code, optional second column = label text.
+  let importType: BarcodeType = 'qr';
+  let skipHeader = false;
+  let importMessage = '';
+  let importOk = true;
+
+  function takeFromBatch() {
+    printItems = [...batchItems];
+    importMessage = `${batchItems.length} Etiketten aus dem Batch-Generator übernommen.`;
+    importOk = true;
+  }
+
+  function splitRow(line: string, sep: string): string[] {
+    if (!sep) return [line];
+    return line.split(sep).map((c) => c.trim().replace(/^"(.*)"$/, '$1').trim());
+  }
+
+  function detectSeparator(line: string): string {
+    return [';', '\t', ','].find((s) => line.includes(s)) ?? '';
+  }
+
+  async function importFile() {
+    try {
+      const [path, lines] = await PickTextFile();
+      if (!path || !lines?.length) return;
+
+      const body = skipHeader ? lines.slice(1) : lines;
+      const sep = path.toLowerCase().endsWith('.csv') ? detectSeparator(body[0] ?? '') : '';
+      const rows = body.map((l) => splitRow(l, sep)).filter((r) => r[0]);
+
+      const res = await GenerateBatch({
+        type: importType,
+        lines: rows.map((r) => r[0]),
+        width: 0,
+        height: 0,
+        showText: false,
+        fontSize: 0,
+        foregroundColor: '#000000',
+        backgroundColor: '#ffffff'
+      });
+      const items = res.items ?? [];
+      printItems = items
+        .filter((it) => it.success && it.svg)
+        .map((it) => ({ data: rows[it.index - 1]?.[1] || it.data, svg: it.svg!, type: importType }));
+
+      const name = path.split(/[\\/]/).pop();
+      importMessage = `${printItems.length} Etiketten aus ${name} importiert`;
+      if (res.errorCount) importMessage += `, ${res.errorCount} Zeilen ungültig für ${importType.toUpperCase()}`;
+      importOk = !res.errorCount;
+    } catch (e: any) {
+      importMessage = `Import fehlgeschlagen: ${e?.message ?? e}`;
+      importOk = false;
+    }
+  }
 
   let columns = 3;
   let rows = 8;
@@ -79,6 +136,14 @@
         <i class="bi bi-printer me-1 text-primary"></i> Etikettenbogen-Layout & Druckeinstellungen
       </h6>
       <div class="d-flex gap-2">
+        <button
+          class="btn btn-outline-primary btn-sm"
+          disabled={batchItems.length === 0}
+          title={batchItems.length ? `${batchItems.length} Barcodes aus dem Batch-Generator` : 'Im Batch-Generator ist noch nichts erzeugt'}
+          on:click={takeFromBatch}
+        >
+          <i class="bi bi-collection me-1"></i> Aus Batch-Generator übernehmen
+        </button>
         <button class="btn btn-outline-secondary btn-sm" on:click={loadSampleLabels}>
           <i class="bi bi-magic me-1"></i> Muster laden
         </button>
@@ -159,6 +224,33 @@
             <label class="form-check-label" for="showDataLabel">Text anzeigen</label>
           </div>
         </div>
+      </div>
+
+      <div class="row g-2 align-items-end border-top pt-3 mt-2">
+        <div class="col-md-4">
+          <label for="labelImportType" class="form-label small text-body-secondary mb-1">
+            Datei importieren (TXT/CSV: 1. Spalte Code, 2. Spalte Etikett-Text)
+          </label>
+          <select id="labelImportType" class="form-select form-select-sm" bind:value={importType}>
+            {#each BARCODE_TYPES as t}
+              <option value={t.id}>{t.name}</option>
+            {/each}
+          </select>
+        </div>
+        <div class="col-md-3 col-6">
+          <div class="form-check form-switch small mb-1">
+            <input class="form-check-input" type="checkbox" id="labelSkipHeader" bind:checked={skipHeader} />
+            <label class="form-check-label" for="labelSkipHeader">Erste Zeile ist Kopfzeile</label>
+          </div>
+        </div>
+        <div class="col-md-2 col-6">
+          <button class="btn btn-outline-primary btn-sm w-100" on:click={importFile}>
+            <i class="bi bi-filetype-csv me-1"></i> Importieren …
+          </button>
+        </div>
+        {#if importMessage}
+          <div class="col-12 small {importOk ? 'text-success' : 'text-warning'}">{importMessage}</div>
+        {/if}
       </div>
     </div>
   </div>

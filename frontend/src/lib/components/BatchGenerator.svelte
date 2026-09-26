@@ -1,6 +1,6 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import { BARCODE_TYPES, type BarcodeType } from '../types';
+  import { BARCODE_TYPES, type BarcodeType, type PrintItem } from '../types';
   import {
     GenerateBatch,
     PickTextFile,
@@ -10,7 +10,9 @@
   } from '../../../bindings/github.com/mlcmcp/mlc_barcode/internal/gui/barcodeapp';
   import type { BatchBarcodeResponse, BatchItemResult } from '../../../bindings/github.com/mlcmcp/mlc_barcode/internal/gui/models';
 
-  export let onSendBatchToPrint: ((items: Array<{ data: string; svg: string; type: string }>) => void) | undefined = undefined;
+  export let onSendBatchToPrint: ((items: PrintItem[]) => void) | undefined = undefined;
+  // Reports every finished batch so the label printer can take it over later.
+  export let onBatchGenerated: ((items: PrintItem[]) => void) | undefined = undefined;
 
   let selectedType: BarcodeType = 'qr';
   let rawText = 'MLC-PROD-001\nMLC-PROD-002\nMLC-PROD-003\nhttps://mlcgo.eu/demo1\nhttps://mlcgo.eu/demo2';
@@ -74,6 +76,7 @@
         backgroundColor: isTransparent ? 'transparent' : bgColor
       });
       batchResponse = res;
+      onBatchGenerated?.(toPrintItems(res));
     } catch (e: any) {
       exportMessage = `Fehler bei der Stapelgenerierung: ${e?.message}`;
       exportSuccess = false;
@@ -115,16 +118,15 @@
     }
   }
 
-  function sendToPrintSheet() {
-    if (!batchResponse?.items || !onSendBatchToPrint) return;
-    const validItems = batchResponse.items
+  function toPrintItems(res: BatchBarcodeResponse): PrintItem[] {
+    return (res.items ?? [])
       .filter((it) => it.success && it.svg)
-      .map((it) => ({
-        data: it.data,
-        svg: it.svg!,
-        type: selectedType
-      }));
-    onSendBatchToPrint(validItems);
+      .map((it) => ({ data: it.data, svg: it.svg!, type: selectedType }));
+  }
+
+  function sendToPrintSheet() {
+    if (!batchResponse || !onSendBatchToPrint) return;
+    onSendBatchToPrint(toPrintItems(batchResponse));
   }
 
   async function copyItemSVG(svg?: string) {

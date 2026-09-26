@@ -29,7 +29,7 @@
   --bs-secondary-color: #a0a0a0;
   --bs-secondary-color-rgb: 160, 160, 160;
 
-  --bs-border-color: #34312b;
+  --bs-border-color: #3a3730;
   --bs-border-color-translucent: rgba(197, 160, 89, 0.2);
 
   --bs-primary: #c5a059;
@@ -137,6 +137,24 @@
 .form-range::-moz-range-thumb,
 .form-range::-moz-range-thumb:active {
   background-color: var(--bs-primary);
+}
+
+/* Bootstrap paints the track in --bs-secondary-bg, the same colour as the
+   bg-body-secondary panels the sliders sit on — the track vanished. */
+.form-range::-webkit-slider-runnable-track {
+  background-color: var(--bs-border-color);
+}
+
+.form-range::-moz-range-track {
+  background-color: var(--bs-border-color);
+}
+
+[data-bs-theme='light'] .form-range::-webkit-slider-runnable-track {
+  background-color: #cfd2d6;
+}
+
+[data-bs-theme='light'] .form-range::-moz-range-track {
+  background-color: #cfd2d6;
 }
 
 .form-range:focus::-webkit-slider-thumb {
