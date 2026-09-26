@@ -48,9 +48,21 @@ tasks:
       - mkdir -p {{.BIN_DIR}}
       - CGO_ENABLED=1 go build -tags gtk3,production -ldflags "{{.LDFLAGS}}" -o {{.BIN_DIR}}/{{.GUI_BINARY}} .
 
+  generate:syso:windows:
+    desc: Windows resources (icon, manifest, version info) for the GUI exe
+    run: once
+    # Without the .syso the cross-compiled exe has no icon — Explorer and the
+    # taskbar show the generic one. info.json carries 0.0.0 as a placeholder.
+    cmds:
+      - |
+        INFO=$(mktemp --suffix=.json)
+        sed 's/"0\.0\.0"/"{{.VERSION}}"/g' build/windows/info.json > "$INFO"
+        wails3 generate syso -arch amd64 -icon build/windows/icon.ico -manifest build/windows/wails.exe.manifest -info "$INFO" -out wails_windows_amd64.syso
+        rm -f "$INFO"
+
   build:gui:windows:
     desc: Cross-compile the Wails v3 desktop GUI for Windows
-    deps: [build:frontend]
+    deps: [build:frontend, generate:syso:windows]
     cmds:
       - mkdir -p {{.BIN_DIR}}
       - GOOS=windows GOARCH=amd64 CGO_ENABLED=0 go build -tags production -trimpath -ldflags "{{.LDFLAGS}} -w -s -H windowsgui" -o {{.BIN_DIR}}/{{.GUI_BINARY}}-windows-amd64.exe .
@@ -64,7 +76,7 @@ tasks:
 
   build:debug:windows:
     desc: Cross-compile Windows GUI with F12 DevTools enabled
-    deps: [build:frontend]
+    deps: [build:frontend, generate:syso:windows]
     cmds:
       - mkdir -p {{.BIN_DIR}}
       - GOOS=windows GOARCH=amd64 CGO_ENABLED=0 go build -tags production,devtools -ldflags "{{.LDFLAGS}}" -o {{.BIN_DIR}}/{{.GUI_BINARY}}-windows-amd64-debug.exe .
@@ -253,6 +265,27 @@ tasks:
     desc: Run the Go tests
     cmds:
       - go test -tags gtk3 ./...
+
+  test:mcp:
+    desc: MCP compliance check with mlc mcp-tester (inspect score 100 + protocol test script + prompts)
+    # mcp-tester: https://github.com/hmsoft0815/mlc_mcptester — the sibling
+    # checkout first (it tracks the newest spec), else PATH; override with
+    # MCP_TESTER=/path/to/mcp-tester.
+    vars:
+      MCP_TESTER:
+        sh: test -x ../mlc_mcptester/bin/mcp-tester && echo ../mlc_mcptester/bin/mcp-tester || command -v mcp-tester
+      SERVER: "{{.BIN_DIR}}/{{.SERVER_BINARY}}-mcptest"
+    cmds:
+      - mkdir -p {{.BIN_DIR}}
+      - go build -ldflags "{{.LDFLAGS}}" -o {{.SERVER}} ./cmd/mcp-server
+      - '{{.MCP_TESTER}} inspect -c "{{.SERVER}}" --min-score 100'
+      - '{{.MCP_TESTER}} test -c "{{.SERVER}}" -s tests/mcp/barcode.mcp > {{.BIN_DIR}}/mcptest.log 2>&1 || (tail -n 40 {{.BIN_DIR}}/mcptest.log; exit 1)'
+      - grep -a "Test Summary" {{.BIN_DIR}}/mcptest.log
+      - >-
+        {{.MCP_TESTER}} prompts get payment_qr_from_invoice -c "{{.SERVER}}"
+        -a '{"invoice":"Invoice 1234, Muster GmbH, IBAN DE89370400440532013000, total 49.90 EUR"}' > /dev/null
+      - '{{.MCP_TESTER}} prompts get product_labels -c "{{.SERVER}}" -a ''{"items":"4006381333931;Schraube M4"}'' > /dev/null'
+      - echo "✓ MCP compliance OK"
 
   check:frontend:
     desc: Run svelte-check for TypeScript and Svelte diagnostics

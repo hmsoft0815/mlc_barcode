@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/hmsoft0815/mlcartifact/client"
 	"github.com/mlcmcp/mlc_barcode/internal/barcodes"
@@ -30,6 +31,10 @@ func getCommonProperties() map[string]any {
 		"text": map[string]any{
 			"type":        "boolean",
 			"description": "Show text below barcode (if supported)",
+		},
+		"caption": map[string]any{
+			"type":        "string",
+			"description": "Custom caption below the code instead of the encoded content (implies text)",
 		},
 		"font_size": map[string]any{
 			"type":        "integer",
@@ -60,7 +65,9 @@ func getCommonProperties() map[string]any {
 	return props
 }
 
-func handleBarcodeGeneration(ctx context.Context, btype barcodes.BarcodeType, data string, args map[string]any) (*mcp.CallToolResult, error) {
+// handleBarcodeGeneration renders the code and returns the MCP result plus
+// the structured output (nil on error, so no structuredContent is sent).
+func handleBarcodeGeneration(ctx context.Context, btype barcodes.BarcodeType, data string, args map[string]any) (*mcp.CallToolResult, any, error) {
 	format, _ := args["format"].(string)
 	if format == "" {
 		format = "svg"
@@ -78,6 +85,10 @@ func handleBarcodeGeneration(ctx context.Context, btype barcodes.BarcodeType, da
 	}
 	if fs, ok := args["font_size"].(float64); ok {
 		opts.FontSize = int(fs)
+	}
+	if c, ok := args["caption"].(string); ok && strings.TrimSpace(c) != "" {
+		opts.ShowText = true
+		opts.CustomText = strings.TrimSpace(c)
 	}
 	if fg, ok := args["fg_color"].(string); ok && fg != "" {
 		opts.ForegroundColor = fg
@@ -100,17 +111,23 @@ func handleBarcodeGeneration(ctx context.Context, btype barcodes.BarcodeType, da
 		content, err = barcodes.GeneratePNG(btype, data, opts)
 		mimeType = "image/png"
 	default:
-		return nil, fmt.Errorf("unsupported format: %s", format)
+		return nil, nil, fmt.Errorf("unsupported format: %s", format)
 	}
 
 	if err != nil {
 		return &mcp.CallToolResult{
 			IsError: true,
 			Content: []mcp.Content{&mcp.TextContent{Text: fmt.Sprintf("Error generating barcode: %v", err)}},
-		}, nil
+		}, nil, nil
 	}
 
 	results := []mcp.Content{}
+	out := barcodeOutput{
+		BarcodeType: string(btype),
+		Format:      format,
+		MimeType:    mimeType,
+		EncodedData: encodedData(btype, data),
+	}
 
 	// Optional artifact saving
 	saveArtifact, _ := args["save_artifact"].(bool)
@@ -124,6 +141,7 @@ func handleBarcodeGeneration(ctx context.Context, btype barcodes.BarcodeType, da
 			results = append(results, &mcp.TextContent{Text: fmt.Sprintf("Error saving artifact: %v", err)})
 		} else {
 			results = append(results, &mcp.TextContent{Text: fmt.Sprintf("Artifact saved as '%s' (ID: %s)", fname, resp.Id)})
+			out.ArtifactID = resp.Id
 		}
 	}
 
@@ -137,5 +155,15 @@ func handleBarcodeGeneration(ctx context.Context, btype barcodes.BarcodeType, da
 		})
 	}
 
-	return &mcp.CallToolResult{Content: results}, nil
+	return &mcp.CallToolResult{Content: results}, out, nil
+}
+
+// encodedData is the payload as it ends up in the code: EAN/UPC input
+// completed with its check digit, everything else trimmed.
+func encodedData(btype barcodes.BarcodeType, data string) string {
+	data = strings.TrimSpace(data)
+	if barcodes.IsRetail(btype) {
+		return barcodes.CheckRetail(btype, data).Code
+	}
+	return data
 }

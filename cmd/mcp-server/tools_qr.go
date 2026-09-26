@@ -20,7 +20,7 @@ func registerWifiTools(s *mcp.Server) {
 	}
 	props["hidden"] = map[string]any{"type": "boolean", "description": "Hidden network"}
 
-	mcp.AddTool(s, &mcp.Tool{
+	addBarcodeTool(s, &mcp.Tool{
 		Name:        "generate_wifi_qr",
 		Description: "Generates a QR code for WIFI access",
 		InputSchema: map[string]any{
@@ -40,8 +40,8 @@ func registerWifiTools(s *mcp.Server) {
 			Encryption: enc,
 			Hidden:     hidden,
 		})
-		res, err := handleBarcodeGeneration(ctx, barcodes.TypeQR, data, args)
-		return res, nil, err
+		res, out, err := handleBarcodeGeneration(ctx, barcodes.TypeQR, data, args)
+		return res, out, err
 	})
 }
 
@@ -59,7 +59,7 @@ func registerVCardTools(s *mcp.Server) {
 	props["country"] = map[string]any{"type": "string"}
 	props["url"] = map[string]any{"type": "string"}
 
-	mcp.AddTool(s, &mcp.Tool{
+	addBarcodeTool(s, &mcp.Tool{
 		Name:        "generate_vcard_qr",
 		Description: "Generates a QR code for a vCard 3.0 contact",
 		InputSchema: map[string]any{
@@ -82,8 +82,8 @@ func registerVCardTools(s *mcp.Server) {
 		opts.URL, _ = args["url"].(string)
 
 		data := qrformats.FormatVCard(opts)
-		res, err := handleBarcodeGeneration(ctx, barcodes.TypeQR, data, args)
-		return res, nil, err
+		res, out, err := handleBarcodeGeneration(ctx, barcodes.TypeQR, data, args)
+		return res, out, err
 	})
 }
 
@@ -98,7 +98,7 @@ func registerVCalendarTools(s *mcp.Server) {
 	props["latitude"] = map[string]any{"type": "number"}
 	props["longitude"] = map[string]any{"type": "number"}
 
-	mcp.AddTool(s, &mcp.Tool{
+	addBarcodeTool(s, &mcp.Tool{
 		Name:        "generate_event_qr",
 		Description: "Generates a QR code for an iCalendar (RFC 5545) event",
 		InputSchema: map[string]any{
@@ -122,8 +122,8 @@ func registerVCalendarTools(s *mcp.Server) {
 		}
 
 		data := qrformats.FormatVCalendar(opts)
-		res, err := handleBarcodeGeneration(ctx, barcodes.TypeQR, data, args)
-		return res, nil, err
+		res, out, err := handleBarcodeGeneration(ctx, barcodes.TypeQR, data, args)
+		return res, out, err
 	})
 }
 
@@ -135,7 +135,7 @@ func registerEPCTools(s *mcp.Server) {
 	props["amount"] = map[string]any{"type": "number", "description": "Amount in EUR (e.g. 12.50)"}
 	props["reference"] = map[string]any{"type": "string", "description": "Remittance information / Verwendungszweck"}
 
-	mcp.AddTool(s, &mcp.Tool{
+	addBarcodeTool(s, &mcp.Tool{
 		Name:        "generate_epc_qr",
 		Description: "Generates an EPC-QR-Code (GiroCode / SEPA-Überweisung) for banking apps and invoice payments",
 		InputSchema: map[string]any{
@@ -160,8 +160,8 @@ func registerEPCTools(s *mcp.Server) {
 			Amount:    amount,
 			Reference: ref,
 		})
-		res, err := handleBarcodeGeneration(ctx, barcodes.TypeQR, data, args)
-		return res, nil, err
+		res, out, err := handleBarcodeGeneration(ctx, barcodes.TypeQR, data, args)
+		return res, out, err
 	})
 }
 
@@ -173,7 +173,7 @@ func registerCryptoTools(s *mcp.Server) {
 	props["label"] = map[string]any{"type": "string", "description": "Optional recipient label"}
 	props["message"] = map[string]any{"type": "string", "description": "Optional payment message/memo"}
 
-	mcp.AddTool(s, &mcp.Tool{
+	addBarcodeTool(s, &mcp.Tool{
 		Name:        "generate_crypto_qr",
 		Description: "Generates a cryptocurrency payment QR code (Bitcoin BIP 21, Ethereum EIP-681, etc.)",
 		InputSchema: map[string]any{
@@ -198,8 +198,8 @@ func registerCryptoTools(s *mcp.Server) {
 			Label:   label,
 			Message: msg,
 		})
-		res, err := handleBarcodeGeneration(ctx, barcodes.TypeQR, data, args)
-		return res, nil, err
+		res, out, err := handleBarcodeGeneration(ctx, barcodes.TypeQR, data, args)
+		return res, out, err
 	})
 }
 
@@ -209,7 +209,7 @@ func registerGeoTools(s *mcp.Server) {
 	props["longitude"] = map[string]any{"type": "number", "description": "Longitude coordinate (e.g. 13.4050)"}
 	props["query"] = map[string]any{"type": "string", "description": "Location name or search query"}
 
-	mcp.AddTool(s, &mcp.Tool{
+	addBarcodeTool(s, &mcp.Tool{
 		Name:        "generate_geo_qr",
 		Description: "Generates a Geo Location (RFC 5870) QR code that opens Google Maps or Apple Maps",
 		InputSchema: map[string]any{
@@ -232,8 +232,8 @@ func registerGeoTools(s *mcp.Server) {
 			Longitude: lon,
 			Query:     query,
 		})
-		res, err := handleBarcodeGeneration(ctx, barcodes.TypeQR, data, args)
-		return res, nil, err
+		res, out, err := handleBarcodeGeneration(ctx, barcodes.TypeQR, data, args)
+		return res, out, err
 	})
 }
 
@@ -241,7 +241,7 @@ func registerCommunicationTools(s *mcp.Server) {
 	// Telephone Tool
 	telProps := getCommonProperties()
 	telProps["phone_number"] = map[string]any{"type": "string", "description": "Phone number to dial (e.g. +49123456789)"}
-	mcp.AddTool(s, &mcp.Tool{
+	addBarcodeTool(s, &mcp.Tool{
 		Name:        "generate_tel_qr",
 		Description: "Generates a telephone QR code (tel:) that opens the phone dialer",
 		InputSchema: map[string]any{
@@ -252,15 +252,15 @@ func registerCommunicationTools(s *mcp.Server) {
 	}, func(ctx context.Context, request *mcp.CallToolRequest, args map[string]any) (*mcp.CallToolResult, any, error) {
 		num, _ := args["phone_number"].(string)
 		data := qrformats.FormatTel(qrformats.TelOptions{PhoneNumber: num})
-		res, err := handleBarcodeGeneration(ctx, barcodes.TypeQR, data, args)
-		return res, nil, err
+		res, out, err := handleBarcodeGeneration(ctx, barcodes.TypeQR, data, args)
+		return res, out, err
 	})
 
 	// SMS Tool
 	smsProps := getCommonProperties()
 	smsProps["phone_number"] = map[string]any{"type": "string", "description": "Recipient phone number"}
 	smsProps["message"] = map[string]any{"type": "string", "description": "SMS message text"}
-	mcp.AddTool(s, &mcp.Tool{
+	addBarcodeTool(s, &mcp.Tool{
 		Name:        "generate_sms_qr",
 		Description: "Generates an SMS QR code (smsto:) with pre-filled recipient and message",
 		InputSchema: map[string]any{
@@ -272,8 +272,8 @@ func registerCommunicationTools(s *mcp.Server) {
 		num, _ := args["phone_number"].(string)
 		msg, _ := args["message"].(string)
 		data := qrformats.FormatSMS(qrformats.SMSOptions{PhoneNumber: num, Message: msg})
-		res, err := handleBarcodeGeneration(ctx, barcodes.TypeQR, data, args)
-		return res, nil, err
+		res, out, err := handleBarcodeGeneration(ctx, barcodes.TypeQR, data, args)
+		return res, out, err
 	})
 
 	// Email Tool
@@ -281,7 +281,7 @@ func registerCommunicationTools(s *mcp.Server) {
 	mailProps["to"] = map[string]any{"type": "string", "description": "Recipient email address"}
 	mailProps["subject"] = map[string]any{"type": "string", "description": "Email subject"}
 	mailProps["body"] = map[string]any{"type": "string", "description": "Email body content"}
-	mcp.AddTool(s, &mcp.Tool{
+	addBarcodeTool(s, &mcp.Tool{
 		Name:        "generate_email_qr",
 		Description: "Generates an Email QR code (mailto:) with recipient, subject, and body",
 		InputSchema: map[string]any{
@@ -294,7 +294,7 @@ func registerCommunicationTools(s *mcp.Server) {
 		subject, _ := args["subject"].(string)
 		body, _ := args["body"].(string)
 		data := qrformats.FormatEmail(qrformats.EmailOptions{To: to, Subject: subject, Body: body})
-		res, err := handleBarcodeGeneration(ctx, barcodes.TypeQR, data, args)
-		return res, nil, err
+		res, out, err := handleBarcodeGeneration(ctx, barcodes.TypeQR, data, args)
+		return res, out, err
 	})
 }

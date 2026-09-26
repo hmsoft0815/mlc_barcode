@@ -41,8 +41,10 @@ func main() {
 			Version: version.Version,
 		},
 		&mcp.ServerOptions{
+			Instructions: serverInstructions,
 			Capabilities: &mcp.ServerCapabilities{
-				Tools: &mcp.ToolCapabilities{ListChanged: true},
+				Tools:   &mcp.ToolCapabilities{ListChanged: true},
+				Prompts: &mcp.PromptCapabilities{ListChanged: true},
 			},
 		},
 	)
@@ -55,6 +57,7 @@ func main() {
 	registerCryptoTools(s)
 	registerGeoTools(s)
 	registerCommunicationTools(s)
+	registerPrompts(s)
 
 	if *addr != "" {
 		fmt.Fprintf(os.Stderr, "Starting Barcode MCP Server on SSE (%s)...\n", *addr)

@@ -1,0 +1,91 @@
+// MLC Barcode MCP server — protocol-level tests for mcp-tester.
+// Run: task test:mcp
+
+echo "--- generate_barcode: every symbology ---"
+call_tool generate_barcode type:qr data:"https://mlcgo.eu"
+assert_contains "<svg"
+call_tool generate_barcode type:datamatrix data:"MLC-DM-12345"
+assert_contains "<svg"
+call_tool generate_barcode type:code128 data:"MLC-128-ABC"
+assert_contains "<svg"
+call_tool generate_barcode type:code39 data:"CODE39"
+assert_contains "<svg"
+call_tool generate_barcode type:ean13 data:"4006381333931"
+assert_contains "<svg"
+call_tool generate_barcode type:ean8 data:"96385074"
+assert_contains "<svg"
+call_tool generate_barcode type:upca data:"036000291452"
+assert_contains "<svg"
+call_tool generate_barcode type:itf data:"12345678"
+assert_contains "<svg"
+
+echo "--- options: png, caption, font size ---"
+call_tool generate_barcode type:code128 data:"ABC-123" format:png text:true font_size:24
+assert_contains "png"
+call_tool generate_barcode type:code128 data:"ABC-123" text:true font_size:24
+assert_contains "font-size=\"24\""
+
+echo "--- structured output ---"
+call_tool generate_barcode type:qr data:"https://mlcgo.eu" format:png
+set_var fmt $.format
+assert_equals $fmt "png"
+set_var mime $.mime_type
+assert_equals $mime "image/png"
+call_tool generate_wifi_qr ssid:"Gast" password:"geheim"
+set_var payload $.encoded_data
+assert_contains $payload "WIFI:"
+
+echo "--- caption ---"
+call_tool generate_barcode type:ean13 data:"4006381333931" caption:"Schraube M4"
+assert_contains "Schraube M4"
+
+echo "--- check digits ---"
+call_tool generate_barcode type:ean13 data:"400638133393"
+assert_contains "<svg"
+set_var ean $.encoded_data
+assert_equals $ean "4006381333931"
+call_tool generate_barcode type:upca data:"03600029145"
+set_var upc $.encoded_data
+assert_equals $upc "036000291452"
+expect_error call_tool generate_barcode type:ean13 data:"4006381333932"
+assert_tool_error
+assert_contains "expected 1"
+expect_error call_tool generate_barcode type:ean13 data:"96385074"
+assert_tool_error
+assert_contains "13 digits"
+expect_error call_tool generate_barcode type:ean8 data:"9638507X"
+assert_tool_error
+assert_contains "only digits"
+
+echo "--- invalid input ---"
+expect_error call_tool generate_barcode type:qr data:""
+assert_tool_error
+expect_error call_tool_raw generate_barcode '{"type":"pdf417","data":"x"}'
+expect_error call_tool_raw generate_barcode '{"type":"qr","data":"x","format":"gif"}'
+expect_error call_tool_raw generate_barcode '{"data":"x"}'
+
+echo "--- structured QR formats ---"
+call_tool generate_wifi_qr ssid:"Gast" password:"geheim" encryption:WPA
+assert_contains "<svg"
+call_tool generate_vcard_qr first_name:"Erika" last_name:"Mustermann" email:"erika@example.org"
+assert_contains "<svg"
+call_tool generate_event_qr summary:"Sommerfest" start_time:"20260901T180000" end_time:"20260901T230000" timezone:"Europe/Berlin"
+assert_contains "<svg"
+call_tool generate_event_qr summary:"Betriebsausflug" start_time:"20260905" end_time:"20260906"
+assert_contains "<svg"
+call_tool generate_epc_qr name:"Max Muster" iban:"DE89370400440532013000" amount:49.90 reference:"Rechnung 1234"
+assert_contains "<svg"
+call_tool generate_crypto_qr address:"bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh" amount:0.001
+assert_contains "<svg"
+call_tool generate_geo_qr latitude:52.52 longitude:13.405 query:"Berlin"
+assert_contains "<svg"
+call_tool generate_tel_qr phone_number:"+49301234567"
+assert_contains "<svg"
+call_tool generate_sms_qr phone_number:"+49301234567" message:"Hallo"
+assert_contains "<svg"
+call_tool generate_email_qr to:"info@example.org" subject:"Anfrage" body:"Hallo"
+assert_contains "<svg"
+
+echo "--- protocol errors ---"
+expect_error call_tool no_such_tool
+assert_error_code -32602

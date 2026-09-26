@@ -17,10 +17,10 @@ func registerBarcodeTools(s *mcp.Server) {
 	}
 	props["data"] = map[string]any{
 		"type":        "string",
-		"description": "The data to encode in the barcode",
+		"description": "The data to encode. ean13/ean8/upca: digits only, 13/8/12 digits with check digit or 12/7/11 without (it is then computed); a wrong check digit is rejected with the expected one",
 	}
 
-	mcp.AddTool(s, &mcp.Tool{
+	addBarcodeTool(s, &mcp.Tool{
 		Name:        "generate_barcode",
 		Description: "Generates a barcode image (SVG or PNG) from data",
 		InputSchema: map[string]any{
@@ -31,7 +31,7 @@ func registerBarcodeTools(s *mcp.Server) {
 	}, func(ctx context.Context, request *mcp.CallToolRequest, args map[string]any) (*mcp.CallToolResult, any, error) {
 		btypeStr, _ := args["type"].(string)
 		data, _ := args["data"].(string)
-		res, err := handleBarcodeGeneration(ctx, barcodes.BarcodeType(strings.ToLower(btypeStr)), data, args)
-		return res, nil, err
+		res, out, err := handleBarcodeGeneration(ctx, barcodes.BarcodeType(strings.ToLower(btypeStr)), data, args)
+		return res, out, err
 	})
 }
