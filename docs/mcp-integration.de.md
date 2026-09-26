@@ -77,7 +77,7 @@ Liest Barcodes und QR-Codes aus einem Bild und meldet Format, Inhalt und Eckpunk
 - **Eingabe:** `path` (absoluter Pfad einer PNG-, JPEG-, GIF- oder WebP-Datei — **nur über stdio**; über HTTP würde der Server sonst seine eigenen Dateien an jeden Client geben) oder `image_base64` (ein `data:`-URI-Präfix ist erlaubt). Höchstens 20 MB und 40 Megapixel. HEIC (iPhone-Fotos) geht nicht — als JPEG exportieren.
 - **Liest:** `qr`, `datamatrix`, `aztec`, `pdf417`, `ean13`, `ean8`, `upca`, `code128`, `code39`, `itf`.
 - **Ausgabe:** `structuredContent` `{count, codes: [{barcode_type, text, content, points}]}`; wird nichts gefunden, gibt es einen Tool-Fehler mit Hinweisen.
-- **`content`:** bekannte Inhalte in Feldern — `epc` (GiroCode: name, iban, `iban_valid` aus der Mod-97-Prüfung, bic, amount, currency, reference), `wifi`, `vcard`, `event`, `geo`, `tel`, `sms`, `email`, `crypto`, `url`. Bei reinem Text weggelassen.
+- **`content`:** bekannte Inhalte in Feldern — `epc` (GiroCode: name, iban, `iban_valid` aus der Mod-97-Prüfung, bic, amount, currency, reference), `wifi`, `vcard`, `event`, `geo`, `tel`, `sms`, `email`, `crypto`, `url`, `pharma` (Arzneimittel-Code nach securPharm, GS1- oder IFA-Format: pzn, `pzn_valid`, gtin/ppn mit Prüfung, batch, expiry JJMMTT, serial). Bei reinem Text weggelassen.
 - CLI: `barcode -decode bild.png` gibt je Code `Typ<TAB>Inhalt` aus.
 
 ## Strukturierte Ausgabe

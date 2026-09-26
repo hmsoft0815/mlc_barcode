@@ -41,3 +41,27 @@ func TestFormatEncodeDecodeParse(t *testing.T) {
 		}
 	}
 }
+
+// Pharmaceutical pack codes: generated as DataMatrix, read back, parsed.
+// The GS1 variant carries its separators as GS characters here (our encoder
+// cannot write FNC1); real GS1 codes are covered by the parser tests.
+func TestPharmaPackCodes(t *testing.T) {
+	for _, tt := range []struct {
+		payload, format string
+	}{
+		{"[)>\x1e06\x1d9N111234567842\x1d1TABC123\x1dD280331\x1dSSN0001X9Z\x1e\x04", "ifa"},
+		{"010415012345678217280331" + "10ABC123\x1d21SN0001X9Z", "gs1"},
+	} {
+		found := roundTrip(t, TypeDataMatrix, tt.payload, DefaultOptions(TypeDataMatrix))
+		if len(found) != 1 {
+			t.Fatalf("%s: decoded %d codes", tt.format, len(found))
+		}
+		p := qrformats.Parse(found[0].Text)
+		want := map[string]string{"format": tt.format, "pzn": "12345678", "pzn_valid": "true", "batch": "ABC123", "expiry": "280331", "serial": "SN0001X9Z"}
+		for k, v := range want {
+			if p.Kind != "pharma" || p.Fields[k] != v {
+				t.Errorf("%s: %s = %q (kind %s), want %q", tt.format, k, p.Fields[k], p.Kind, v)
+			}
+		}
+	}
+}

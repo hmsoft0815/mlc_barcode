@@ -120,6 +120,14 @@ assert_equals $ibanok "true"
 set_var amount $.codes.0.content.fields.amount
 assert_equals $amount "49.90"
 assert_contains "reference=Rechnung 1234"
+call_tool decode_barcode path:"tests/mcp/fixtures/securpharm-ifa.png"
+set_var kind $.codes.0.content.kind
+assert_equals $kind "pharma"
+set_var pzn $.codes.0.content.fields.pzn
+assert_equals $pzn "12345678"
+set_var pznok $.codes.0.content.fields.pzn_valid
+assert_equals $pznok "true"
+assert_contains "batch=ABC123"
 expect_error call_tool decode_barcode path:"tests/mcp/fixtures/blank.png"
 assert_tool_error
 assert_contains "no barcode found"

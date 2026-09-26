@@ -38,7 +38,7 @@ func runDecode(path string) int {
 	}
 	for _, d := range found {
 		// One line per code: multi-line payloads (vCard, GiroCode) get \n.
-		fmt.Printf("%s\t%s\n", d.Type, strings.NewReplacer("\r", `\r`, "\n", `\n`).Replace(d.Text))
+		fmt.Printf("%s\t%s\n", d.Type, strings.NewReplacer("\r", `\r`, "\n", `\n`, "\x1d", "<GS>", "\x1e", "<RS>", "\x04", "<EOT>").Replace(d.Text))
 		if p := qrformats.Parse(d.Text); p.Kind != "text" {
 			keys := make([]string, 0, len(p.Fields))
 			for k := range p.Fields {

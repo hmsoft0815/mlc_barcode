@@ -11,7 +11,8 @@ export const KIND_LABELS: Record<string, string> = {
   sms: 'SMS',
   email: 'E-Mail',
   crypto: 'Krypto-Zahlung',
-  url: 'Link'
+  url: 'Link',
+  pharma: 'Arzneimittel (securPharm)'
 };
 
 const FIELD_LABELS: Record<string, string> = {
@@ -57,11 +58,24 @@ const FIELD_LABELS: Record<string, string> = {
   body: 'Text',
   coin: 'Währung',
   address: 'Adresse',
-  label: 'Bezeichnung'
+  label: 'Bezeichnung',
+  format: 'Datenformat',
+  pzn: 'PZN',
+  pzn_valid: 'PZN-Prüfziffer',
+  ppn: 'PPN',
+  ppn_valid: 'PPN-Prüfsumme',
+  gtin: 'GTIN / NTIN',
+  gtin_valid: 'GTIN-Prüfziffer',
+  batch: 'Charge',
+  expiry: 'Verwendbar bis',
+  serial: 'Seriennummer',
+  production_date: 'Herstelldatum',
+  nhrn: 'Nationale Nummer (NHRN)',
+  unparsed: 'Nicht erkannter Rest'
 };
 
 // Order in which fields are shown; the rest follows alphabetically.
-const ORDER = ['name', 'full_name', 'first_name', 'last_name', 'ssid', 'summary', 'to', 'phone', 'iban', 'iban_valid', 'bic', 'amount', 'currency', 'reference', 'start', 'end', 'all_day'];
+const ORDER = ['pzn', 'pzn_valid', 'expiry', 'batch', 'serial', 'name', 'full_name', 'first_name', 'last_name', 'ssid', 'summary', 'to', 'phone', 'iban', 'iban_valid', 'bic', 'amount', 'currency', 'reference', 'start', 'end', 'all_day'];
 
 export function fieldLabel(key: string): string {
   return FIELD_LABELS[key] ?? key;
@@ -80,8 +94,30 @@ function formatICalDate(v: string): string {
   return m[4] ? `${date} ${m[4]}:${m[5]}${m[6] ? ' UTC' : ''}` : date;
 }
 
+// GS1/IFA date YYMMDD; DD 00 means the end of the month.
+function formatPackDate(v: string, markExpired: boolean): string {
+  const m = /^(\d{2})(\d{2})(\d{2})$/.exec(v);
+  if (!m) return v;
+  const year = 2000 + Number(m[1]);
+  const month = Number(m[2]);
+  const day = Number(m[3]);
+  const text = day === 0 ? `${m[2]}/${year}` : `${m[3]}.${m[2]}.${year}`;
+  if (!markExpired) return text;
+  const last = day === 0 ? new Date(year, month, 0) : new Date(year, month - 1, day);
+  last.setHours(23, 59, 59);
+  return last < new Date() ? `${text} – abgelaufen` : text;
+}
+
+export function isCheckKey(key: string): boolean {
+  return key.endsWith('_valid');
+}
+
 export function formatFieldValue(key: string, value: string | undefined): string {
   if (value === undefined) return '';
+  if (isCheckKey(key)) return value === 'true' ? '✓ gültig' : '✗ Prüfziffer falsch – bitte prüfen!';
+  if (key === 'expiry') return formatPackDate(value, true);
+  if (key === 'production_date') return formatPackDate(value, false);
+  if (key === 'format') return value === 'ifa' ? 'IFA (PPN)' : value === 'gs1' ? 'GS1' : value;
   if (value === 'true') return 'ja';
   if (value === 'false') return 'nein';
   if (key === 'start' || key === 'end') return formatICalDate(value);
