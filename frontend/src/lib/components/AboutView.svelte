@@ -1,4 +1,15 @@
 <script lang="ts">
+  // Braces would be Svelte syntax in the markup, so the example lives here.
+  const cliAndMcpExample = `# Kommandozeile:
+barcode -type qr -data "https://mlcgo.eu" -out qr.svg
+
+# MCP-Server: startet Ihr KI-Client selbst.
+# Eintrag z. B. in claude_desktop_config.json (Windows-Setup):
+"mcpServers": {
+  "mlc-barcode": {
+    "command": "C:\\\\Program Files\\\\MLC Barcode\\\\mcp-barcode-server.exe"
+  }
+}`;
   import licenseText from '../../../../LICENSE?raw';
   import { BARCODE_TYPES } from '../types';
   export let appVersion: string = __APP_VERSION__;
@@ -110,11 +121,7 @@
           <p class="mb-2">
             MLC Barcode ist auch als stand-alone Kommandozeilentool und MCP-Server für KI-Assistenten (Claude Desktop, Cursor, Gemini-CLI) verfügbar:
           </p>
-          <pre class="bg-body-secondary p-2 rounded mb-0 font-monospace small"><code># CLI Aufruf:
-barcode -type qr -data "https://mlcgo.eu" -out qr.svg
-
-# MCP Server (Stdio/SSE):
-mcp-barcode-server</code></pre>
+          <pre class="bg-body-secondary p-2 rounded mb-0 font-monospace small"><code>{cliAndMcpExample}</code></pre>
           <a
             href="https://mlcgo.eu/products/mlc-barcode/de/mcp/"
             target="_blank"
