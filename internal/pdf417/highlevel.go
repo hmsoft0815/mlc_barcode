@@ -307,6 +307,13 @@ func highlevelEncode(dataStr string) ([]int, error) {
 
 	result := []int{}
 
+	// Text outside ASCII is written as UTF-8 bytes. Without a marker readers
+	// assume ISO-8859-1 (the PDF417 default) and show mojibake, so declare
+	// UTF-8 with ECI 26 first (change against upstream, see doc.go).
+	if !isASCII(dataStr) {
+		result = append(result, eciCharset, eciUTF8)
+	}
+
 	data := []byte(dataStr)
 
 	for len(data) > 0 {
@@ -351,4 +358,18 @@ func highlevelEncode(dataStr string) ([]int, error) {
 	}
 
 	return result, nil
+}
+
+const (
+	eciCharset = 927 // ECI designator codeword
+	eciUTF8    = 26  // ECI assignment number of UTF-8
+)
+
+func isASCII(s string) bool {
+	for i := 0; i < len(s); i++ {
+		if s[i] >= 0x80 {
+			return false
+		}
+	}
+	return true
 }

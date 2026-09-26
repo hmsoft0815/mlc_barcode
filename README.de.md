@@ -221,6 +221,8 @@ weitergebbar, auch kommerziell, solange Produkte, die es verwenden, "Michael Lec
 nennen (Dokumentation, Info-Dialog o. ä.). Eine kommerzielle Lizenz ohne Namensnennung gibt es
 auf Anfrage. Siehe [LICENSE](LICENSE).
 
+Fremdcode behält seine eigene Lizenz: Der PDF417-Reader in `internal/pdf417decode` ist eine Go-Portierung von ZXing (Apache-2.0), der PDF417-Encoder in `internal/pdf417` eine gepatchte Kopie aus boombuler/barcode (MIT). Siehe [THIRD_PARTY_NOTICES.txt](THIRD_PARTY_NOTICES.txt).
+
 ---
 **Hinweis:** Aktuell sind keine weiteren Erweiterungen oder größeren Änderungen geplant, da sich die Werkzeuge im Alltag – insbesondere auch in Verbindung mit Large Language Models (LLMs) – bestens bewährt haben.
 

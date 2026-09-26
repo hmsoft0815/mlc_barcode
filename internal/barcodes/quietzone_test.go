@@ -12,7 +12,7 @@ func TestExportedCodesReadWithoutExtraMargin(t *testing.T) {
 		btype BarcodeType
 		data  string
 	}{
-		{TypeQR, "https://mlcgo.eu"}, {TypeDataMatrix, "MLC-DM-12345"}, {TypeAztec, "TICKET-ICE-599"},
+		{TypeQR, "https://mlcgo.eu"}, {TypeDataMatrix, "MLC-DM-12345"}, {TypeAztec, "TICKET-ICE-599"}, {TypePDF417, "BOARDING PASS"},
 		{TypeCode128, "MLC-128-abc"}, {TypeCode39, "CODE39"}, {TypeEAN13, "4006381333931"},
 		{TypeEAN8, "96385074"}, {TypeUPCA, "036000291452"}, {TypeITF, "12345678"},
 	} {

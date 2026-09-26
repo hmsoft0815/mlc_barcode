@@ -192,10 +192,9 @@
                 </details>
               </div>
             {/each}
-            <p class="small text-body-secondary mb-0">PDF417 wird noch nicht erkannt.</p>
           {:else if !busy}
             <p class="text-body-secondary small mb-0">
-              Liest QR, DataMatrix, Aztec, EAN-13/8, UPC-A, Code 128, Code 39 und ITF – auch mehrere Codes pro Bild.
+              Liest QR, DataMatrix, Aztec, PDF417, EAN-13/8, UPC-A, Code 128, Code 39 und ITF – auch mehrere Codes pro Bild.
               Bekannte Inhalte wie GiroCode, Visitenkarte, WLAN oder Termin werden in ihre Felder zerlegt;
               beim GiroCode wird die IBAN-Prüfsumme kontrolliert.
             </p>

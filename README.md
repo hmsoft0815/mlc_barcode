@@ -224,6 +224,8 @@ redistribute, also commercially, as long as products using it credit "Michael Le
 visibly (docs, About screen or similar). A commercial licence without attribution is
 available on request. See [LICENSE](LICENSE).
 
+Third-party code keeps its own licence: the PDF417 reader in `internal/pdf417decode` is a Go port of ZXing (Apache-2.0), the PDF417 encoder in `internal/pdf417` a patched copy from boombuler/barcode (MIT). See [THIRD_PARTY_NOTICES.txt](THIRD_PARTY_NOTICES.txt).
+
 ---
 **Note:** Currently, no further expansions or major changes are planned, as the tools have proven themselves effective in everyday use, particularly in combination with Large Language Models (LLMs).
 

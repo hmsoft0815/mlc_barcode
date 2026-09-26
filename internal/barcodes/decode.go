@@ -12,6 +12,7 @@ import (
 	multiqr "github.com/makiuchi-d/gozxing/multi/qrcode"
 	"github.com/makiuchi-d/gozxing/oned"
 	"github.com/makiuchi-d/gozxing/qrcode"
+	"github.com/mlcmcp/mlc_barcode/internal/pdf417decode"
 )
 
 // Decoded is one barcode found in an image.
@@ -21,9 +22,9 @@ type Decoded struct {
 	Points []image.Point // corner or finder points in image coordinates
 }
 
-// Decode finds every barcode in img. PDF417 cannot be read yet (see
-// PLAN.md, decoder phase 4). When nothing is found it returns an
-// InputError with code ErrNothingFound.
+// Decode finds every barcode in img, all ten symbologies we generate
+// (PDF417 through the ported ZXing reader in internal/pdf417decode). When
+// nothing is found it returns an InputError with code ErrNothingFound.
 func Decode(img image.Image) ([]Decoded, error) {
 	// Attempts from cheap to expensive; the first that finds anything wins.
 	// A quiet zone helps codes cropped to their edge, doubling helps dense
@@ -40,7 +41,7 @@ func Decode(img image.Image) ([]Decoded, error) {
 		return found, nil
 	}
 	return nil, inputError(ErrNothingFound,
-		"no barcode found in the image — check that the code is sharp, fully visible and not too small; PDF417 cannot be read yet",
+		"no barcode found in the image — check that the code is sharp, fully visible and not too small",
 		nil)
 }
 
@@ -127,6 +128,9 @@ func decodeOnce(img image.Image, origin image.Point, scale int) []Decoded {
 		if r, err := nr.reader.Decode(bmp, hints); err == nil {
 			results = append(results, r)
 		}
+	}
+	if rs, err := pdf417decode.NewReader().DecodeMultiple(bmp, hints); err == nil {
+		results = append(results, rs...)
 	}
 
 	seen := map[string]bool{}

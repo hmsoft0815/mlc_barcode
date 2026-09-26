@@ -73,7 +73,7 @@ func registerDecodeTools(s *mcp.Server, allowPath bool) {
 		},
 	}
 	desc := "Reads barcodes and QR codes from an image and reports symbology and content; known payloads (GiroCode/EPC with IBAN check, vCard, Wi-Fi, calendar event, geo, tel, SMS, email, crypto, URL) are split into fields. " +
-		"Finds several codes per image. Reads qr, datamatrix, aztec, ean13, ean8, upca, code128, code39 and itf; pdf417 not yet."
+		"Finds several codes per image. Reads qr, datamatrix, aztec, pdf417, ean13, ean8, upca, code128, code39 and itf."
 	if allowPath {
 		props["path"] = map[string]any{
 			"type":        "string",
