@@ -28,6 +28,7 @@ All tools share common optional parameters for formatting:
 - `fg_color` / `bg_color`: Colors (e.g., `black`, `#ff0000`, `transparent`).
 - `text`: Show a caption below the barcode (the encoded content).
 - `caption`: Your own caption text instead of the encoded content (implies `text`).
+- `quiet_zone`: Blank margin scanners need (default `true`); the requested size includes it.
 - `font_size`: Caption size in pixels (6–200); omitted = automatic. Over-long captions shrink to the barcode width.
 - `save_artifact` / `filename`: Only available if `-artifact-addr` is specified.
 

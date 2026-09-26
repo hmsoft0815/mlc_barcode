@@ -28,6 +28,7 @@ Alle Tools teilen sich gemeinsame optionale Parameter für die Formatierung:
 - `fg_color` / `bg_color`: Farben (z. B. `black`, `#ff0000`, `transparent`).
 - `text`: Beschriftung unter dem Barcode anzeigen (der codierte Inhalt).
 - `caption`: Eigener Beschriftungstext statt des codierten Inhalts (schaltet `text` ein).
+- `quiet_zone`: Rand, den Scanner brauchen (Standard `true`); die angeforderte Größe schließt ihn ein.
 - `font_size`: Schriftgröße der Beschriftung in Pixeln (6–200); weggelassen = automatisch. Zu lange Beschriftungen werden auf Barcodebreite verkleinert.
 - `save_artifact` / `filename`: Nur verfügbar, wenn `-artifact-addr` beim Start angegeben wurde.
 

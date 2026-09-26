@@ -92,6 +92,7 @@ Die Binärdateien befinden sich in `bin/`:
 
 - `-decode <bild>`: Codes aus einer PNG/JPEG/GIF/WebP-Datei lesen statt erzeugen; gibt je Code `Typ<TAB>Inhalt` aus.
 - `-type`: Barcode-Typ (Standard: `qr`).
+- `-no-quiet-zone`: Ruhezone (Rand um den Code) weglassen — standardmäßig an: QR 4 Module, DataMatrix 1, 1D-Codes ~10 links/rechts. Nur abschalten, wenn Sie selbst Rand lassen; ohne sie scheitern DataMatrix und ITF auf farbigem oder unruhigem Grund.
 - `-data`: Der zu kodierende Inhalt (erforderlich, sofern keine strukturierten Flags genutzt werden).
 - `-out`: Ausgabedatei mit Endung `.svg` oder `.png` (Standard: `barcode.svg`).
 - `-width`: Breite in Pixeln.

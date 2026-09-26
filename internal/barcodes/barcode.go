@@ -65,6 +65,9 @@ type BarcodeOptions struct {
 	AztecECCPercent int
 	// For PDF417: security level 0-8 (-1 = chosen by data length)
 	PDF417Security int
+	// NoQuietZone drops the blank margin the symbology needs (see
+	// quietzone.go) — only for callers that place their own margin.
+	NoQuietZone bool
 }
 
 // DefaultOptions returns recommended default options for a barcode type
@@ -130,16 +133,8 @@ func Generate(btype BarcodeType, data string, opts BarcodeOptions) (barcode.Barc
 		return nil, encoderError(btype, err)
 	}
 
-	// Scale to the requested size, but never below the code's own size:
-	// barcode.Scale cannot shrink, and a long Code 128 is wider than 600 px.
-	if opts.Width > 0 && opts.Height > 0 {
-		b := bc.Bounds()
-		bc, err = barcode.Scale(bc, max(opts.Width, b.Dx()), max(opts.Height, b.Dy()))
-		if err != nil {
-			return nil, err
-		}
-	}
-	return bc, nil
+	// Scale to the requested size with the quiet zone inside it.
+	return fitWithQuietZone(bc, btype, opts)
 }
 
 var errUnsupportedType = errors.New("unsupported barcode type")

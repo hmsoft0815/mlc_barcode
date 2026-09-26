@@ -32,6 +32,11 @@ func getCommonProperties() map[string]any {
 			"type":        "boolean",
 			"description": "Show text below barcode (if supported)",
 		},
+		"quiet_zone": map[string]any{
+			"type":        "boolean",
+			"description": "Blank margin around the code that scanners need (default true); set false only when you add your own margin",
+			"default":     true,
+		},
 		"caption": map[string]any{
 			"type":        "string",
 			"description": "Custom caption below the code instead of the encoded content (implies text)",
@@ -85,6 +90,9 @@ func handleBarcodeGeneration(ctx context.Context, btype barcodes.BarcodeType, da
 	}
 	if fs, ok := args["font_size"].(float64); ok {
 		opts.FontSize = int(fs)
+	}
+	if qz, ok := args["quiet_zone"].(bool); ok && !qz {
+		opts.NoQuietZone = true
 	}
 	if c, ok := args["caption"].(string); ok && strings.TrimSpace(c) != "" {
 		opts.ShowText = true

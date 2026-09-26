@@ -14,6 +14,7 @@ type BarcodeRequest struct {
 	Height          int    `json:"height"`          // Output height in px (0 for default)
 	ShowText        bool   `json:"showText"`        // Show readable text below barcode
 	FontSize        int    `json:"fontSize"`        // Caption size in px (0 = automatic)
+	NoQuietZone     bool   `json:"noQuietZone"`     // omit the margin scanners need
 	ForegroundColor string `json:"foregroundColor"` // Foreground color (e.g. #000000)
 	BackgroundColor string `json:"backgroundColor"` // Background color (e.g. #ffffff or transparent)
 }

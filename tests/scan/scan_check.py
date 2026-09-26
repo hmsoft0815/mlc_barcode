@@ -13,7 +13,7 @@ import sys
 from pathlib import Path
 
 import zxingcpp
-from PIL import Image, ImageOps
+from PIL import Image
 
 CLI, WORK = sys.argv[1], Path(sys.argv[2])
 WORK.mkdir(parents=True, exist_ok=True)
@@ -36,7 +36,9 @@ SWEEP_SOURCES = {"ascii": "abcdefghij" * 6, "umlaut": "äöüßÄÖÜ" * 9,
 
 
 def decode(path: Path):
-    img = ImageOps.expand(Image.open(path).convert("L"), border=40, fill=255)
+    # Read the file exactly as exported — no extra margin, so a missing
+    # quiet zone shows up here (it was hidden before 1.6.0).
+    img = Image.open(path).convert("L")
     found = zxingcpp.read_barcodes(img)
     return found[0].text if found else None
 

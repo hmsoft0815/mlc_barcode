@@ -86,6 +86,7 @@
   let fgColor = '#000000';
   let bgColor = '#ffffff';
   let isTransparent = false;
+  let quietZone = true; // blank margin scanners need
   let showText = false;
   let fontSize = 0; // caption px, 0 = automatic
   let customWidth = 0;
@@ -330,7 +331,8 @@
         showText,
         fontSize,
         foregroundColor: fgColor,
-        backgroundColor: isTransparent ? 'transparent' : bgColor
+        backgroundColor: isTransparent ? 'transparent' : bgColor,
+        noQuietZone: !quietZone
       });
       result = res;
     } catch (e: any) {
@@ -1116,6 +1118,20 @@
                 />
               </div>
             {/if}
+          </div>
+
+          <div class="form-check form-switch mb-3">
+            <input
+              id="quietZoneCheck"
+              type="checkbox"
+              class="form-check-input"
+              bind:checked={quietZone}
+              on:change={triggerGenerate}
+            />
+            <label for="quietZoneCheck" class="form-check-label small">
+              Ruhezone (Rand um den Code)
+              <span class="text-body-secondary">– von Scannern benötigt; nur abschalten, wenn Sie selbst Rand lassen</span>
+            </label>
           </div>
 
           <!-- Styling & Colors -->

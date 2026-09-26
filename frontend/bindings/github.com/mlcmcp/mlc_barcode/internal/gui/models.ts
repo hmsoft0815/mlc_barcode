@@ -45,6 +45,11 @@ export interface BarcodeRequest {
     "fontSize": number;
 
     /**
+     * omit the margin scanners need
+     */
+    "noQuietZone": boolean;
+
+    /**
      * Foreground color (e.g. #000000)
      */
     "foregroundColor": string;

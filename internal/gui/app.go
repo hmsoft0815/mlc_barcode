@@ -165,6 +165,7 @@ func (a *BarcodeApp) GenerateBarcode(req BarcodeRequest) (BarcodeResult, error) 
 	opts.ShowText = req.ShowText
 	opts.FontSize = req.FontSize
 	opts.CustomText = req.CustomText
+	opts.NoQuietZone = req.NoQuietZone
 	if req.ForegroundColor != "" {
 		opts.ForegroundColor = req.ForegroundColor
 	}

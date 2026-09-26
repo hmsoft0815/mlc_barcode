@@ -92,6 +92,7 @@ The binaries are located in `bin/`:
 
 - `-decode <image>`: Read codes from a PNG/JPEG/GIF/WebP file instead of generating; prints `type<TAB>content` per code.
 - `-type`: Barcode type (default: `qr`).
+- `-no-quiet-zone`: Omit the blank margin around the code (on by default: QR 4 modules, DataMatrix 1, 1D codes ~10 left/right). Only if you add your own margin — without it DataMatrix and ITF fail on coloured or busy backgrounds.
 - `-data`: Data to encode (required if no structured flags are used).
 - `-out`: Output file with `.svg` or `.png` extension (default: `barcode.svg`).
 - `-width`: Width in pixels.
