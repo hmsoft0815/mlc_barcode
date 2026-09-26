@@ -176,6 +176,38 @@ Das **[MCP-Handbuch](https://mlcgo.eu/books/mcp-handbuch/)** erklärt das Model 
 Tools, Resources, Prompts, Transporte, Sicherheit und das Artifact-Pattern.
 Auf Deutsch und Englisch.
 
+## Barcode- & 2D-Code-Spezifikationen
+
+Diese Übersicht enthält die offiziellen ISO-Normen, Spezifikationen und Dokumentationen für die bereits implementierten sowie für geplante Formate.
+
+### Integrierte Formate
+
+| Kurz | Langform | Offizielle Spezifikation & Dokumentation |
+| :--- | :--- | :--- |
+| **QR** | Quick Response Code | https://iso.org (ISO/IEC 18004) |
+| **DataMatrix** | DataMatrix ECC 200 | https://iso.org (ISO/IEC 16022) |
+| **Code128** | Code 128 | https://iso.org (ISO/IEC 15417) |
+| **Code39** | Code 39 (3 of 9) | https://iso.org (ISO/IEC 16388) |
+| **EAN-13** | International Article Number (13-stellig) | https://iso.org (ISO/IEC 15420) |
+| **EAN-8** | International Article Number (8-stellig) | https://iso.org (ISO/IEC 15420) |
+| **UPC-A** | Universal Product Code | https://iso.org (ISO/IEC 15420) |
+| **ITF** | Interleaved 2 of 5 | https://iso.org (ISO/IEC 16390) |
+
+### Geplante Formate
+
+| Kurz | Langform | Offizielle Spezifikation & Dokumentation |
+| :--- | :--- | :--- |
+| **Aztec** | Aztec Code | https://iso.org (ISO/IEC 24778) |
+| **PDF417** | Portable Data File 417 | https://iso.org (ISO/IEC 15438) |
+| **GS1 DataMatrix** | GS1 DataMatrix (mit FNC1-Steuerung) | https://gs1.org (GS1 Guideline) |
+
+### Hilfreiche offene Ressourcen (Implementierungshilfen)
+
+Da ISO-Normen kostenpflichtig sind, bieten die folgenden freien Dokumentationen exzellente Algorithmen für Prüfziffern-Berechnungen und Zeichensatz-Tabellen:
+
+* **Prüfziffern & Zeichensätze:** https://grandzebu.net (umfangreiche Berechnungen für Code 128 und EAN)
+* **GS1-Datenstrukturen:** https://gs1.org (Definitionen aller Application Identifier)
+
 ---
 
 ## Lizenz

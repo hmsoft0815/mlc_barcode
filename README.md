@@ -179,6 +179,38 @@ The **[MCP Handbook](https://mlcgo.eu/books/mcp-handbuch/)** explains the Model 
 up — tools, resources, prompts, transports, security and the artifact pattern.
 Available in English and German.
 
+## Barcode & 2D code specifications
+
+The official ISO standards, specifications and documentation for the formats already implemented and for those planned.
+
+### Integrated formats
+
+| Short | Long form | Official specification & documentation |
+| :--- | :--- | :--- |
+| **QR** | Quick Response Code | https://iso.org (ISO/IEC 18004) |
+| **DataMatrix** | DataMatrix ECC 200 | https://iso.org (ISO/IEC 16022) |
+| **Code128** | Code 128 | https://iso.org (ISO/IEC 15417) |
+| **Code39** | Code 39 (3 of 9) | https://iso.org (ISO/IEC 16388) |
+| **EAN-13** | International Article Number (13 digits) | https://iso.org (ISO/IEC 15420) |
+| **EAN-8** | International Article Number (8 digits) | https://iso.org (ISO/IEC 15420) |
+| **UPC-A** | Universal Product Code | https://iso.org (ISO/IEC 15420) |
+| **ITF** | Interleaved 2 of 5 | https://iso.org (ISO/IEC 16390) |
+
+### Planned formats
+
+| Short | Long form | Official specification & documentation |
+| :--- | :--- | :--- |
+| **Aztec** | Aztec Code | https://iso.org (ISO/IEC 24778) |
+| **PDF417** | Portable Data File 417 | https://iso.org (ISO/IEC 15438) |
+| **GS1 DataMatrix** | GS1 DataMatrix (with FNC1) | https://gs1.org (GS1 Guideline) |
+
+### Helpful open resources (implementation aids)
+
+ISO standards are not free; these open sources document the algorithms for check digits and the character-set tables well:
+
+* **Check digits & character sets:** https://grandzebu.net (extensive calculations for Code 128 and EAN)
+* **GS1 data structures:** https://gs1.org (definitions of all Application Identifiers)
+
 ---
 
 ## License
