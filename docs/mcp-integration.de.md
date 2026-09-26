@@ -34,6 +34,8 @@ Alle Tools teilen sich gemeinsame optionale Parameter für die Formatierung:
 ### 1. `generate_barcode`
 Generiert einen Standard-Barcode.
 - **Erforderlich**: `type`, `data`.
+- `type`: `qr`, `datamatrix`, `aztec`, `pdf417`, `code128`, `code39`, `ean13`, `ean8`, `upca`, `itf`.
+- Fehlermeldungen nennen das störende Zeichen oder die Datenmenge und sagen, was stattdessen zu tun ist (z. B. `code128` für Kleinbuchstaben, `aztec` für mehr Text, als ein QR-Code fasst).
 - `ean13` / `ean8` / `upca`: nur Ziffern; mit Prüfziffer (13/8/12 Stellen) oder ohne (12/7/11 — sie wird berechnet). Eine falsche Prüfziffer wird abgelehnt, die Fehlermeldung nennt die richtige.
 
 ### 2. `generate_wifi_qr`

@@ -548,11 +548,17 @@
               on:change={(e) => handleTypeChange(e.currentTarget.value as BarcodeType)}
             >
               <optgroup label="2D Matrix (Mehrzeilig / Große Datenmengen)">
-                {#each BARCODE_TYPES.filter((t) => t.category === '2D Matrix') as t}
+                <!-- Structured payloads (vCard, Wi-Fi, …) are read reliably by phones only as QR or DataMatrix. -->
+                {#each BARCODE_TYPES.filter((t) => t.category === '2D Matrix' && (qrMode === 'text' || t.id === 'qr' || t.id === 'datamatrix')) as t}
                   <option value={t.id}>{t.name} ({t.description})</option>
                 {/each}
               </optgroup>
               {#if qrMode === 'text'}
+                <optgroup label="2D gestapelt (Tickets, Bordkarten, Etiketten)">
+                  {#each BARCODE_TYPES.filter((t) => t.category === '2D Stacked') as t}
+                    <option value={t.id}>{t.name} - {t.description}</option>
+                  {/each}
+                </optgroup>
                 <optgroup label="1D Linear (Einzelhandels- & Industrie-Codes)">
                   {#each BARCODE_TYPES.filter((t) => t.category === '1D Linear') as t}
                     <option value={t.id}>{t.name} - {t.description}</option>

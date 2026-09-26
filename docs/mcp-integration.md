@@ -34,6 +34,8 @@ All tools share common optional parameters for formatting:
 ### 1. `generate_barcode`
 Generates a standard barcode.
 - **Required**: `type`, `data`.
+- `type`: `qr`, `datamatrix`, `aztec`, `pdf417`, `code128`, `code39`, `ean13`, `ean8`, `upca`, `itf`.
+- Errors name the offending character or the amount of data and say what to do instead (e.g. `code128` for lower case, `aztec` for more text than a QR code holds).
 - `ean13` / `ean8` / `upca`: digits only; with check digit (13/8/12 digits) or without (12/7/11 — it is computed). A wrong check digit is rejected, the error names the expected one.
 
 ### 2. `generate_wifi_qr`

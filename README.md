@@ -39,7 +39,7 @@ Current Version: **1.5.0**
 
 ## Features
 
-- Supports multiple barcode types: QR, DataMatrix, Code128, Code39, EAN-13, EAN-8, UPC-A, ITF.
+- Supports multiple barcode types: QR, DataMatrix, Aztec, PDF417, Code128, Code39, EAN-13, EAN-8, UPC-A, ITF.
 - Output formats: SVG (vector-based) and PNG.
 - Adjustable size and optional caption (custom text, adjustable font size) in SVG and PNG.
 - Desktop GUI with batch generator and A4 label sheets.
@@ -195,13 +195,13 @@ The official ISO standards, specifications and documentation for the formats alr
 | **EAN-8** | International Article Number (8 digits) | https://iso.org (ISO/IEC 15420) |
 | **UPC-A** | Universal Product Code | https://iso.org (ISO/IEC 15420) |
 | **ITF** | Interleaved 2 of 5 | https://iso.org (ISO/IEC 16390) |
+| **Aztec** | Aztec Code | https://iso.org (ISO/IEC 24778) |
+| **PDF417** | Portable Data File 417 | https://iso.org (ISO/IEC 15438) |
 
 ### Planned formats
 
 | Short | Long form | Official specification & documentation |
 | :--- | :--- | :--- |
-| **Aztec** | Aztec Code | https://iso.org (ISO/IEC 24778) |
-| **PDF417** | Portable Data File 417 | https://iso.org (ISO/IEC 15438) |
 | **GS1 DataMatrix** | GS1 DataMatrix (with FNC1) | https://gs1.org (GS1 Guideline) |
 
 ### Helpful open resources (implementation aids)

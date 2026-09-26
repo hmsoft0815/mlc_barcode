@@ -39,7 +39,7 @@ ohne sie. Siehe [LICENSE](LICENSE).
 Aktuelle Version: **1.5.0**
 
 ## Funktionen
-- Unterstützt mehrere Barcode-Typen: QR, DataMatrix, Code128, Code39, EAN-13, EAN-8, UPC-A, ITF.
+- Unterstützt mehrere Barcode-Typen: QR, DataMatrix, Aztec, PDF417, Code128, Code39, EAN-13, EAN-8, UPC-A, ITF.
 - Ausgabeformate: SVG (vektorbasiert) und PNG.
 - Anpassbare Größe und optionale Beschriftung (Freitext, einstellbare Schriftgröße) in SVG und PNG.
 - Desktop-GUI mit Batch-Generator und A4-Etikettenbögen.
@@ -192,13 +192,13 @@ Diese Übersicht enthält die offiziellen ISO-Normen, Spezifikationen und Dokume
 | **EAN-8** | International Article Number (8-stellig) | https://iso.org (ISO/IEC 15420) |
 | **UPC-A** | Universal Product Code | https://iso.org (ISO/IEC 15420) |
 | **ITF** | Interleaved 2 of 5 | https://iso.org (ISO/IEC 16390) |
+| **Aztec** | Aztec Code | https://iso.org (ISO/IEC 24778) |
+| **PDF417** | Portable Data File 417 | https://iso.org (ISO/IEC 15438) |
 
 ### Geplante Formate
 
 | Kurz | Langform | Offizielle Spezifikation & Dokumentation |
 | :--- | :--- | :--- |
-| **Aztec** | Aztec Code | https://iso.org (ISO/IEC 24778) |
-| **PDF417** | Portable Data File 417 | https://iso.org (ISO/IEC 15438) |
 | **GS1 DataMatrix** | GS1 DataMatrix (mit FNC1-Steuerung) | https://gs1.org (GS1 Guideline) |
 
 ### Hilfreiche offene Ressourcen (Implementierungshilfen)

@@ -64,7 +64,7 @@
               <tr>
                 <td class="fw-medium text-body">{t.name}</td>
                 <td>
-                  <span class="badge {t.category === '2D Matrix' ? 'bg-info-subtle text-info-emphasis' : 'bg-body-secondary text-body border'}">
+                  <span class="badge {t.category !== '1D Linear' ? 'bg-info-subtle text-info-emphasis' : 'bg-body-secondary text-body border'}">
                     {t.category}
                   </span>
                 </td>
