@@ -21,12 +21,15 @@ const (
 	ErrEncoder         = "encoder"
 	ErrNothingFound    = "nothing_found"
 	ErrAztecCharset    = "aztec_charset"
+	ErrImageFormat     = "image_format"
+	ErrImageTooLarge   = "image_too_large"
 )
 
 // ErrorCodes lists every code; a test checks the GUI translates each one.
 var ErrorCodes = []string{
 	ErrEmpty, ErrRetailNonDigit, ErrRetailLength, ErrRetailChecksum, ErrCode39Charset,
 	ErrASCIIOnly, ErrITFDigits, ErrITFEven, ErrCapacity, ErrUnsupportedType, ErrEncoder, ErrNothingFound, ErrAztecCharset,
+	ErrImageFormat, ErrImageTooLarge,
 }
 
 // InputError is an input the symbology cannot encode. Error() is the

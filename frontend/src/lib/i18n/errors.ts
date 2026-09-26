@@ -50,6 +50,12 @@ const de: Catalog = {
   encoder: (p) => `${typeName(p.type)} kann diese Eingabe nicht codieren (${p.detail}).`,
   aztec_charset: (p) =>
     `Aztec kann nur Zeichen aus ISO-8859-1 (Latin-1, mit äöüß) darstellen; ${quoted(p.char)} an Position ${p.pos} gehört nicht dazu. Dafür QR oder DataMatrix nehmen.`,
+  image_format: () =>
+    'Dieses Bildformat wird nicht unterstützt. Bitte PNG, JPEG, GIF oder WebP verwenden (iPhone-Fotos im HEIC-Format vorher als JPEG exportieren).',
+  image_too_large: (p) =>
+    p.max_mp
+      ? `Das Bild ist ${p.width}×${p.height} Pixel groß, höchstens ${p.max_mp} Megapixel sind erlaubt. Bitte verkleinern.`
+      : `Das Bild ist ${p.size_mb} MB groß, höchstens ${p.max_mb} MB sind erlaubt.`,
   nothing_found: () =>
     'Im Bild wurde kein Barcode gefunden. Ist der Code scharf, vollständig sichtbar und nicht zu klein? PDF417 kann noch nicht gelesen werden.'
 };

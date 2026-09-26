@@ -22,6 +22,14 @@ export function CopyToClipboard(text: string): $CancellablePromise<boolean> {
 }
 
 /**
+ * DecodeImage reads the barcodes in an image (PNG, JPEG, GIF, WebP), given
+ * as base64 or data URI, and splits known payloads into fields.
+ */
+export function DecodeImage(imageBase64: string): $CancellablePromise<$models.DecodeImageResult> {
+    return $Call.ByID(107298074, imageBase64);
+}
+
+/**
  * ExportBatchToFolder exports generated batch barcodes into a target directory.
  */
 export function ExportBatchToFolder(req: $models.BatchExportRequest): $CancellablePromise<$models.BatchExportResponse> {

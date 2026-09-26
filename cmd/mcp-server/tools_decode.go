@@ -1,15 +1,10 @@
 package main
 
 import (
-	"bytes"
 	"context"
 	"encoding/base64"
 	"errors"
 	"fmt"
-	"image"
-	_ "image/gif"
-	_ "image/jpeg"
-	_ "image/png"
 	"os"
 	"sort"
 	"strings"
@@ -17,14 +12,6 @@ import (
 	"github.com/mlcmcp/mlc_barcode/internal/barcodes"
 	"github.com/mlcmcp/mlc_barcode/internal/qrformats"
 	"github.com/modelcontextprotocol/go-sdk/mcp"
-	_ "golang.org/x/image/webp"
-)
-
-// Limits against oversized input: bytes before decoding, pixels from the
-// image header before the pixels are allocated.
-const (
-	maxImageBytes  = 20 << 20
-	maxImagePixels = 40_000_000
 )
 
 type decodedCode struct {
@@ -108,11 +95,11 @@ func registerDecodeTools(s *mcp.Server, allowPath bool) {
 			path = ""
 		}
 
-		img, err := loadImage(path, b64)
+		data, err := loadImage(path, b64)
 		if err != nil {
 			return toolError(err), nil, nil
 		}
-		found, err := barcodes.Decode(img)
+		found, _, err := barcodes.DecodeImageBytes(data)
 		if err != nil {
 			return toolError(err), nil, nil
 		}
@@ -156,7 +143,7 @@ func toolError(err error) *mcp.CallToolResult {
 	return &mcp.CallToolResult{IsError: true, Content: []mcp.Content{&mcp.TextContent{Text: err.Error()}}}
 }
 
-func loadImage(path, b64 string) (image.Image, error) {
+func loadImage(path, b64 string) ([]byte, error) {
 	var data []byte
 	switch {
 	case path != "" && b64 != "":
@@ -166,8 +153,8 @@ func loadImage(path, b64 string) (image.Image, error) {
 		if err != nil {
 			return nil, fmt.Errorf("cannot read %s: %v — pass an absolute path to an existing image file", path, err)
 		}
-		if st.Size() > maxImageBytes {
-			return nil, fmt.Errorf("image file is %d MB, at most %d MB are accepted", st.Size()>>20, maxImageBytes>>20)
+		if st.Size() > barcodes.MaxImageBytes {
+			return nil, fmt.Errorf("image file is %d MB, at most %d MB are accepted", st.Size()>>20, barcodes.MaxImageBytes>>20)
 		}
 		if data, err = os.ReadFile(path); err != nil {
 			return nil, fmt.Errorf("cannot read %s: %v", path, err)
@@ -176,8 +163,8 @@ func loadImage(path, b64 string) (image.Image, error) {
 		if i := strings.Index(b64, ","); strings.HasPrefix(b64, "data:") && i > 0 {
 			b64 = b64[i+1:]
 		}
-		if base64.StdEncoding.DecodedLen(len(b64)) > maxImageBytes {
-			return nil, fmt.Errorf("image is larger than %d MB", maxImageBytes>>20)
+		if base64.StdEncoding.DecodedLen(len(b64)) > barcodes.MaxImageBytes {
+			return nil, fmt.Errorf("image is larger than %d MB", barcodes.MaxImageBytes>>20)
 		}
 		var err error
 		if data, err = base64.StdEncoding.DecodeString(strings.TrimSpace(b64)); err != nil {
@@ -187,16 +174,5 @@ func loadImage(path, b64 string) (image.Image, error) {
 		return nil, errors.New("no image given — pass path (absolute file path) or image_base64")
 	}
 
-	cfg, format, err := image.DecodeConfig(bytes.NewReader(data))
-	if err != nil {
-		return nil, errors.New("unsupported image format — use PNG, JPEG, GIF or WebP (HEIC from iPhones: export as JPEG first)")
-	}
-	if cfg.Width*cfg.Height > maxImagePixels {
-		return nil, fmt.Errorf("image is %dx%d pixels, at most %d megapixels are accepted — scale it down", cfg.Width, cfg.Height, maxImagePixels/1_000_000)
-	}
-	img, _, err := image.Decode(bytes.NewReader(data))
-	if err != nil {
-		return nil, fmt.Errorf("cannot decode %s image: %v", format, err)
-	}
-	return img, nil
+	return data, nil
 }

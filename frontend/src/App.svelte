@@ -5,10 +5,11 @@
   import BatchGenerator from './lib/components/BatchGenerator.svelte';
   import LabelPrinter from './lib/components/LabelPrinter.svelte';
   import AboutView from './lib/components/AboutView.svelte';
+  import Checker from './lib/components/Checker.svelte';
   import type { PrintItem } from './lib/types';
   import { GetVersion } from '../bindings/github.com/mlcmcp/mlc_barcode/internal/gui/barcodeapp';
 
-  let activeTab: 'single' | 'batch' | 'print' | 'about' = 'single';
+  let activeTab: 'single' | 'batch' | 'print' | 'check' | 'about' = 'single';
   let appVersion = __APP_VERSION__;
   let theme: 'light' | 'dark' = 'dark';
 
@@ -74,6 +75,9 @@
     </div>
     <div class:d-none={activeTab !== 'print'}>
       <LabelPrinter {printItems} batchItems={lastBatchItems} />
+    </div>
+    <div class:d-none={activeTab !== 'check'}>
+      <Checker active={activeTab === 'check'} />
     </div>
     <div class:d-none={activeTab !== 'about'}>
       <AboutView {appVersion} />

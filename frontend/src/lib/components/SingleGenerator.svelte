@@ -1219,6 +1219,23 @@
               <span class="badge bg-body-secondary text-body border small">
                 Vektor: <strong>SVG / Crisp</strong>
               </span>
+              {#if result.readBack === 'ok'}
+                <span class="badge bg-success-subtle text-success-emphasis border border-success-subtle small" title="Der erzeugte Code wurde mit dem eingebauten Scanner gelesen und stimmt mit der Eingabe überein.">
+                  <i class="bi bi-check2-circle me-1"></i>Lesbar geprüft
+                </span>
+              {:else if result.readBack === 'unreadable'}
+                <span class="badge bg-danger-subtle text-danger-emphasis border border-danger-subtle small" title="Der eingebaute Scanner konnte diesen Code nicht lesen – meist zu wenig Kontrast zwischen Code- und Hintergrundfarbe.">
+                  <i class="bi bi-exclamation-triangle me-1"></i>Nicht lesbar – Farben prüfen
+                </span>
+              {:else if result.readBack === 'mismatch'}
+                <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle small" title="Der Scanner hat etwas anderes gelesen als eingegeben.">
+                  <i class="bi bi-exclamation-triangle me-1"></i>Gelesener Inhalt weicht ab
+                </span>
+              {:else if result.readBack === 'unsupported'}
+                <span class="badge bg-body-secondary text-body-secondary border small" title="Für PDF417 gibt es noch keinen eingebauten Scanner.">
+                  Lesbarkeit nicht prüfbar
+                </span>
+              {/if}
             </div>
           {:else if result?.error}
             <div class="alert alert-danger w-100 text-center py-4 my-auto">

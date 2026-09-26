@@ -102,6 +102,7 @@ barcode -type qr -data "https://mlcgo.eu" -out qr.svg
           <ul class="mb-0 ps-3">
             <li><strong>Live-Vorschau:</strong> Direkte Vektordarstellung in SVG und hochauflösendem PNG.</li>
             <li><strong>9 QR-Sonderformate:</strong> GiroCode (SEPA-Überweisung), Krypto-Wallets, Maps (Geo), Telefon, SMS, E-Mail, WLAN, vCard 3.0 und Kalender-Events.</li>
+            <li><strong>Prüfen:</strong> Barcodes aus Bildern lesen (Datei, Drag &amp; Drop, <kbd>Strg</kbd>+<kbd>V</kbd>) – Format, Inhalt und zerlegte Felder, beim GiroCode mit IBAN-Prüfung. Jeder erzeugte Code wird automatisch gegengelesen („Lesbar geprüft“).</li>
             <li><strong>Beschriftung:</strong> Freitext unter dem Barcode mit einstellbarer Schriftgröße, in SVG und PNG.</li>
             <li><strong>Batch-Generierung:</strong> Import von <code>.txt</code>/<code>.csv</code> (Format siehe unten) und Stapel-Export in einen Zielordner.</li>
             <li><strong>Etiketten-Druckbogen:</strong> DIN-A4-Layouts nach gängigen Avery-Zweckform-Rastern; Etiketten aus dem Batch-Generator übernehmen oder direkt aus TXT/CSV mit eigenem Etikett-Text importieren.</li>

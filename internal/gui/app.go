@@ -190,12 +190,64 @@ func (a *BarcodeApp) GenerateBarcode(req BarcodeRequest) (BarcodeResult, error) 
 	}
 
 	return BarcodeResult{
-		Type:    string(btype),
-		Data:    data,
-		SVG:     svgStr,
-		PNGData: pngDataURI,
-		Success: true,
+		Type:     string(btype),
+		Data:     data,
+		SVG:      svgStr,
+		PNGData:  pngDataURI,
+		Success:  true,
+		ReadBack: readBack(btype, data, pngBytes),
 	}, nil
+}
+
+// readBack decodes the generated PNG and compares it with the input.
+func readBack(btype barcodes.BarcodeType, data string, png []byte) string {
+	if btype == barcodes.TypePDF417 {
+		return "unsupported"
+	}
+	want := data
+	if barcodes.IsRetail(btype) {
+		want = barcodes.CheckRetail(btype, data).Code
+	}
+	found, _, err := barcodes.DecodeImageBytes(png)
+	if err != nil || len(found) == 0 {
+		return "unreadable"
+	}
+	for _, d := range found {
+		if d.Type == btype && d.Text == want {
+			return "ok"
+		}
+	}
+	return "mismatch"
+}
+
+// DecodeImage reads the barcodes in an image (PNG, JPEG, GIF, WebP), given
+// as base64 or data URI, and splits known payloads into fields.
+func (a *BarcodeApp) DecodeImage(imageBase64 string) DecodeImageResult {
+	if i := strings.Index(imageBase64, ","); strings.HasPrefix(imageBase64, "data:") && i > 0 {
+		imageBase64 = imageBase64[i+1:]
+	}
+	raw, err := base64.StdEncoding.DecodeString(strings.TrimSpace(imageBase64))
+	if err != nil {
+		return DecodeImageResult{Error: "invalid image data", ErrorInfo: ErrorInfo{ErrorCode: barcodes.ErrImageFormat}}
+	}
+	found, size, err := barcodes.DecodeImageBytes(raw)
+	res := DecodeImageResult{Width: size.X, Height: size.Y, Codes: []DecodedCode{}}
+	if err != nil {
+		res.Error, res.ErrorInfo = err.Error(), errorInfo(err)
+		return res
+	}
+	for _, d := range found {
+		c := DecodedCode{Type: string(d.Type), Text: d.Text}
+		if p := qrformats.Parse(d.Text); p.Kind != "text" {
+			c.Content = &p
+		}
+		for _, pt := range d.Points {
+			c.Points = append(c.Points, Point{X: pt.X, Y: pt.Y})
+		}
+		res.Codes = append(res.Codes, c)
+	}
+	res.Success = true
+	return res
 }
 
 // GenerateBatch processes multiple lines of text and generates barcodes for each.

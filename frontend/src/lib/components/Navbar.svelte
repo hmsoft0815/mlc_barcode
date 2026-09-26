@@ -1,5 +1,5 @@
 <script lang="ts">
-  export let activeTab: 'single' | 'batch' | 'print' | 'about' = 'single';
+  export let activeTab: 'single' | 'batch' | 'print' | 'check' | 'about' = 'single';
   export let appVersion: string = __APP_VERSION__;
   export let theme: 'light' | 'dark' = 'light';
   export let onToggleTheme: () => void = () => {};
@@ -41,6 +41,14 @@
           type="button"
         >
           <i class="bi bi-printer me-1"></i> Etiketten-Druck
+        </button>
+
+        <button
+          class="nav-link {activeTab === 'check' ? 'active' : 'text-body-secondary'}"
+          on:click={() => (activeTab = 'check')}
+          type="button"
+        >
+          <i class="bi bi-qr-code-scan me-1"></i> Prüfen
         </button>
 
         <button

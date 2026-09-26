@@ -1,6 +1,9 @@
 package gui
 
-import "github.com/mlcmcp/mlc_barcode/internal/barcodes"
+import (
+	"github.com/mlcmcp/mlc_barcode/internal/barcodes"
+	"github.com/mlcmcp/mlc_barcode/internal/qrformats"
+)
 
 // BarcodeRequest contains parameters for generating a single barcode.
 type BarcodeRequest struct {
@@ -22,7 +25,11 @@ type BarcodeResult struct {
 	SVG     string `json:"svg,omitempty"`     // Raw SVG XML
 	PNGData string `json:"pngData,omitempty"` // Base64 data URI (data:image/png;base64,...)
 	Success bool   `json:"success"`
-	Error   string `json:"error,omitempty"` // English text (fallback)
+	// ReadBack is the result of reading the generated PNG with the decoder:
+	// "ok", "mismatch" (read something else), "unreadable" (e.g. too little
+	// contrast) or "unsupported" (no reader for the symbology yet).
+	ReadBack string `json:"readBack,omitempty"`
+	Error    string `json:"error,omitempty"` // English text (fallback)
 	ErrorInfo
 }
 
@@ -175,4 +182,28 @@ type RetailValidation struct {
 	Expected        int    `json:"expected"`
 	MinLength       int    `json:"minLength"`
 	MaxLength       int    `json:"maxLength"`
+}
+
+// DecodedCode is one barcode found by DecodeImage.
+type DecodedCode struct {
+	Type    string            `json:"type"`
+	Text    string            `json:"text"`
+	Content *qrformats.Parsed `json:"content,omitempty"` // known payload split into fields
+	Points  []Point           `json:"points,omitempty"`  // in image pixels
+}
+
+// Point is a position in image pixels.
+type Point struct {
+	X int `json:"x"`
+	Y int `json:"y"`
+}
+
+// DecodeImageResult is the answer of DecodeImage.
+type DecodeImageResult struct {
+	Success bool          `json:"success"`
+	Codes   []DecodedCode `json:"codes"`
+	Width   int           `json:"width"`
+	Height  int           `json:"height"`
+	Error   string        `json:"error,omitempty"`
+	ErrorInfo
 }
