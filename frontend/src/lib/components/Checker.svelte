@@ -54,6 +54,19 @@
     }
   }
 
+  // Frame around the reported points. QR points are the centres of the
+  // finder patterns (plus the alignment pattern), 1D codes give two points on
+  // a line — a padded bounding box fits both.
+  function markBox(points: { x: number; y: number }[], w: number, h: number) {
+    if (points.length === 0) return null;
+    const xs = points.map((p) => p.x);
+    const ys = points.map((p) => p.y);
+    const minX = Math.min(...xs), maxX = Math.max(...xs), minY = Math.min(...ys), maxY = Math.max(...ys);
+    const pad = Math.max((maxX - minX) * 0.2, (maxY - minY) * 0.2, Math.max(w, h) * 0.02);
+    const x = Math.max(0, minX - pad), y = Math.max(0, minY - pad);
+    return { x, y, w: Math.min(w, maxX + pad) - x, h: Math.min(h, maxY + pad) - y, pad };
+  }
+
   async function copyText(text: string, i: number) {
     if (!(await CopyToClipboard(text))) await navigator.clipboard.writeText(text);
     copied = i;
@@ -91,14 +104,10 @@
                 {#if result?.success && result.width > 0}
                   <svg viewBox="0 0 {result.width} {result.height}" preserveAspectRatio="xMidYMid meet" aria-hidden="true">
                     {#each result.codes ?? [] as code, i}
-                      {#if (code.points?.length ?? 0) >= 3}
-                        <polygon class="mark" points={code.points?.map((p) => `${p.x},${p.y}`).join(' ')} />
-                      {/if}
-                      {#each code.points ?? [] as p}
-                        <circle class="mark-dot" cx={p.x} cy={p.y} r={Math.max(result.width, result.height) / 120} />
-                      {/each}
-                      {#if code.points?.length}
-                        <text class="mark-label" x={code.points[0].x} y={code.points[0].y} font-size={Math.max(result.width, result.height) / 30}>{i + 1}</text>
+                      {@const box = markBox(code.points ?? [], result.width, result.height)}
+                      {#if box}
+                        <rect class="mark" x={box.x} y={box.y} width={box.w} height={box.h} rx={box.pad / 3} />
+                        <text class="mark-label" x={box.x + box.pad / 2} y={box.y - box.pad / 3} font-size={Math.max(result.width, result.height) / 30}>{i + 1}</text>
                       {/if}
                     {/each}
                   </svg>
@@ -233,9 +242,6 @@
     fill: rgba(var(--bs-primary-rgb), 0.15);
     stroke: var(--bs-primary);
     stroke-width: 0.6%;
-  }
-  .mark-dot {
-    fill: var(--bs-primary);
   }
   .mark-label {
     fill: var(--bs-primary);
