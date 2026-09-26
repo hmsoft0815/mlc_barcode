@@ -36,7 +36,7 @@ diese Nennung nicht ins Produkt, gibt es auf Anfrage eine kommerzielle Lizenz
 ohne sie. Siehe [LICENSE](LICENSE).
 
 ## Version
-Aktuelle Version: **1.5.0**
+Aktuelle Version: **1.6.0**
 
 ## Funktionen
 - Unterstützt mehrere Barcode-Typen: QR, DataMatrix, Aztec, PDF417, Code128, Code39, EAN-13, EAN-8, UPC-A, ITF.

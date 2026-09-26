@@ -23,8 +23,8 @@ export interface BarcodeTypeOption {
 export const BARCODE_TYPES: BarcodeTypeOption[] = [
   { id: 'qr', name: 'QR Code', category: '2D Matrix', description: '2D Matrixcode für Text, URLs, WLAN, vCard, Events', sample: 'https://mlcgo.eu' },
   { id: 'datamatrix', name: 'DataMatrix', category: '2D Matrix', description: 'Kompakter 2D-Code für Industrie und Bauteile', sample: 'MLC-DM-12345' },
-  { id: 'aztec', name: 'Aztec', category: '2D Matrix', description: 'Kompakter 2D-Code für Bahn- und Flugtickets, gut lesbar auf Displays', sample: 'TICKET-ICE-599-FRA-MUC' },
-  { id: 'pdf417', name: 'PDF417', category: '2D Stacked', description: 'Gestapelter 2D-Code für Bordkarten, Versandetiketten und Ausweise', sample: 'BOARDING PASS LH123 FRA-JFK' },
+  { id: 'aztec', name: 'Aztec', category: '2D Matrix', description: 'Kompakter 2D-Code für Bahn- und Flugtickets – für Fachscanner, Handy-Kameras lesen ihn meist nicht', sample: 'TICKET-ICE-599-FRA-MUC' },
+  { id: 'pdf417', name: 'PDF417', category: '2D Stacked', description: 'Gestapelter 2D-Code für Bordkarten und Versandetiketten – für Fachscanner, Handy-Kameras lesen ihn meist nicht', sample: 'BOARDING PASS LH123 FRA-JFK' },
   { id: 'code128', name: 'Code 128', category: '1D Linear', description: 'Universeller 1D-Barcode für alle ASCII-Zeichen', sample: 'MLC-128-ABC' },
   { id: 'code39', name: 'Code 39', category: '1D Linear', description: 'Alphanumerischer Barcode (Großbuchstaben, Ziffern)', sample: 'CODE39' },
   { id: 'ean13', name: 'EAN-13 / GTIN-13', category: '1D Linear', description: '13-stelliger Einzelhandels-Barcode (12 Ziffern + Prüfziffer)', sample: '4012345678901' },
