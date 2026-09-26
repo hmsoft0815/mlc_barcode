@@ -1,7 +1,6 @@
 package gui
 
 import (
-	"bufio"
 	"encoding/base64"
 	"fmt"
 	"os"
@@ -245,42 +244,6 @@ func (a *BarcodeApp) GenerateBatch(req BatchBarcodeRequest) (BatchBarcodeRespons
 		ValidCount: validCount,
 		ErrorCount: errorCount,
 	}, nil
-}
-
-// PickTextFile opens a native open-file dialog for .txt or .csv files and reads all lines.
-func (a *BarcodeApp) PickTextFile() (string, []string, error) {
-	dialog := application.Get().Dialog.OpenFile()
-	dialog.SetMessage("Text- oder CSV-Datei auswählen")
-	dialog.AddFilter("Text & CSV Dateien (*.txt, *.csv)", "*.txt;*.csv")
-	dialog.AddFilter("Alle Dateien (*.*)", "*.*")
-
-	filePath, err := dialog.PromptForSingleSelection()
-	if err != nil {
-		return "", nil, err
-	}
-	if filePath == "" {
-		return "", nil, nil // User cancelled
-	}
-
-	file, err := os.Open(filePath)
-	if err != nil {
-		return filePath, nil, fmt.Errorf("could not open file: %w", err)
-	}
-	defer file.Close()
-
-	var lines []string
-	scanner := bufio.NewScanner(file)
-	for scanner.Scan() {
-		text := strings.TrimSpace(scanner.Text())
-		if text != "" {
-			lines = append(lines, text)
-		}
-	}
-	if err := scanner.Err(); err != nil {
-		return filePath, nil, fmt.Errorf("error reading file lines: %w", err)
-	}
-
-	return filePath, lines, nil
 }
 
 // PickExportFolder opens a native folder selection dialog.

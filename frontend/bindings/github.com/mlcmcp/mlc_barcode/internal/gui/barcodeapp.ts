@@ -120,10 +120,11 @@ export function PickExportFolder(): $CancellablePromise<string> {
 }
 
 /**
- * PickTextFile opens a native open-file dialog for .txt or .csv files and reads all lines.
+ * PickTableFile opens a TXT/CSV file and splits it into rows. An empty Path
+ * means the user cancelled.
  */
-export function PickTextFile(): $CancellablePromise<[string, string[] | null]> {
-    return $Call.ByID(2658359795);
+export function PickTableFile(): $CancellablePromise<$models.TableFile> {
+    return $Call.ByID(964615804);
 }
 
 /**

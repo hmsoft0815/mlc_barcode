@@ -3,7 +3,7 @@
   import { BARCODE_TYPES, type BarcodeType, type PrintItem } from '../types';
   import {
     GenerateBatch,
-    PickTextFile,
+    PickTableFile,
     PickExportFolder,
     ExportBatchToFolder,
     CopyToClipboard
@@ -39,10 +39,12 @@
 
   async function loadFile() {
     try {
-      const [path, lines] = await PickTextFile();
-      if (path && lines && lines.length > 0) {
-        importedFilePath = path;
-        rawText = lines.join('\n');
+      // CSV: only the first column (content) is used here.
+      const file = await PickTableFile();
+      const rows = (file.rows ?? []).map((r) => r ?? []);
+      if (file.path && rows.length > 0) {
+        importedFilePath = file.path;
+        rawText = rows.map((r) => r[0]).join('\n');
         runBatchGenerate();
       }
     } catch (e: any) {

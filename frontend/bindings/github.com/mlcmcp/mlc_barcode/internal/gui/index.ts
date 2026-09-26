@@ -21,6 +21,7 @@ export type {
     GeoInput,
     SMSInput,
     SaveSingleFileRequest,
+    TableFile,
     TelInput,
     VCardInput,
     WifiInput

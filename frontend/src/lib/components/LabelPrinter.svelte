@@ -1,6 +1,6 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import { GenerateBatch, PickTextFile } from '../../../bindings/github.com/mlcmcp/mlc_barcode/internal/gui/barcodeapp';
+  import { GenerateBatch, PickTableFile } from '../../../bindings/github.com/mlcmcp/mlc_barcode/internal/gui/barcodeapp';
   import { BARCODE_TYPES, type BarcodeType, type PrintItem } from '../types';
 
   export let printItems: PrintItem[] = [];
@@ -18,23 +18,17 @@
     importOk = true;
   }
 
-  function splitRow(line: string, sep: string): string[] {
-    if (!sep) return [line];
-    return line.split(sep).map((c) => c.trim().replace(/^"(.*)"$/, '$1').trim());
-  }
-
-  function detectSeparator(line: string): string {
-    return [';', '\t', ','].find((s) => line.includes(s)) ?? '';
-  }
-
   async function importFile() {
     try {
-      const [path, lines] = await PickTextFile();
-      if (!path || !lines?.length) return;
-
-      const body = skipHeader ? lines.slice(1) : lines;
-      const sep = path.toLowerCase().endsWith('.csv') ? detectSeparator(body[0] ?? '') : '';
-      const rows = body.map((l) => splitRow(l, sep)).filter((r) => r[0]);
+      const file = await PickTableFile();
+      if (!file.path) return;
+      const all = (file.rows ?? []).map((r) => r ?? []);
+      const rows = skipHeader ? all.slice(1) : all;
+      if (rows.length === 0) {
+        importMessage = 'Die Datei enthält keine Zeilen.';
+        importOk = false;
+        return;
+      }
 
       const res = await GenerateBatch({
         type: importType,
@@ -51,7 +45,7 @@
         .filter((it) => it.success && it.svg)
         .map((it) => ({ data: rows[it.index - 1]?.[1] || it.data, svg: it.svg!, type: importType }));
 
-      const name = path.split(/[\\/]/).pop();
+      const name = file.path.split(/[\\/]/).pop();
       importMessage = `${printItems.length} Etiketten aus ${name} importiert`;
       if (res.errorCount) importMessage += `, ${res.errorCount} Zeilen ungültig für ${importType.toUpperCase()}`;
       importOk = !res.errorCount;
@@ -229,7 +223,7 @@
       <div class="row g-2 align-items-end border-top pt-3 mt-2">
         <div class="col-md-4">
           <label for="labelImportType" class="form-label small text-body-secondary mb-1">
-            Datei importieren (TXT/CSV: 1. Spalte Code, 2. Spalte Etikett-Text)
+            Datei importieren — TXT: eine Zeile = ein Code · CSV: Inhalt; optional Etikett-Text
           </label>
           <select id="labelImportType" class="form-select form-select-sm" bind:value={importType}>
             {#each BARCODE_TYPES as t}
@@ -365,7 +359,7 @@
     .print-page-wrapper {
       box-shadow: none !important;
       margin: 0 !important;
-      padding: 5mm !important;
+      padding: 10mm !important;
       max-width: 100% !important;
       width: 100% !important;
     }

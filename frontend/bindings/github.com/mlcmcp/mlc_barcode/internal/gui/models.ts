@@ -224,6 +224,20 @@ export interface SaveSingleFileRequest {
 }
 
 /**
+ * TableFile is an imported TXT/CSV file. Every row has at least one cell:
+ * cell 0 is the barcode content, cell 1 (optional) a caption.
+ */
+export interface TableFile {
+    "path": string;
+
+    /**
+     * "" = one column per line
+     */
+    "separator": string;
+    "rows": (string[] | null)[] | null;
+}
+
+/**
  * TelInput contains telephone dialing parameters.
  */
 export interface TelInput {

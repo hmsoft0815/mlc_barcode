@@ -118,6 +118,27 @@ mcp-barcode-server</code></pre>
     </div>
   </div>
 
+  <!-- File import format -->
+  <div class="card shadow-sm border mb-3">
+    <div class="card-header bg-body border-bottom py-2">
+      <h6 class="mb-0 fw-semibold text-body">
+        <i class="bi bi-filetype-csv me-1 text-primary"></i> Datei-Import (Batch-Generator & Etiketten-Druck)
+      </h6>
+    </div>
+    <div class="card-body small text-body-secondary">
+      <ul class="ps-3 mb-2">
+        <li><strong>TXT:</strong> Jede Zeile ist ein Barcode-Inhalt. Es wird nichts aufgeteilt — Kommas und Semikolons gehören zum Inhalt.</li>
+        <li><strong>CSV:</strong> Spalte 1 = Inhalt (z.&nbsp;B. für den QR-Code), Spalte 2 = <em>optionaler</em> Etikett-Text. Der Batch-Generator nutzt nur Spalte 1.</li>
+        <li><strong>Trennzeichen:</strong> <code>;</code> oder Tab werden erkannt (Excel speichert deutsch mit <code>;</code>). Ein Komma gilt nur als Trennzeichen, wenn jede Zeile gleich viele hat. Ohne erkennbares Trennzeichen ist jede Zeile ein Inhalt.</li>
+        <li>Enthält der Inhalt selbst das Trennzeichen (z.&nbsp;B. <code>WIFI:…;…;</code>), das Feld in Anführungszeichen setzen.</li>
+        <li>Leere Zeilen werden übersprungen, eine Kopfzeile lässt sich im Etiketten-Druck abschalten.</li>
+      </ul>
+      <pre class="bg-body-secondary p-2 rounded mb-0 font-monospace small"><code>ART-1001;Schraube M4
+ART-1002
+"WIFI:T:WPA;S:Gast;P:geheim;;";Gäste-WLAN</code></pre>
+    </div>
+  </div>
+
   <!-- Copyright, License & Credits -->
   <div class="card shadow-sm border mb-3">
     <div class="card-header bg-body border-bottom py-2">

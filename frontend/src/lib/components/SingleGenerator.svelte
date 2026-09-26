@@ -1190,7 +1190,7 @@
                 </button>
               </div>
               <div class="col-6">
-                <button type="button" class="btn btn-outline-secondary btn-sm w-100" on:click={copyPNG}>
+                <button type="button" class="btn btn-outline-primary btn-sm w-100" on:click={copyPNG}>
                   <i class="bi bi-image me-1"></i> PNG kopieren
                 </button>
               </div>

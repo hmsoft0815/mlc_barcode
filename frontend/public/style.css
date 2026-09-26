@@ -54,3 +54,10 @@ html, body {
 ::-webkit-scrollbar-thumb:hover {
   background: rgba(120, 120, 120, 0.5);
 }
+
+/* Zero page margins suppress the browser's print header and footer
+   (wails.localhost URL, title, date). The label sheet brings its own margin. */
+@page {
+  size: A4;
+  margin: 0;
+}

@@ -80,7 +80,7 @@
     </div>
   </main>
 
-  <footer class="py-2 px-3 border-top bg-body text-body-secondary small d-flex flex-wrap justify-content-between align-items-center">
+  <footer class="no-print py-2 px-3 border-top bg-body text-body-secondary small d-flex flex-wrap justify-content-between align-items-center">
     <div>
       <span class="fw-medium">MLC Barcode v{appVersion}</span> · © 2026 Michael Lechner · <span class="badge bg-body-secondary text-body border">MIT with Attribution</span>
     </div>

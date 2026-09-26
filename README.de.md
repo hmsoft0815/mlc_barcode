@@ -15,7 +15,21 @@ Aktuelle Version: **1.4.0**
 ## Funktionen
 - Unterstützt mehrere Barcode-Typen: QR, DataMatrix, Code128, Code39, EAN-13, EAN-8, UPC-A, ITF.
 - Ausgabeformate: SVG (vektorbasiert) und PNG.
-- Anpassbare Größe und optionale Textanzeige für generierte SVG-Bilder.
+- Anpassbare Größe und optionale Beschriftung (Freitext, einstellbare Schriftgröße) in SVG und PNG.
+- Desktop-GUI mit Batch-Generator und A4-Etikettenbögen.
+
+### Datei-Import (GUI: Batch-Generator und Etiketten-Druck)
+
+- **TXT:** Eine Zeile = ein Barcode-Inhalt; es wird nichts aufgeteilt.
+- **CSV:** Spalte 1 = Inhalt (z. B. für den QR-Code), Spalte 2 = *optionaler* Etikett-Text. Der Batch-Generator nutzt nur Spalte 1.
+- Trennzeichen `;` oder Tab werden erkannt; ein Komma gilt nur, wenn jede Zeile gleich viele hat. Ohne erkennbares Trennzeichen ist jede Zeile ein Inhalt.
+- Enthält der Inhalt selbst das Trennzeichen, das Feld in Anführungszeichen setzen, z. B. `"WIFI:T:WPA;S:Gast;P:geheim;;";Gäste-WLAN`. Leere Zeilen werden übersprungen, ein UTF-8-BOM (Excel) wird entfernt.
+
+```csv
+ART-1001;Schraube M4
+ART-1002
+"WIFI:T:WPA;S:Gast;P:geheim;;";Gäste-WLAN
+```
 - MCP-Server Integration für LLMs (bietet das Tool `generate_barcode` an).
 - **Optionale Artifact-Anbindung**: Generierte Barcodes können direkt an den `mlcartifact` Dienst gesendet werden.
 - Saubere Projektstruktur nach Go Best Practices.

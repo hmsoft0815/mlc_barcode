@@ -16,7 +16,21 @@ Current Version: **1.4.0**
 
 - Supports multiple barcode types: QR, DataMatrix, Code128, Code39, EAN-13, EAN-8, UPC-A, ITF.
 - Output formats: SVG (vector-based) and PNG.
-- Adjustable size and optional text display for generated SVG images.
+- Adjustable size and optional caption (custom text, adjustable font size) in SVG and PNG.
+- Desktop GUI with batch generator and A4 label sheets.
+
+### File import (GUI: batch generator and label printer)
+
+- **TXT:** one line = one barcode content; nothing is split.
+- **CSV:** column 1 = content (e.g. for the QR code), column 2 = *optional* label text. The batch generator only uses column 1.
+- Separator `;` or tab is detected; a comma only counts when every line has the same number of them. Without a detectable separator every line is one content.
+- Quote a field that contains the separator itself, e.g. `"WIFI:T:WPA;S:Guest;P:secret;;";Guest Wi-Fi`. Empty lines are skipped, a UTF-8 BOM (Excel) is removed.
+
+```csv
+ART-1001;M4 screw
+ART-1002
+"WIFI:T:WPA;S:Guest;P:secret;;";Guest Wi-Fi
+```
 - MCP Server integration for LLMs (provides the `generate_barcode` tool).
 - **Optional Artifact connection**: Generated barcodes can be sent directly to the `mlcartifact` service.
 
