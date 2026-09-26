@@ -43,6 +43,7 @@ Current Version: **1.5.0**
 - Output formats: SVG (vector-based) and PNG.
 - Adjustable size and optional caption (custom text, adjustable font size) in SVG and PNG.
 - Desktop GUI with batch generator and A4 label sheets.
+- **Reads** barcodes from images (CLI `-decode`, MCP `decode_barcode`): symbology and content, several codes per image — every generated code is tested against this reader.
 
 ### File import (GUI: batch generator and label printer)
 
@@ -89,6 +90,7 @@ The binaries are located in `bin/`:
 
 ### Parameters
 
+- `-decode <image>`: Read codes from a PNG/JPEG/GIF/WebP file instead of generating; prints `type<TAB>content` per code.
 - `-type`: Barcode type (default: `qr`).
 - `-data`: Data to encode (required if no structured flags are used).
 - `-out`: Output file with `.svg` or `.png` extension (default: `barcode.svg`).

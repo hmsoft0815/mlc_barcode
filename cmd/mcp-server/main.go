@@ -56,6 +56,7 @@ func main() {
 	registerCryptoTools(s)
 	registerGeoTools(s)
 	registerCommunicationTools(s)
+	registerDecodeTools(s, *addr == "")
 	registerPrompts(s)
 
 	if *addr != "" {

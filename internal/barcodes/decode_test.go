@@ -153,3 +153,40 @@ func TestDecodeNothingFound(t *testing.T) {
 		t.Errorf("want ErrNothingFound, got %v", err)
 	}
 }
+
+// A sheet with different symbologies side by side: Aztec is only found by
+// the region scan, because its detector starts at the image centre.
+func TestDecodeMixedSheet(t *testing.T) {
+	parts := []image.Image{
+		renderPNG(t, TypeQR, "QR auf dem Blatt", DefaultOptions(TypeQR)),
+		renderPNG(t, TypeAztec, "AZTEC AUF DEM BLATT", DefaultOptions(TypeAztec)),
+		renderPNG(t, TypeEAN13, "4006381333931", DefaultOptions(TypeEAN13)),
+	}
+	sheet := image.NewRGBA(image.Rect(0, 0, 1400, 900))
+	draw.Draw(sheet, sheet.Bounds(), image.NewUniform(color.White), image.Point{}, draw.Src)
+	at := []image.Point{{60, 60}, {800, 60}, {400, 600}}
+	for i, p := range parts {
+		draw.Draw(sheet, p.Bounds().Add(at[i]), p, image.Point{}, draw.Src)
+	}
+
+	found, err := Decode(sheet)
+	if err != nil {
+		t.Fatal(err)
+	}
+	expectOne(t, found, TypeQR, "QR auf dem Blatt")
+	expectOne(t, found, TypeAztec, "AZTEC AUF DEM BLATT")
+	expectOne(t, found, TypeEAN13, "4006381333931")
+
+	// Points are in sheet coordinates: the QR's lie inside its square.
+	qrBox := parts[0].Bounds().Add(at[0])
+	for _, d := range found {
+		if d.Type != TypeQR {
+			continue
+		}
+		for _, p := range d.Points {
+			if !p.In(qrBox) {
+				t.Errorf("QR point %v outside %v", p, qrBox)
+			}
+		}
+	}
+}

@@ -43,6 +43,7 @@ Aktuelle Version: **1.5.0**
 - Ausgabeformate: SVG (vektorbasiert) und PNG.
 - Anpassbare Größe und optionale Beschriftung (Freitext, einstellbare Schriftgröße) in SVG und PNG.
 - Desktop-GUI mit Batch-Generator und A4-Etikettenbögen.
+- **Liest** Barcodes aus Bildern (CLI `-decode`, MCP `decode_barcode`): Format und Inhalt, auch mehrere Codes pro Bild — jeder erzeugte Code wird gegen diesen Reader getestet.
 
 ### Datei-Import (GUI: Batch-Generator und Etiketten-Druck)
 
@@ -89,6 +90,7 @@ Die Binärdateien befinden sich in `bin/`:
 
 ### Parameter
 
+- `-decode <bild>`: Codes aus einer PNG/JPEG/GIF/WebP-Datei lesen statt erzeugen; gibt je Code `Typ<TAB>Inhalt` aus.
 - `-type`: Barcode-Typ (Standard: `qr`).
 - `-data`: Der zu kodierende Inhalt (erforderlich, sofern keine strukturierten Flags genutzt werden).
 - `-out`: Ausgabedatei mit Endung `.svg` oder `.png` (Standard: `barcode.svg`).

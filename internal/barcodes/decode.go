@@ -29,15 +29,15 @@ func Decode(img image.Image) ([]Decoded, error) {
 	// A quiet zone helps codes cropped to their edge, doubling helps dense
 	// codes on few pixels, inverting helps light codes on dark ground.
 	padded := withQuietZone(img)
-	attempts := []func() image.Image{
-		func() image.Image { return padded },
-		func() image.Image { return scale2x(padded) },
-		func() image.Image { return invert(padded) },
+	origin := image.Pt(-quietZone, -quietZone) // padded → caller's coordinates
+	if found := decodeRegions(padded, origin); len(found) > 0 {
+		return found, nil
 	}
-	for _, next := range attempts {
-		if found := decodeOnce(next()); len(found) > 0 {
-			return found, nil
-		}
+	if found := decodeOnce(scale2x(padded), origin, 2); len(found) > 0 {
+		return found, nil
+	}
+	if found := decodeOnce(invert(padded), origin, 1); len(found) > 0 {
+		return found, nil
 	}
 	return nil, inputError(ErrNothingFound,
 		"no barcode found in the image — check that the code is sharp, fully visible and not too small; PDF417 cannot be read yet",
@@ -60,10 +60,57 @@ func readers() []namedReader {
 	}
 }
 
+// regionScanPixels is the image size from which Decode also searches
+// overlapping parts of the image. Detectors such as Aztec's start at the
+// image centre and miss a code that sits beside another one.
+const regionScanPixels = 400_000
+
+// decodeRegions decodes the whole image and, for large images, five
+// overlapping regions (four quadrants and the centre, 60 % each).
+func decodeRegions(img image.Image, origin image.Point) []Decoded {
+	found := decodeOnce(img, origin, 1)
+	b := img.Bounds()
+	if b.Dx()*b.Dy() < regionScanPixels {
+		return found
+	}
+	w, h := b.Dx()*3/5, b.Dy()*3/5
+	for _, at := range []image.Point{
+		{0, 0}, {b.Dx() - w, 0}, {0, b.Dy() - h}, {b.Dx() - w, b.Dy() - h}, {(b.Dx() - w) / 2, (b.Dy() - h) / 2},
+	} {
+		part := crop(img, image.Rect(at.X, at.Y, at.X+w, at.Y+h))
+		found = merge(found, decodeOnce(withQuietZone(part), origin.Add(at).Sub(image.Pt(quietZone, quietZone)), 1))
+	}
+	return found
+}
+
+// merge appends the codes of more that are not in found yet.
+func merge(found, more []Decoded) []Decoded {
+	for _, m := range more {
+		dup := false
+		for _, f := range found {
+			if f.Type == m.Type && f.Text == m.Text {
+				dup = true
+				break
+			}
+		}
+		if !dup {
+			found = append(found, m)
+		}
+	}
+	return found
+}
+
+func crop(img image.Image, r image.Rectangle) image.Image {
+	out := image.NewGray(image.Rect(0, 0, r.Dx(), r.Dy()))
+	draw.Draw(out, out.Bounds(), img, r.Min, draw.Src)
+	return out
+}
+
 // decodeOnce runs every reader on one image and collects distinct results.
 // QR codes go through the multi reader, so several QR codes in one image
-// are all reported.
-func decodeOnce(img image.Image) []Decoded {
+// are all reported. A result point p maps to p/scale + origin in the
+// caller's image.
+func decodeOnce(img image.Image, origin image.Point, scale int) []Decoded {
 	bmp, err := gozxing.NewBinaryBitmapFromImage(img)
 	if err != nil {
 		return nil
@@ -97,7 +144,7 @@ func decodeOnce(img image.Image) []Decoded {
 		}
 		seen[key] = true
 		for _, p := range r.GetResultPoints() {
-			d.Points = append(d.Points, image.Pt(int(p.GetX())-quietZone, int(p.GetY())-quietZone))
+			d.Points = append(d.Points, image.Pt(int(p.GetX())/scale, int(p.GetY())/scale).Add(origin))
 		}
 		out = append(out, d)
 	}

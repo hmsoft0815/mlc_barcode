@@ -70,6 +70,14 @@ Ergänzen Sie Ihre `claude_desktop_config.json`:
 }
 ```
 
+## Codes lesen: `decode_barcode`
+
+Liest Barcodes und QR-Codes aus einem Bild und meldet Format, Inhalt und Eckpunkte — auch mehrere Codes pro Bild.
+- **Eingabe:** `path` (absoluter Pfad einer PNG-, JPEG-, GIF- oder WebP-Datei — **nur über stdio**; über HTTP würde der Server sonst seine eigenen Dateien an jeden Client geben) oder `image_base64` (ein `data:`-URI-Präfix ist erlaubt). Höchstens 20 MB und 40 Megapixel. HEIC (iPhone-Fotos) geht nicht — als JPEG exportieren.
+- **Liest:** `qr`, `datamatrix`, `aztec`, `ean13`, `ean8`, `upca`, `code128`, `code39`, `itf`. PDF417 wird noch nicht gelesen.
+- **Ausgabe:** `structuredContent` `{count, codes: [{barcode_type, text, points}]}`; wird nichts gefunden, gibt es einen Tool-Fehler mit Hinweisen.
+- CLI: `barcode -decode bild.png` gibt je Code `Typ<TAB>Inhalt` aus.
+
 ## Strukturierte Ausgabe
 
 Jeder erfolgreiche Aufruf liefert neben dem Bild `structuredContent` passend zum Output-Schema des Werkzeugs:

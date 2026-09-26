@@ -16,6 +16,7 @@ import (
 
 func main() {
 	showVersion := flag.Bool("version", false, "Show version and exit")
+	decode := flag.String("decode", "", "Read barcodes from an image file (PNG, JPEG, GIF, WebP) and print type and content")
 	btype := flag.String("type", "qr", "Barcode type (qr, datamatrix, aztec, pdf417, code128, code39, ean13, ean8, upca, itf)")
 	data := flag.String("data", "", "Data to encode")
 	customText := flag.String("custom-text", "", "Custom caption text to display below barcode")
@@ -82,6 +83,9 @@ func main() {
 	if *showVersion {
 		fmt.Printf("MLC Barcode CLI v%s\nAuthor: %s\n", version.Version, version.Author)
 		return
+	}
+	if *decode != "" {
+		os.Exit(runDecode(*decode))
 	}
 
 	dataStr := *data
