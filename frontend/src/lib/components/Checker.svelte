@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { onMount } from 'svelte';
+  import { onMount, onDestroy, tick } from 'svelte';
   import { DecodeImage, CopyToClipboard } from '../../../bindings/github.com/mlcmcp/mlc_barcode/internal/gui/barcodeapp';
   import type { DecodeImageResult } from '../../../bindings/github.com/mlcmcp/mlc_barcode/internal/gui/models';
   import { BARCODE_TYPES } from '../types';
@@ -16,9 +16,91 @@
   let dragOver = false;
   let copied = -1;
 
+  // Camera: live preview, frames go to the same decoder as files. The first
+  // frame with a code stops the camera and stays as the checked image.
+  const cameraSupported = typeof navigator !== 'undefined' && !!navigator.mediaDevices?.getUserMedia;
+  let video: HTMLVideoElement;
+  let stream: MediaStream | null = null;
+  let cameraOn = false;
+  let cameraError = '';
+  let scanTimer: ReturnType<typeof setTimeout> | undefined;
+  let cameras: MediaDeviceInfo[] = [];
+  let facingUser = false; // front camera: preview is mirrored like a mirror
+  let scanTick = 0;
+  const SCAN_INTERVAL_MS = 300;
+  const FRAME_MAX_SIDE = 1600;
+  const GUIDE_INSET = 0.18; // matches .camera-frame
+
+  // Copies a rectangle of an image or video frame into a JPEG data URL,
+  // at most FRAME_MAX_SIDE on the long side.
+  function grab(source: CanvasImageSource, r: { x: number; y: number; w: number; h: number }) {
+    const scale = Math.min(1, FRAME_MAX_SIDE / Math.max(r.w, r.h));
+    const canvas = document.createElement('canvas');
+    canvas.width = Math.max(1, Math.round(r.w * scale));
+    canvas.height = Math.max(1, Math.round(r.h * scale));
+    canvas.getContext('2d')!.drawImage(source, r.x, r.y, r.w, r.h, 0, 0, canvas.width, canvas.height);
+    return canvas.toDataURL('image/jpeg', 0.92);
+  }
+
+  // Region selection on a still image: drag a rectangle, only that part is
+  // decoded; the marks are shifted back onto the whole image.
+  let imgEl: HTMLImageElement;
+  let cropMode = false;
+  let sel: { x0: number; y0: number; x1: number; y1: number } | null = null;
+
+  function relPos(e: PointerEvent) {
+    const b = imgEl.getBoundingClientRect();
+    return { x: Math.min(1, Math.max(0, (e.clientX - b.left) / b.width)), y: Math.min(1, Math.max(0, (e.clientY - b.top) / b.height)) };
+  }
+
+  function selStart(e: PointerEvent) {
+    if (!cropMode) return;
+    (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
+    const p = relPos(e);
+    sel = { x0: p.x, y0: p.y, x1: p.x, y1: p.y };
+  }
+
+  function selMove(e: PointerEvent) {
+    if (!cropMode || !sel) return;
+    const p = relPos(e);
+    sel = { ...sel, x1: p.x, y1: p.y };
+  }
+
+  async function selEnd() {
+    if (!cropMode || !sel) return;
+    const nw = imgEl.naturalWidth, nh = imgEl.naturalHeight;
+    const x = Math.min(sel.x0, sel.x1) * nw, y = Math.min(sel.y0, sel.y1) * nh;
+    const w = Math.abs(sel.x1 - sel.x0) * nw, h = Math.abs(sel.y1 - sel.y0) * nh;
+    if (w < 16 || h < 16) {
+      sel = null; // a tap, not a drag
+      return;
+    }
+    const crop = { x, y, w, h };
+    const scale = Math.min(1, FRAME_MAX_SIDE / Math.max(w, h));
+    busy = true;
+    result = null;
+    try {
+      const r = await DecodeImage(grab(imgEl, crop));
+      for (const c of r.codes ?? []) {
+        c.points = (c.points ?? []).map((pt) => ({ x: crop.x + pt.x / scale, y: crop.y + pt.y / scale }));
+      }
+      result = { ...r, width: nw, height: nh };
+    } catch (e: any) {
+      result = { success: false, codes: [], width: 0, height: 0, error: e?.message ?? String(e) };
+    } finally {
+      busy = false;
+      cropMode = false;
+      sel = null;
+    }
+  }
+
+  $: if (!active && cameraOn) stopCamera();
+
   const typeName = (id: string) => BARCODE_TYPES.find((t) => t.id === id)?.name ?? id.toUpperCase();
 
   async function check(dataUrl: string, name: string) {
+    cropMode = false;
+    sel = null;
     imageUrl = dataUrl;
     fileName = name;
     busy = true;
@@ -32,8 +114,88 @@
     }
   }
 
+  async function startCamera(deviceId?: string) {
+    cameraError = '';
+    try {
+      stream = await navigator.mediaDevices.getUserMedia({
+        video: {
+          ...(deviceId ? { deviceId: { exact: deviceId } } : { facingMode: { ideal: 'environment' } }),
+          width: { ideal: 1920 },
+          height: { ideal: 1080 },
+        },
+        audio: false,
+      });
+      // Labels and the full list are only available once access was granted.
+      cameras = (await navigator.mediaDevices.enumerateDevices()).filter((d) => d.kind === 'videoinput');
+      facingUser = stream.getVideoTracks()[0]?.getSettings().facingMode === 'user';
+    } catch (e: any) {
+      cameraError =
+        e?.name === 'NotAllowedError' ? 'Der Zugriff auf die Kamera wurde nicht erlaubt.'
+        : e?.name === 'NotFoundError' || e?.name === 'OverconstrainedError' ? 'Keine Kamera gefunden.'
+        : e?.name === 'NotReadableError' ? 'Die Kamera wird gerade von einem anderen Programm verwendet.'
+        : `Kamera nicht verfügbar (${e?.name ?? e}).`;
+      return;
+    }
+    cameraOn = true;
+    cropMode = false;
+    imageUrl = '';
+    result = null;
+    await tick(); // the video element exists only after this render
+    if (!video || !stream) return;
+    video.srcObject = stream;
+    video.play().catch(() => {});
+    scanTimer = setTimeout(scanFrame, SCAN_INTERVAL_MS);
+  }
+
+  async function switchCamera() {
+    const current = stream?.getVideoTracks()[0]?.getSettings().deviceId;
+    const i = cameras.findIndex((c) => c.deviceId === current);
+    const next = cameras[(i + 1) % cameras.length];
+    stopCamera();
+    await startCamera(next?.deviceId);
+  }
+
+  function stopCamera() {
+    clearTimeout(scanTimer);
+    stream?.getTracks().forEach((t) => t.stop());
+    stream = null;
+    cameraOn = false;
+    if (video) video.srcObject = null;
+  }
+
+  // One frame at a time: the next is taken only after the decoder answered,
+  // so a slow device never builds up a queue.
+  async function scanFrame() {
+    if (!cameraOn || !video) return;
+    const w = video.videoWidth, h = video.videoHeight;
+    if (w > 0 && h > 0) {
+      // Every other frame only the area inside the guide frame, at full
+      // camera resolution: small codes (DataMatrix on a pack) get more
+      // pixels there than in the downscaled whole frame.
+      const guide = scanTick++ % 2 === 0;
+      const src = guide ? { x: w * GUIDE_INSET, y: h * GUIDE_INSET, w: w * (1 - 2 * GUIDE_INSET), h: h * (1 - 2 * GUIDE_INSET) } : { x: 0, y: 0, w, h };
+      const dataUrl = grab(video, src);
+      try {
+        const r = await DecodeImage(dataUrl);
+        if (cameraOn && r.success && (r.codes?.length ?? 0) > 0) {
+          stopCamera();
+          imageUrl = dataUrl;
+          fileName = guide ? 'Kamera (Zielrahmen)' : 'Kamera';
+          result = r;
+          return;
+        }
+      } catch {
+        // A single bad frame is no reason to stop scanning.
+      }
+    }
+    if (cameraOn) scanTimer = setTimeout(scanFrame, SCAN_INTERVAL_MS);
+  }
+
+  onDestroy(stopCamera);
+
   function readFile(file: File | null | undefined) {
     if (!file) return;
+    if (cameraOn) stopCamera();
     const reader = new FileReader();
     reader.onload = () => check(reader.result as string, file.name);
     reader.readAsDataURL(file);
@@ -98,9 +260,18 @@
             on:dragleave={() => (dragOver = false)}
             on:drop={onDrop}
           >
-            {#if imageUrl}
-              <div class="preview">
-                <img src={imageUrl} alt={fileName} />
+            {#if cameraOn}
+              <div class="camera">
+                <!-- svelte-ignore a11y-media-has-caption -->
+                <video bind:this={video} class:mirrored={facingUser} autoplay playsinline muted></video>
+                <div class="camera-frame" aria-hidden="true"></div>
+              </div>
+              <div class="small text-body-secondary mt-2">
+                <span class="spinner-grow spinner-grow-sm text-primary me-1"></span> Code ins Bild halten …
+              </div>
+            {:else if imageUrl}
+              <div class="preview" class:cropping={cropMode}>
+                <img bind:this={imgEl} src={imageUrl} alt={fileName} />
                 {#if result?.success && result.width > 0}
                   <svg viewBox="0 0 {result.width} {result.height}" preserveAspectRatio="xMidYMid meet" aria-hidden="true">
                     {#each result.codes ?? [] as code, i}
@@ -112,23 +283,74 @@
                     {/each}
                   </svg>
                 {/if}
+                {#if cropMode}
+                  <div
+                    class="crop-layer"
+                    role="presentation"
+                    on:pointerdown={selStart}
+                    on:pointermove={selMove}
+                    on:pointerup={selEnd}
+                    on:pointercancel={() => (sel = null)}
+                  >
+                    {#if sel}
+                      <div
+                        class="crop-rect"
+                        style="left:{Math.min(sel.x0, sel.x1) * 100}%;top:{Math.min(sel.y0, sel.y1) * 100}%;width:{Math.abs(sel.x1 - sel.x0) * 100}%;height:{Math.abs(sel.y1 - sel.y0) * 100}%"
+                      ></div>
+                    {/if}
+                  </div>
+                {/if}
               </div>
-              <div class="small text-body-secondary mt-2 text-truncate">{fileName}</div>
+              <div class="small text-body-secondary mt-2 text-truncate">
+                {cropMode ? 'Rahmen um den Code ziehen …' : fileName}
+              </div>
             {:else}
               <i class="bi bi-image fs-1 d-block mb-2 opacity-50"></i>
               <p class="mb-1 text-body">Bild hierher ziehen, auswählen oder mit <kbd>Strg</kbd>+<kbd>V</kbd> einfügen</p>
               <p class="small text-body-secondary mb-0">PNG, JPEG, GIF oder WebP · Fotos, Scans, Screenshots</p>
             {/if}
           </div>
-          <label class="btn btn-outline-primary btn-sm mt-3">
-            <i class="bi bi-folder2-open me-1"></i> Bild auswählen …
-            <input
-              type="file"
-              accept="image/png,image/jpeg,image/gif,image/webp"
-              class="d-none"
-              on:change={(e) => readFile(e.currentTarget.files?.[0])}
-            />
-          </label>
+          <div class="d-flex flex-wrap gap-2 mt-3">
+            <label class="btn btn-outline-primary btn-sm mb-0">
+              <i class="bi bi-folder2-open me-1"></i> Bild auswählen …
+              <input
+                type="file"
+                accept="image/png,image/jpeg,image/gif,image/webp"
+                class="d-none"
+                on:change={(e) => readFile(e.currentTarget.files?.[0])}
+              />
+            </label>
+            {#if cameraSupported}
+              {#if cameraOn}
+                {#if cameras.length > 1}
+                  <button type="button" class="btn btn-outline-primary btn-sm" on:click={switchCamera}>
+                    <i class="bi bi-arrow-repeat me-1"></i> Kamera wechseln
+                  </button>
+                {/if}
+                <button type="button" class="btn btn-outline-secondary btn-sm" on:click={stopCamera}>
+                  <i class="bi bi-camera-video-off me-1"></i> Kamera beenden
+                </button>
+              {:else}
+                <button type="button" class="btn btn-outline-primary btn-sm" on:click={() => startCamera()}>
+                  <i class="bi bi-camera me-1"></i> Mit Kamera scannen
+                </button>
+              {/if}
+            {/if}
+            {#if imageUrl && !cameraOn}
+              <button
+                type="button"
+                class="btn btn-sm {cropMode ? 'btn-primary' : 'btn-outline-primary'}"
+                on:click={() => ((cropMode = !cropMode), (sel = null))}
+              >
+                <i class="bi bi-crop me-1"></i> {cropMode ? 'Auswahl abbrechen' : 'Ausschnitt wählen'}
+              </button>
+            {/if}
+          </div>
+          {#if cameraError}
+            <div class="alert alert-warning small mt-2 mb-0">
+              <i class="bi bi-camera-video-off me-1"></i> {cameraError}
+            </div>
+          {/if}
         </div>
       </div>
     </div>
@@ -219,6 +441,32 @@
     background-color: var(--bs-primary-bg-subtle);
     border-color: var(--bs-primary) !important;
   }
+  /* The box hugs the video (no cropping), so the guide frame covers exactly
+     the part that GUIDE_INSET cuts out of the camera frame. */
+  .camera {
+    position: relative;
+    display: inline-block;
+    max-width: 100%;
+    overflow: hidden;
+    border-radius: var(--bs-border-radius);
+  }
+  .camera video {
+    display: block;
+    max-width: 100%;
+    max-height: 420px;
+    background: #000;
+  }
+  .camera video.mirrored {
+    transform: scaleX(-1);
+  }
+  .camera-frame {
+    position: absolute;
+    inset: 18%;
+    border: 3px solid rgba(var(--bs-primary-rgb), 0.9);
+    border-radius: 12px;
+    box-shadow: 0 0 0 999px rgba(0, 0, 0, 0.25);
+    pointer-events: none;
+  }
   .preview {
     position: relative;
     display: inline-block;
@@ -236,6 +484,22 @@
     width: 100%;
     height: 100%;
     pointer-events: none;
+  }
+  .crop-layer {
+    position: absolute;
+    inset: 0;
+    cursor: crosshair;
+    touch-action: none;
+    background: rgba(0, 0, 0, 0.15);
+  }
+  .crop-rect {
+    position: absolute;
+    border: 2px dashed var(--bs-primary);
+    background: rgba(var(--bs-primary-rgb), 0.15);
+  }
+  .preview.cropping img {
+    user-select: none;
+    -webkit-user-drag: none;
   }
   .mark {
     fill: rgba(var(--bs-primary-rgb), 0.15);

@@ -200,6 +200,132 @@ tasks:
       - scp "{{.MAC_HOST}}:{{.REMOTE_DIR}}/bin/mlc-barcode-{{.VERSION}}.dmg" {{.BIN_DIR}}/mlc-barcode-{{.VERSION}}.dmg
       - echo "✓ {{.BIN_DIR}}/mlc-barcode-{{.VERSION}}.dmg"
 
+  ios:remote:
+    desc: "Build the iOS app on macstudio and run it — IOS_PLATFORM=simulator (default) or device"
+    # Nicht `task ios:package`: dessen Frontend-Schritt scheitert auf dem Mac
+    # (fehlender Task im Scaffold) und braeuchte pnpm dort. frontend/dist
+    # geht wie bei build:macos:remote fertig mit, Go-Archiv, Link und Bundle
+    # laufen hier explizit, das Bundle danach ueber das Scaffold.
+    #
+    # Device-Builds signieren mit dem "Apple Development"-Zertifikat und dem
+    # Team-Wildcard-Profil. Beides legt xcodebuild ueber den App Store
+    # Connect API-Key (Admin, auf dem Mac unter ~/.appstoreconnect/
+    # private_keys) selbst an und registriert dabei auch ein neues Geraet.
+    # Das Geraet muss gekoppelt sein ("Vertrauen") und im Entwicklermodus.
+    # Scheitert codesign mit errSecInternalComponent, ist der Schluesselbund
+    # gesperrt: einmal `ssh -t <mac> security unlock-keychain`.
+    deps: [build:frontend]
+    vars:
+      MAC_HOST: mlc@macstudio.fritz.box
+      REMOTE_DIR: mlc-barcode-ios
+      IOS_PLATFORM: '{{.IOS_PLATFORM | default "simulator"}}'
+      SIM_DEVICE: '{{.SIM_DEVICE | default "iPad Pro 13-inch (M4)"}}'
+      BUNDLE_ID: eu.mlcgo.mlcbarcode
+      TEAM_ID: '{{env "MLC_TEAM_ID"}}'
+      ASC_KEY_ID: '{{env "MLC_ASC_KEY_ID"}}'
+      ASC_ISSUER: '{{env "MLC_ASC_ISSUER"}}'
+    cmds:
+      - |
+        rsync -az --delete \
+          --exclude='.git' --exclude='.mlcai' --exclude='mlcprodweb' \
+          --exclude='bin/' --exclude='reports/' --exclude='showcase/' \
+          --exclude='node_modules/' --exclude='frontend/node_modules/' \
+          . {{.MAC_HOST}}:{{.REMOTE_DIR}}/
+      - |
+        ssh {{.MAC_HOST}} bash -s << 'ENDSSH'
+          set -e
+          export PATH=$PATH:/usr/local/go/bin:$HOME/go/bin:/opt/homebrew/bin
+          cd ~/{{.REMOTE_DIR}}
+          VERSION=$(cat VERSION)
+          # Das Scaffold-Taskfile ist im Haupt-Taskfile nicht eingebunden
+          # (ios:* soll unter Linux nicht auftauchen); nur hier dazunehmen.
+          grep -q '^  ios: ./build/ios' Taskfile.yml || sed -i '' 's#^  linux: ./build/linux/Taskfile.yml#&\
+          ios: ./build/ios/Taskfile.yml#' Taskfile.yml
+          wails3 ios overlay:gen -out build/ios/xcode/overlay.json -config build/config.yml >/dev/null
+          wails3 ios xcode:gen -outdir build/ios/xcode -config build/config.yml >/dev/null
+          plutil -replace CFBundleVersion -string "${VERSION}" build/ios/Info.plist
+          plutil -replace CFBundleShortVersionString -string "${VERSION}" build/ios/Info.plist
+
+          if [ "{{.IOS_PLATFORM}}" = device ]; then
+            SDKNAME=iphoneos; TARGET=arm64-apple-ios15.0; MINFLAG=-miphoneos-version-min=15.0
+          else
+            SDKNAME=iphonesimulator; TARGET=arm64-apple-ios15.0-simulator; MINFLAG=-mios-simulator-version-min=15.0
+          fi
+          SDK=$(xcrun --sdk $SDKNAME --show-sdk-path)
+          echo "→ baue ios/arm64 ($SDKNAME)"
+          GOOS=ios GOARCH=arm64 CGO_ENABLED=1 \
+            CGO_CFLAGS="-isysroot $SDK -target $TARGET $MINFLAG -Wno-deprecated-declarations" \
+            CGO_LDFLAGS="-isysroot $SDK -target $TARGET" \
+            go build -buildmode=c-archive -overlay build/ios/xcode/overlay.json \
+              -tags production,ios -trimpath -buildvcs=false \
+              -ldflags "-X {{.MODULE}}/internal/version.Version=${VERSION} -w -s" \
+              -o bin/{{.APP_NAME}}.a
+          MAIN_M=build/ios/xcode/main/main.m; [ -f $MAIN_M ] || MAIN_M=build/ios/main.m
+          xcrun -sdk $SDKNAME clang -target $TARGET -isysroot $SDK \
+            -framework Foundation -framework UIKit -framework WebKit -framework Security \
+            -framework CoreFoundation -framework UniformTypeIdentifiers \
+            -framework LocalAuthentication -framework UserNotifications -framework AVFoundation \
+            -framework CoreLocation -framework CoreMotion -framework SystemConfiguration -lresolv \
+            -o bin/{{.APP_NAME}} $MAIN_M -Wl,-force_load,bin/{{.APP_NAME}}.a
+
+          if [ "{{.IOS_PLATFORM}}" = device ]; then
+            xcrun devicectl list devices --json-output /tmp/mlcb-devices.json >/dev/null
+            DEVICE=$(jq -r '[.result.devices[] | select(.hardwareProperties.reality == "physical"
+              and .connectionProperties.pairingState == "paired")][0] | .hardwareProperties.udid // empty' /tmp/mlcb-devices.json)
+            [ -n "$DEVICE" ] || { echo "Kein gekoppeltes Geraet (Vertrauen? Entwicklermodus?)"; exit 1; }
+            PROFILES="$HOME/Library/Developer/Xcode/UserData/Provisioning Profiles"
+            find_profile() {
+              ls -t "$PROFILES"/*.mobileprovision 2>/dev/null | while read -r P; do
+                security cms -D -i "$P" 2>/dev/null | grep -q "<string>$DEVICE</string>" && { echo "$P"; break; }
+              done
+              true  # kein Treffer ist kein Fehler (set -e)
+            }
+            PROFILE=$(find_profile)
+            if [ -z "$PROFILE" ]; then
+              # Geraet unbekannt: xcodebuild auf dem Wails-Projekt registriert
+              # es und laedt das Profil neu. Das Build-Ergebnis wird verworfen.
+              # Das Projekt schaltet Signieren ab und kennt nur das iPhone,
+              # die generierte Plist traegt ein unmaskiertes "&" aus config.yml.
+              echo "→ registriere Geraet $DEVICE"
+              sed -i '' 's/ & / \&amp; /g' build/ios/xcode/main/Info.plist
+              (cd build/ios/xcode && xcodebuild -quiet -project main.xcodeproj -scheme "MLC Barcode" \
+                -destination "id=$DEVICE" -derivedDataPath /tmp/mlcb-dd \
+                -allowProvisioningUpdates -allowProvisioningDeviceRegistration \
+                -authenticationKeyPath ~/.appstoreconnect/private_keys/AuthKey_{{.ASC_KEY_ID}}.p8 \
+                -authenticationKeyID {{.ASC_KEY_ID}} -authenticationKeyIssuerID {{.ASC_ISSUER}} \
+                DEVELOPMENT_TEAM={{.TEAM_ID}} CODE_SIGN_STYLE=Automatic CODE_SIGNING_ALLOWED=YES \
+                CODE_SIGN_IDENTITY="Apple Development" TARGETED_DEVICE_FAMILY=1,2 build 2>&1 \
+                | grep -v "^warning\|deprecated\|note:\|IDERunDestination" || true)
+              PROFILE=$(find_profile)
+              [ -n "$PROFILE" ] || { echo "Kein Profil fuer $DEVICE"; exit 1; }
+            fi
+            IDENTITY=$(security find-identity -v -p codesigning | awk -F'"' '/Apple Development/ {print $2; exit}')
+            [ -n "$IDENTITY" ] || { echo "Kein 'Apple Development'-Zertifikat auf dem Mac"; exit 1; }
+            # Ohne application-identifier verweigert das Geraet die Installation.
+            cat > /tmp/mlcb-entitlements.plist << ENT
+        <?xml version="1.0" encoding="UTF-8"?>
+        <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+        <plist version="1.0"><dict>
+          <key>application-identifier</key><string>{{.TEAM_ID}}.{{.BUNDLE_ID}}</string>
+          <key>com.apple.developer.team-identifier</key><string>{{.TEAM_ID}}</string>
+          <key>get-task-allow</key><true/>
+        </dict></plist>
+        ENT
+            task ios:create:app:bundle IOS_PLATFORM=device CODESIGN_IDENTITY="$IDENTITY" \
+              PROVISIONING_PROFILE="$PROFILE" ENTITLEMENTS_FILE=/tmp/mlcb-entitlements.plist
+            xcrun devicectl device install app --device "$DEVICE" bin/{{.APP_NAME}}.app
+            xcrun devicectl device process launch --terminate-existing --device "$DEVICE" {{.BUNDLE_ID}}
+          else
+            task ios:create:app:bundle
+            DEV="{{.SIM_DEVICE}}"
+            xcrun simctl boot "$DEV" 2>/dev/null || true
+            xcrun simctl bootstatus "$DEV" -b >/dev/null
+            xcrun simctl install "$DEV" bin/{{.APP_NAME}}.app
+            xcrun simctl launch --terminate-running-process "$DEV" {{.BUNDLE_ID}}
+          fi
+          echo "→ fertig: {{.APP_NAME}} ${VERSION} auf {{.IOS_PLATFORM}}"
+        ENDSSH
+
   build:
     desc: Build CLI, MCP server, and GUI for this machine
     deps: [build:frontend]

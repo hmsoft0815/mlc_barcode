@@ -5,7 +5,7 @@
     <key>CFBundleExecutable</key>
     <string>mlc-barcode</string>
     <key>CFBundleIdentifier</key>
-    <string>com.example.mlcbarcode.dev</string>
+    <string>eu.mlcgo.mlcbarcode.dev.dev</string>
     <key>CFBundleName</key>
     <string>My Product (Dev)</string>
     <key>CFBundleDisplayName</key>
