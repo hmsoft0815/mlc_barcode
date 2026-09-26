@@ -224,9 +224,9 @@ tasks:
       IOS_PLATFORM: '{{.IOS_PLATFORM | default "simulator"}}'
       SIM_DEVICE: '{{.SIM_DEVICE | default "iPad Pro 13-inch (M4)"}}'
       BUNDLE_ID: eu.mlcgo.mlcbarcode
-      TEAM_ID: '{{env "MLC_TEAM_ID"}}'
-      ASC_KEY_ID: '{{env "MLC_ASC_KEY_ID"}}'
-      ASC_ISSUER: '{{env "MLC_ASC_ISSUER"}}'
+      # Team-ID, API-Key-ID und Issuer-ID stehen auf dem Mac in
+      # ~/.appstoreconnect/mlc-ios.env (TEAM_ID=, ASC_KEY_ID=, ASC_ISSUER=),
+      # neben dem privaten Schluessel — nicht im oeffentlichen Repo.
     cmds:
       - |
         rsync -az --delete \
@@ -278,6 +278,9 @@ tasks:
             -o bin/{{.APP_NAME}} $MAIN_M -Wl,-force_load,bin/{{.APP_NAME}}.a
 
           if [ "{{.IOS_PLATFORM}}" = device ]; then
+            IOS_ENV=~/.appstoreconnect/mlc-ios.env
+            [ -f $IOS_ENV ] || { echo "$IOS_ENV fehlt (TEAM_ID=, ASC_KEY_ID=, ASC_ISSUER=)"; exit 1; }
+            . $IOS_ENV
             xcrun devicectl list devices --json-output /tmp/mlcb-devices.json >/dev/null
             DEVICE=$(jq -r '[.result.devices[] | select(.hardwareProperties.reality == "physical"
               and .connectionProperties.pairingState == "paired")][0] | .hardwareProperties.udid // empty' /tmp/mlcb-devices.json)
@@ -300,9 +303,9 @@ tasks:
               (cd build/ios/xcode && xcodebuild -quiet -project main.xcodeproj -scheme "MLC Barcode" \
                 -destination "id=$DEVICE" -derivedDataPath /tmp/mlcb-dd \
                 -allowProvisioningUpdates -allowProvisioningDeviceRegistration \
-                -authenticationKeyPath ~/.appstoreconnect/private_keys/AuthKey_{{.ASC_KEY_ID}}.p8 \
-                -authenticationKeyID {{.ASC_KEY_ID}} -authenticationKeyIssuerID {{.ASC_ISSUER}} \
-                DEVELOPMENT_TEAM={{.TEAM_ID}} CODE_SIGN_STYLE=Automatic CODE_SIGNING_ALLOWED=YES \
+                -authenticationKeyPath ~/.appstoreconnect/private_keys/AuthKey_$ASC_KEY_ID.p8 \
+                -authenticationKeyID $ASC_KEY_ID -authenticationKeyIssuerID $ASC_ISSUER \
+                DEVELOPMENT_TEAM=$TEAM_ID CODE_SIGN_STYLE=Automatic CODE_SIGNING_ALLOWED=YES \
                 CODE_SIGN_IDENTITY="Apple Development" TARGETED_DEVICE_FAMILY=1,2 build 2>&1 \
                 | grep -v "^warning\|deprecated\|note:\|IDERunDestination" || true)
               PROFILE=$(find_profile)
@@ -318,15 +321,18 @@ tasks:
         <?xml version="1.0" encoding="UTF-8"?>
         <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
         <plist version="1.0"><dict>
-          <key>application-identifier</key><string>{{.TEAM_ID}}.{{.BUNDLE_ID}}</string>
-          <key>com.apple.developer.team-identifier</key><string>{{.TEAM_ID}}</string>
+          <key>application-identifier</key><string>$TEAM_ID.{{.BUNDLE_ID}}</string>
+          <key>com.apple.developer.team-identifier</key><string>$TEAM_ID</string>
           <key>get-task-allow</key><true/>
         </dict></plist>
         ENT
             task ios:create:app:bundle IOS_PLATFORM=device CODESIGN_IDENTITY="$IDENTITY" \
               PROVISIONING_PROFILE="$PROFILE" ENTITLEMENTS_FILE=/tmp/mlcb-entitlements.plist
             xcrun devicectl device install app --device "$DEVICE" bin/{{.APP_NAME}}.app
-            xcrun devicectl device process launch --terminate-existing --device "$DEVICE" {{.BUNDLE_ID}}
+            # Ein gesperrtes Geraet verweigert den Start; installiert ist die App
+            # trotzdem, das ist kein Fehler des Builds.
+            xcrun devicectl device process launch --terminate-existing --device "$DEVICE" {{.BUNDLE_ID}} >/dev/null 2>&1 \
+              && echo "→ gestartet" || echo "→ installiert; Start nicht moeglich (Geraet gesperrt?) — bitte von Hand oeffnen"
           else
             task ios:create:app:bundle
             DEV="{{.SIM_DEVICE}}"
