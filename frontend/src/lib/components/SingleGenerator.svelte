@@ -1248,7 +1248,7 @@
                   <i class="bi bi-exclamation-triangle me-1"></i>Gelesener Inhalt weicht ab
                 </span>
               {:else if result.readBack === 'unsupported'}
-                <span class="badge bg-body-secondary text-body-secondary border small" title="Für PDF417 gibt es noch keinen eingebauten Scanner.">
+                <span class="badge bg-body-secondary text-body-secondary border small" title="Für dieses Format gibt es keinen eingebauten Scanner.">
                   Lesbarkeit nicht prüfbar
                 </span>
               {/if}

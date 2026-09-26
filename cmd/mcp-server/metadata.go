@@ -13,7 +13,7 @@ const serverInstructions = `Generates barcodes and QR codes as SVG (default) or 
 - EAN-13, EAN-8 and UPC-A may be given without check digit; it is computed. A wrong check digit is rejected and the error names the right one.
 - text:true adds a caption showing the encoded content; caption:"…" sets your own caption text instead (e.g. a product name under an EAN or a name under a vCard); font_size sets its size.
 - structuredContent.encoded_data is exactly what the code contains, e.g. the EAN including check digit or the generated vCard.
-- decode_barcode reads codes from an image (path or image_base64) and reports symbology and content — use it to verify a generated code or to read one the user provides. PDF417 cannot be read yet.`
+- decode_barcode reads codes from an image (path or image_base64) and reports symbology and content — use it to verify a generated code or to read one the user provides.`
 
 var toolTitles = map[string]string{
 	"generate_barcode":   "Barcode or QR code",

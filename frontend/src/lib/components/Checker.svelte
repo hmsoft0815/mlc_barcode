@@ -4,7 +4,7 @@
   import type { DecodeImageResult } from '../../../bindings/github.com/mlcmcp/mlc_barcode/internal/gui/models';
   import { BARCODE_TYPES } from '../types';
   import { formatError } from '../i18n/errors';
-  import { KIND_LABELS, fieldLabel, formatFieldValue, sortedFieldKeys } from '../i18n/fields';
+  import { KIND_LABELS, fieldLabel, formatFieldValue, isCheckKey, sortedFieldKeys } from '../i18n/fields';
 
   // Tabs stay mounted; paste (Ctrl+V) is only taken while this one is shown.
   export let active = false;
@@ -174,12 +174,12 @@
                       {#each sortedFieldKeys(code.content.fields) as key}
                         <tr>
                           <th class="text-body-secondary fw-normal small" style="width: 40%">{fieldLabel(key)}</th>
-                          <td class="small {key === 'iban_valid' && code.content.fields[key] === 'false' ? 'text-danger fw-semibold' : ''}">
-                            {#if key === 'iban_valid'}
-                              {code.content.fields[key] === 'true' ? '✓ gültig' : '✗ Prüfsumme falsch – IBAN prüfen!'}
-                            {:else}
-                              <span class="value">{formatFieldValue(key, code.content.fields[key])}</span>
-                            {/if}
+                          <td
+                            class="small {(isCheckKey(key) && code.content.fields[key] === 'false') || (key === 'expiry' && formatFieldValue(key, code.content.fields[key]).endsWith('abgelaufen'))
+                              ? 'text-danger fw-semibold'
+                              : ''}"
+                          >
+                            <span class="value">{formatFieldValue(key, code.content.fields[key])}</span>
                           </td>
                         </tr>
                       {/each}
@@ -192,12 +192,11 @@
                 </details>
               </div>
             {/each}
-            <p class="small text-body-secondary mb-0">PDF417 wird noch nicht erkannt.</p>
           {:else if !busy}
             <p class="text-body-secondary small mb-0">
-              Liest QR, DataMatrix, Aztec, EAN-13/8, UPC-A, Code 128, Code 39 und ITF – auch mehrere Codes pro Bild.
+              Liest QR, DataMatrix, Aztec, PDF417, EAN-13/8, UPC-A, Code 128, Code 39 und ITF – auch mehrere Codes pro Bild.
               Bekannte Inhalte wie GiroCode, Visitenkarte, WLAN oder Termin werden in ihre Felder zerlegt;
-              beim GiroCode wird die IBAN-Prüfsumme kontrolliert.
+              beim GiroCode wird die IBAN-Prüfsumme kontrolliert, bei Arzneimittel-Codes (securPharm) PZN, Charge, Verfall und Seriennummer angezeigt.
             </p>
           {/if}
         </div>

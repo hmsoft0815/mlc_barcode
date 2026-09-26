@@ -46,7 +46,7 @@ func expectOne(t *testing.T, found []Decoded, btype BarcodeType, text string) {
 	t.Errorf("want %s %q, decoded %+v", btype, text, found)
 }
 
-// Every symbology we generate (PDF417 follows with its reader) must read
+// Every symbology we generate must read
 // back to exactly the input — EAN/UPC with the completed check digit.
 func TestRoundTripAllSymbologies(t *testing.T) {
 	cases := []struct {
@@ -56,6 +56,8 @@ func TestRoundTripAllSymbologies(t *testing.T) {
 		{TypeQR, "https://mlcgo.eu/produkte?x=Größe", ""},
 		{TypeDataMatrix, "MLC-DM-12345 äöü", ""},
 		{TypeAztec, "TICKET-ICE-599-FRA-MUC", ""},
+		{TypePDF417, "BOARDING PASS LH123 FRA-JFK", ""},
+		{TypePDF417, "Größe äöü – 12 €", ""},
 		{TypeCode128, "MLC-128-abc", ""},
 		{TypeCode128, "Hello World 123", ""},
 		{TypeCode39, "CODE39-TEST", ""},
@@ -84,7 +86,7 @@ func TestRoundTrip2DSweep(t *testing.T) {
 		"digits": strings.Repeat("0123456789", 6),
 		"mixed":  strings.Repeat("Größe 12 € x;y,z", 4),
 	}
-	for _, btype := range []BarcodeType{TypeQR, TypeDataMatrix, TypeAztec} {
+	for _, btype := range []BarcodeType{TypeQR, TypeDataMatrix, TypeAztec, TypePDF417} {
 		for name, src := range sources {
 			runes := []rune(src)
 			for n := 1; n <= 60; n++ {

@@ -16,7 +16,8 @@ func TestReadBack(t *testing.T) {
 		{BarcodeRequest{Type: "qr", Data: "https://mlcgo.eu"}, "ok"},
 		{BarcodeRequest{Type: "ean13", Data: "400638133393"}, "ok"}, // check digit completed
 		{BarcodeRequest{Type: "upca", Data: "036000291452"}, "ok"},
-		{BarcodeRequest{Type: "pdf417", Data: "BOARDING PASS"}, "unsupported"},
+		{BarcodeRequest{Type: "pdf417", Data: "BOARDING PASS"}, "ok"},
+		{BarcodeRequest{Type: "pdf417", Data: "Größe äöü €"}, "ok"},
 		// light grey on white: a scanner cannot read it — the GUI must warn
 		{BarcodeRequest{Type: "qr", Data: "kaum sichtbar", ForegroundColor: "#f4f4f4", BackgroundColor: "#ffffff"}, "unreadable"},
 	} {

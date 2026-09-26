@@ -100,6 +100,7 @@ tasks:
         cp {{.BIN_DIR}}/{{.SERVER_BINARY}}-linux-amd64 /tmp/mlc-barcode-pkg-linux/mcp-barcode-server
         cp build/appicon.png /tmp/mlc-barcode-pkg-linux/icon.png
         cp LICENSE /tmp/mlc-barcode-pkg-linux/LICENSE.txt
+        cp THIRD_PARTY_NOTICES.txt /tmp/mlc-barcode-pkg-linux/
         tar -czf {{.BIN_DIR}}/mlc-barcode-{{.VERSION}}-linux-amd64.tar.gz -C /tmp/mlc-barcode-pkg-linux .
         rm -rf /tmp/mlc-barcode-pkg-linux
         echo "✓ {{.BIN_DIR}}/mlc-barcode-{{.VERSION}}-linux-amd64.tar.gz"
@@ -121,6 +122,7 @@ tasks:
           cp {{.BIN_DIR}}/{{.SERVER_BINARY}}-macos-{{.ITEM}} $PKG/mcp-barcode-server
           cp build/appicon.png $PKG/icon.png
           cp LICENSE $PKG/LICENSE.txt
+          cp THIRD_PARTY_NOTICES.txt $PKG/
           tar -czf {{.BIN_DIR}}/mlc-barcode-{{.VERSION}}-macos-{{.ITEM}}.tar.gz -C $PKG .
           rm -rf $PKG
           echo "✓ {{.BIN_DIR}}/mlc-barcode-{{.VERSION}}-macos-{{.ITEM}}.tar.gz"

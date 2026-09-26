@@ -7,7 +7,7 @@ import (
 )
 
 // Parsed is a decoded payload split into fields. Kind is one of epc, wifi,
-// vcard, event, geo, tel, sms, email, crypto, url or text; Fields holds
+// vcard, event, geo, tel, sms, email, crypto, url, pharma or text; Fields holds
 // only what the payload carries. It is the inverse of the Format*
 // functions, so a round trip returns the same values.
 type Parsed struct {
@@ -20,6 +20,9 @@ type Parsed struct {
 func Parse(text string) Parsed {
 	t := strings.TrimSpace(text)
 	lower := strings.ToLower(t)
+	if isPharma(text) { // control characters matter: check before trimming
+		return parsePharma(text)
+	}
 	switch {
 	case strings.HasPrefix(t, "BCD\n") || strings.HasPrefix(t, "BCD\r\n"):
 		return parseEPC(t)

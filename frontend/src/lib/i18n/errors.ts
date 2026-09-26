@@ -57,7 +57,7 @@ const de: Catalog = {
       ? `Das Bild ist ${p.width}×${p.height} Pixel groß, höchstens ${p.max_mp} Megapixel sind erlaubt. Bitte verkleinern.`
       : `Das Bild ist ${p.size_mb} MB groß, höchstens ${p.max_mb} MB sind erlaubt.`,
   nothing_found: () =>
-    'Im Bild wurde kein Barcode gefunden. Ist der Code scharf, vollständig sichtbar und nicht zu klein? PDF417 kann noch nicht gelesen werden.'
+    'Im Bild wurde kein Barcode gefunden. Ist der Code scharf, vollständig sichtbar und nicht zu klein?'
 };
 
 const catalogs: Partial<Record<Lang, Catalog>> = { de };

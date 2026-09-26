@@ -105,9 +105,10 @@ assert_contains "<svg"
 echo "--- decode_barcode ---"
 call_tool decode_barcode path:"tests/mcp/fixtures/qr-aztec-pdf417.png"
 set_var count $.count
-assert_equals $count "2"
+assert_equals $count "3"
 assert_contains "qr: BOARDING PASS LH123 FRA-JFK"
 assert_contains "aztec: BOARDING PASS LH123 FRA-JFK"
+assert_contains "pdf417: BOARDING PASS LH123 FRA-JFK"
 call_tool decode_barcode image_base64:"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAHgAAAB4CAIAAAC2BqGFAAACjUlEQVR4nOyd0Y6jMAwAj1P//5e7D32JhFJiYk/C7sxj76Awslyv48Dr/X7/k3r+r76Av4KiIRQNoWgIRUMoGkLREIqGUDTE6/s/H8eR/pXt36Lt+cm/Uavv64wRDaFoCEVDXOTolpkc2suJ1fl65JwV93XGiIZQNISiIQI5umUkN0VzXy9fVx/bUnFfH4xoCEVDKBriZo7OIqvOrehd5GJEQygaQtEQi3N0Sy9fr6qpczGiIRQNoWiImzm6Yn1vpDc9knNn+tp165ZGNISiIRQNEcjR+9SkH6I5vZd/mfsyoiEUDaFoiIscvWrPVtYMRsUsxz2MaAhFQyga4vieraJ9g6yecstM/Uteg/PRW6BoCEVDXOToHciam47+fkR/G8zRW6BoCEVDBOroKNE8WFGD976rh/PRj0fREIqGSNhnGF2vaz+Pzkdn5Xp+hsSIhlA0hKIhAmuGMz2HrHw9Qta8R24tb0RDKBpC0RA31wwresQ9smbmcvvL52Oto7dA0RCKhkhYM1z1vKSR66noddiP3hpFQygaImEveLR3Ud0zqZi3s9fxGBQNoWgI6PnRM+tvFfm3d2x0X+L4b4wRDaFoCEVDLN5nOLMPpbq/PHKs/ejtUDSEoiEWv4el93m07o6eJ6teto7eDkVDKBpio/ewRK+h+vl2WTN8H4xoCEVDKBpi8XtYejmu4hl1Fb116+jtUDSEoiEWP+M/Ous2MkMSPX/v/498bh29HYqGUDTERu9haYn2InpkzYTM92qMaAhFQyga4sHvYZnZb1K9H/2MEQ2haAhFQyx+D0vW3HT190av7YwRDaFoCEVDPOD50b8DIxpC0RCKhlA0hKIhFA2haAhFQyga4icAAP//9XKV/c+i/BcAAAAASUVORK5CYII="
 set_var text $.codes.0.text
 assert_equals $text "MCP base64 test"
@@ -119,6 +120,14 @@ assert_equals $ibanok "true"
 set_var amount $.codes.0.content.fields.amount
 assert_equals $amount "49.90"
 assert_contains "reference=Rechnung 1234"
+call_tool decode_barcode path:"tests/mcp/fixtures/securpharm-ifa.png"
+set_var kind $.codes.0.content.kind
+assert_equals $kind "pharma"
+set_var pzn $.codes.0.content.fields.pzn
+assert_equals $pzn "12345678"
+set_var pznok $.codes.0.content.fields.pzn_valid
+assert_equals $pznok "true"
+assert_contains "batch=ABC123"
 expect_error call_tool decode_barcode path:"tests/mcp/fixtures/blank.png"
 assert_tool_error
 assert_contains "no barcode found"

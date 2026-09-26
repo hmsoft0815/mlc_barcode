@@ -202,9 +202,6 @@ func (a *BarcodeApp) GenerateBarcode(req BarcodeRequest) (BarcodeResult, error) 
 
 // readBack decodes the generated PNG and compares it with the input.
 func readBack(btype barcodes.BarcodeType, data string, png []byte) string {
-	if btype == barcodes.TypePDF417 {
-		return "unsupported"
-	}
 	want := data
 	if barcodes.IsRetail(btype) {
 		want = barcodes.CheckRetail(btype, data).Code

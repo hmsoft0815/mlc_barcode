@@ -11,6 +11,7 @@ barcode -type qr -data "https://mlcgo.eu" -out qr.svg
   }
 }`;
   import licenseText from '../../../../LICENSE?raw';
+  import thirdPartyText from '../../../../THIRD_PARTY_NOTICES.txt?raw';
   import { BARCODE_TYPES } from '../types';
   export let appVersion: string = __APP_VERSION__;
 </script>
@@ -185,6 +186,10 @@ ART-1002
             <summary class="small text-primary" style="cursor: pointer;">Lizenztext anzeigen</summary>
             <pre class="license-text bg-body-secondary border rounded p-2 mt-2 mb-0">{licenseText}</pre>
           </details>
+          <details class="mt-2">
+            <summary class="small text-primary" style="cursor: pointer;">Drittlizenzen anzeigen (ZXing, boombuler/barcode, gozxing)</summary>
+            <pre class="license-text bg-body-secondary border rounded p-2 mt-2 mb-0">{thirdPartyText}</pre>
+          </details>
         </div>
         <div class="col-md-5 border-start-md ps-md-3">
           <h6 class="fw-semibold text-body small mb-2">Verwendete Open-Source Bibliotheken:</h6>
@@ -197,6 +202,12 @@ ART-1002
             </li>
             <li class="mb-1">
               <i class="bi bi-box-seam me-1 text-primary"></i> <strong>boombuler/barcode</strong> (MIT) — Barcode Engine
+            </li>
+            <li class="mb-1">
+              <i class="bi bi-box-seam me-1 text-primary"></i> <strong>gozxing</strong> (MIT) — Barcodes lesen
+            </li>
+            <li class="mb-1">
+              <i class="bi bi-box-seam me-1 text-primary"></i> <strong>ZXing PDF417-Reader</strong> (Apache-2.0) — nach Go portiert
             </li>
             <li class="mb-1">
               <i class="bi bi-box-seam me-1 text-primary"></i> <strong>MCP Go-SDK</strong> (Apache-2.0 / MIT) — Model Context Protocol

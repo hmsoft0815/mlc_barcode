@@ -77,6 +77,7 @@ Section "MainSection" SEC01
   File "/oname=mcp-barcode-server.exe" "bin/mcp-barcode-server-windows-amd64.exe"
   File "build/windows/icon.ico"
   File "/oname=LICENSE.txt" "LICENSE"
+  File "THIRD_PARTY_NOTICES.txt"
 
   ; Create uninstaller
   WriteUninstaller "$INSTDIR\Uninstall.exe"
@@ -119,6 +120,7 @@ Section "Uninstall"
   Delete "$INSTDIR\mcp-barcode-server.exe"
   Delete "$INSTDIR\icon.ico"
   Delete "$INSTDIR\LICENSE.txt"
+  Delete "$INSTDIR\THIRD_PARTY_NOTICES.txt"
   Delete "$INSTDIR\Uninstall.exe"
   RMDir "$INSTDIR"
 
