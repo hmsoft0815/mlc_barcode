@@ -212,8 +212,11 @@ tasks:
     # Connect API-Key (Admin, auf dem Mac unter ~/.appstoreconnect/
     # private_keys) selbst an und registriert dabei auch ein neues Geraet.
     # Das Geraet muss gekoppelt sein ("Vertrauen") und im Entwicklermodus.
-    # Scheitert codesign mit errSecInternalComponent, ist der Schluesselbund
-    # gesperrt: einmal `ssh -t <mac> security unlock-keychain`.
+    # Zum Signieren muss der Login-Schluesselbund in derselben SSH-Sitzung
+    # entsperrt werden; wie bei mlcterm kommt das Mac-Passwort aus
+    # MAC_KEYCHAIN_PASS (ersatzweise MLCTERM_KEYCHAIN_PASS). Ein eigener,
+    # dauerhaft entsperrter Build-Schluesselbund scheiterte per SSH trotz
+    # Partition-Liste mit errSecInternalComponent.
     deps: [build:frontend]
     vars:
       MAC_HOST: mlc@macstudio.fritz.box
@@ -232,7 +235,13 @@ tasks:
           --exclude='node_modules/' --exclude='frontend/node_modules/' \
           . {{.MAC_HOST}}:{{.REMOTE_DIR}}/
       - |
-        ssh {{.MAC_HOST}} bash -s << 'ENDSSH'
+        PASS="${MAC_KEYCHAIN_PASS:-${MLCTERM_KEYCHAIN_PASS:-}}"
+        if [ "{{.IOS_PLATFORM}}" = device ] && [ -z "$PASS" ]; then
+          echo "MAC_KEYCHAIN_PASS ist nicht gesetzt — ohne das bleibt der"
+          echo "Schluesselbund auf dem Mac gesperrt und codesign scheitert."
+          exit 1
+        fi
+        ssh {{.MAC_HOST}} "KEYCHAIN_PASS='$PASS' bash -s" << 'ENDSSH'
           set -e
           export PATH=$PATH:/usr/local/go/bin:$HOME/go/bin:/opt/homebrew/bin
           cd ~/{{.REMOTE_DIR}}
@@ -299,7 +308,10 @@ tasks:
               PROFILE=$(find_profile)
               [ -n "$PROFILE" ] || { echo "Kein Profil fuer $DEVICE"; exit 1; }
             fi
-            IDENTITY=$(security find-identity -v -p codesigning | awk -F'"' '/Apple Development/ {print $2; exit}')
+            # Der Login-Schluesselbund ist in einer SSH-Sitzung gesperrt, auch
+            # wenn der Mac angemeldet ist.
+            security unlock-keychain -p "$KEYCHAIN_PASS" ~/Library/Keychains/login.keychain-db
+            IDENTITY=$(security find-identity -v -p codesigning | awk -F'"' '/Apple Development: Created via API/ {print $2; exit}')
             [ -n "$IDENTITY" ] || { echo "Kein 'Apple Development'-Zertifikat auf dem Mac"; exit 1; }
             # Ohne application-identifier verweigert das Geraet die Installation.
             cat > /tmp/mlcb-entitlements.plist << ENT
