@@ -27,16 +27,16 @@ func FormatVCard(opts VCardOptions) string {
 	sb.WriteString("VERSION:3.0\n")
 
 	if opts.LastName != "" || opts.FirstName != "" {
-		fmt.Fprintf(&sb, "N:%s;%s\n", opts.LastName, opts.FirstName)
-		fmt.Fprintf(&sb, "FN:%s %s\n", opts.FirstName, opts.LastName)
+		fmt.Fprintf(&sb, "N:%s;%s\n", escapeText(opts.LastName), escapeText(opts.FirstName))
+		fmt.Fprintf(&sb, "FN:%s\n", escapeText(strings.TrimSpace(opts.FirstName+" "+opts.LastName)))
 	}
 
 	if opts.Organization != "" {
-		fmt.Fprintf(&sb, "ORG:%s\n", opts.Organization)
+		fmt.Fprintf(&sb, "ORG:%s\n", escapeText(opts.Organization))
 	}
 
 	if opts.Title != "" {
-		fmt.Fprintf(&sb, "TITLE:%s\n", opts.Title)
+		fmt.Fprintf(&sb, "TITLE:%s\n", escapeText(opts.Title))
 	}
 
 	if opts.Phone != "" {
@@ -48,7 +48,8 @@ func FormatVCard(opts VCardOptions) string {
 	}
 
 	if opts.Address != "" || opts.City != "" || opts.Zip != "" || opts.Country != "" {
-		fmt.Fprintf(&sb, "ADR;TYPE=WORK:;;%s;%s;;%s;%s\n", opts.Address, opts.City, opts.Zip, opts.Country)
+		fmt.Fprintf(&sb, "ADR;TYPE=WORK:;;%s;%s;;%s;%s\n",
+			escapeText(opts.Address), escapeText(opts.City), escapeText(opts.Zip), escapeText(opts.Country))
 	}
 
 	if opts.URL != "" {

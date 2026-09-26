@@ -25,14 +25,14 @@ func FormatVCalendar(opts VCalendarOptions) string {
 	sb.WriteString("BEGIN:VEVENT\n")
 
 	if opts.Summary != "" {
-		fmt.Fprintf(&sb, "SUMMARY:%s\n", opts.Summary)
+		fmt.Fprintf(&sb, "SUMMARY:%s\n", escapeText(opts.Summary))
 	}
 
 	writeDateTime(&sb, "DTSTART", opts.StartTime, opts.TimeZone)
 	writeDateTime(&sb, "DTEND", opts.EndTime, opts.TimeZone)
 
 	if opts.Location != "" {
-		fmt.Fprintf(&sb, "LOCATION:%s\n", opts.Location)
+		fmt.Fprintf(&sb, "LOCATION:%s\n", escapeText(opts.Location))
 	}
 
 	if opts.Latitude != 0 || opts.Longitude != 0 {
@@ -40,7 +40,7 @@ func FormatVCalendar(opts VCalendarOptions) string {
 	}
 
 	if opts.Description != "" {
-		fmt.Fprintf(&sb, "DESCRIPTION:%s\n", opts.Description)
+		fmt.Fprintf(&sb, "DESCRIPTION:%s\n", escapeText(opts.Description))
 	}
 
 	sb.WriteString("END:VEVENT\n")

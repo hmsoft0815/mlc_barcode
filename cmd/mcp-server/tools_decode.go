@@ -11,9 +11,11 @@ import (
 	_ "image/jpeg"
 	_ "image/png"
 	"os"
+	"sort"
 	"strings"
 
 	"github.com/mlcmcp/mlc_barcode/internal/barcodes"
+	"github.com/mlcmcp/mlc_barcode/internal/qrformats"
 	"github.com/modelcontextprotocol/go-sdk/mcp"
 	_ "golang.org/x/image/webp"
 )
@@ -26,9 +28,10 @@ const (
 )
 
 type decodedCode struct {
-	BarcodeType string      `json:"barcode_type"`
-	Text        string      `json:"text"`
-	Points      []pointJSON `json:"points,omitempty"`
+	BarcodeType string            `json:"barcode_type"`
+	Text        string            `json:"text"`
+	Content     *qrformats.Parsed `json:"content,omitempty"`
+	Points      []pointJSON       `json:"points,omitempty"`
 }
 
 type pointJSON struct {
@@ -52,6 +55,15 @@ var decodeOutputSchema = map[string]any{
 				"properties": map[string]any{
 					"barcode_type": map[string]any{"type": "string", "description": "Symbology, e.g. qr, ean13, aztec"},
 					"text":         map[string]any{"type": "string", "description": "Content of the code (EAN/UPC including check digit)"},
+					"content": map[string]any{
+						"type":        "object",
+						"description": "The payload split into fields when it is a known format (omitted for plain text)",
+						"properties": map[string]any{
+							"kind":   map[string]any{"type": "string", "enum": []string{"epc", "wifi", "vcard", "event", "geo", "tel", "sms", "email", "crypto", "url"}},
+							"fields": map[string]any{"type": "object", "additionalProperties": map[string]any{"type": "string"}},
+						},
+						"required": []string{"kind"},
+					},
 					"points": map[string]any{"type": "array", "description": "Corner or finder points in image pixels",
 						"items": map[string]any{"type": "object", "properties": map[string]any{
 							"x": map[string]any{"type": "integer"}, "y": map[string]any{"type": "integer"},
@@ -73,7 +85,7 @@ func registerDecodeTools(s *mcp.Server, allowPath bool) {
 			"description": "PNG, JPEG, GIF or WebP image, base64 encoded (a data: URI prefix is accepted)",
 		},
 	}
-	desc := "Reads barcodes and QR codes from an image and reports symbology and content. " +
+	desc := "Reads barcodes and QR codes from an image and reports symbology and content; known payloads (GiroCode/EPC with IBAN check, vCard, Wi-Fi, calendar event, geo, tel, SMS, email, crypto, URL) are split into fields. " +
 		"Finds several codes per image. Reads qr, datamatrix, aztec, ean13, ean8, upca, code128, code39 and itf; pdf417 not yet."
 	if allowPath {
 		props["path"] = map[string]any{
@@ -110,14 +122,34 @@ func registerDecodeTools(s *mcp.Server, allowPath bool) {
 		fmt.Fprintf(&summary, "Found %d code(s):", len(found))
 		for _, d := range found {
 			c := decodedCode{BarcodeType: string(d.Type), Text: d.Text}
+			if p := qrformats.Parse(d.Text); p.Kind != "text" {
+				c.Content = &p
+			}
 			for _, p := range d.Points {
 				c.Points = append(c.Points, pointJSON{X: p.X, Y: p.Y})
 			}
 			out.Codes = append(out.Codes, c)
 			fmt.Fprintf(&summary, "\n- %s: %s", d.Type, d.Text)
+			if c.Content != nil {
+				fmt.Fprintf(&summary, "\n  (%s: %s)", c.Content.Kind, describeFields(c.Content.Fields))
+			}
 		}
 		return &mcp.CallToolResult{Content: []mcp.Content{&mcp.TextContent{Text: summary.String()}}}, out, nil
 	})
+}
+
+// describeFields lists the fields in a stable order for the text summary.
+func describeFields(f map[string]string) string {
+	keys := make([]string, 0, len(f))
+	for k := range f {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+	parts := make([]string, len(keys))
+	for i, k := range keys {
+		parts[i] = k + "=" + f[k]
+	}
+	return strings.Join(parts, ", ")
 }
 
 func toolError(err error) *mcp.CallToolResult {

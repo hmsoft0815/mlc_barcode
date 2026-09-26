@@ -47,7 +47,9 @@ func FormatCrypto(opts CryptoOptions) string {
 		params.Set("message", opts.Message)
 	}
 
-	queryString := params.Encode()
+	// BIP 21 values are percent-encoded; url.Values writes '+' for spaces,
+	// which wallets show literally ("Rechnung+1234").
+	queryString := strings.ReplaceAll(params.Encode(), "+", "%20")
 	if queryString != "" {
 		return fmt.Sprintf("%s:%s?%s", coin, address, queryString)
 	}
