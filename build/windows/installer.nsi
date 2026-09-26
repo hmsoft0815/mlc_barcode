@@ -44,6 +44,7 @@ SetCompressorDictSize 32
 ; ─── Pages ────────────────────────────────────────────────────────────────────
 
 !insertmacro MUI_PAGE_WELCOME
+!insertmacro MUI_PAGE_LICENSE "LICENSE"
 !insertmacro MUI_PAGE_DIRECTORY
 !insertmacro MUI_PAGE_INSTFILES
 !insertmacro MUI_PAGE_FINISH
@@ -75,6 +76,7 @@ Section "MainSection" SEC01
   File "/oname=barcode.exe" "bin/barcode-windows-amd64.exe"
   File "/oname=mcp-barcode-server.exe" "bin/mcp-barcode-server-windows-amd64.exe"
   File "build/windows/icon.ico"
+  File "/oname=LICENSE.txt" "LICENSE"
 
   ; Create uninstaller
   WriteUninstaller "$INSTDIR\Uninstall.exe"
@@ -116,6 +118,7 @@ Section "Uninstall"
   Delete "$INSTDIR\barcode.exe"
   Delete "$INSTDIR\mcp-barcode-server.exe"
   Delete "$INSTDIR\icon.ico"
+  Delete "$INSTDIR\LICENSE.txt"
   Delete "$INSTDIR\Uninstall.exe"
   RMDir "$INSTDIR"
 

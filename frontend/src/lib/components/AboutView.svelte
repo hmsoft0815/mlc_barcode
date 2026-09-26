@@ -1,4 +1,5 @@
 <script lang="ts">
+  import licenseText from '../../../../LICENSE?raw';
   import { BARCODE_TYPES } from '../types';
   export let appVersion: string = __APP_VERSION__;
 </script>
@@ -169,9 +170,13 @@ ART-1002
             ohne Namensnennung ist auf Anfrage erhältlich.
           </p>
           <div class="font-monospace p-2 bg-body-secondary rounded border small">
-            Lizenz: MIT with Attribution (siehe LICENSE)<br />
+            Lizenz: MIT with Attribution (siehe unten)<br />
             Git Repository: <a href="https://github.com/hmsoft0815/mlc_barcode" target="_blank" rel="noreferrer" class="text-decoration-none">https://github.com/hmsoft0815/mlc_barcode</a>
           </div>
+          <details class="mt-2">
+            <summary class="small text-primary" style="cursor: pointer;">Lizenztext anzeigen</summary>
+            <pre class="license-text bg-body-secondary border rounded p-2 mt-2 mb-0">{licenseText}</pre>
+          </details>
         </div>
         <div class="col-md-5 border-start-md ps-md-3">
           <h6 class="fw-semibold text-body small mb-2">Verwendete Open-Source Bibliotheken:</h6>
@@ -203,3 +208,12 @@ ART-1002
     </div>
   </div>
 </div>
+
+<style>
+  .license-text {
+    white-space: pre-wrap;
+    font-size: 0.75rem;
+    max-height: 22rem;
+    overflow-y: auto;
+  }
+</style>
