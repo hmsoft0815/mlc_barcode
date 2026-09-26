@@ -16,7 +16,7 @@ import (
 
 func main() {
 	showVersion := flag.Bool("version", false, "Show version and exit")
-	btype := flag.String("type", "qr", "Barcode type (qr, datamatrix, code128, code39, ean13, ean8, upca, itf)")
+	btype := flag.String("type", "qr", "Barcode type (qr, datamatrix, aztec, pdf417, code128, code39, ean13, ean8, upca, itf)")
 	data := flag.String("data", "", "Data to encode")
 	customText := flag.String("custom-text", "", "Custom caption text to display below barcode")
 	output := flag.String("out", "barcode.svg", "Output filename (.svg or .png)")

@@ -12,8 +12,8 @@ func registerBarcodeTools(s *mcp.Server) {
 	props := getCommonProperties()
 	props["type"] = map[string]any{
 		"type":        "string",
-		"description": "Barcode type (qr, datamatrix, code128, code39, ean13, ean8, upca, itf)",
-		"enum":        []string{"qr", "datamatrix", "code128", "code39", "ean13", "ean8", "upca", "itf"},
+		"description": "Barcode type: qr, datamatrix, aztec (tickets, compact, good on screens), pdf417 (boarding passes, shipping labels), code128 (ASCII), code39 (A-Z 0-9 -.$/+%), ean13, ean8, upca, itf (even number of digits)",
+		"enum":        barcodeTypeNames(),
 	}
 	props["data"] = map[string]any{
 		"type":        "string",

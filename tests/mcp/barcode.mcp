@@ -18,6 +18,10 @@ call_tool generate_barcode type:upca data:"036000291452"
 assert_contains "<svg"
 call_tool generate_barcode type:itf data:"12345678"
 assert_contains "<svg"
+call_tool generate_barcode type:aztec data:"TICKET-ICE-599-FRA-MUC"
+assert_contains "<svg"
+call_tool generate_barcode type:pdf417 data:"BOARDING PASS LH123 FRA-JFK"
+assert_contains "<svg"
 
 echo "--- options: png, caption, font size ---"
 call_tool generate_barcode type:code128 data:"ABC-123" format:png text:true font_size:24
@@ -57,10 +61,22 @@ expect_error call_tool generate_barcode type:ean8 data:"9638507X"
 assert_tool_error
 assert_contains "only digits"
 
+echo "--- helpful errors: what is wrong, what to do ---"
+expect_error call_tool generate_barcode type:code39 data:"hello"
+assert_tool_error
+assert_contains "'h' at position 1"
+assert_contains "upper case"
+expect_error call_tool generate_barcode type:code128 data:"Größe"
+assert_tool_error
+assert_contains "position 3"
+expect_error call_tool generate_barcode type:itf data:"12345"
+assert_tool_error
+assert_contains "012345"
+
 echo "--- invalid input ---"
 expect_error call_tool generate_barcode type:qr data:""
 assert_tool_error
-expect_error call_tool_raw generate_barcode '{"type":"pdf417","data":"x"}'
+expect_error call_tool_raw generate_barcode '{"type":"maxicode","data":"x"}'
 expect_error call_tool_raw generate_barcode '{"type":"qr","data":"x","format":"gif"}'
 expect_error call_tool_raw generate_barcode '{"data":"x"}'
 

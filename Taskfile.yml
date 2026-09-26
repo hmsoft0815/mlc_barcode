@@ -290,6 +290,17 @@ tasks:
       - bash tests/mcp/http-check.sh "{{.MCP_TESTER}}" "{{.SERVER}}" {{.BIN_DIR}}
       - echo "✓ MCP compliance OK"
 
+  test:scan:
+    desc: Scan test — generate every symbology with the CLI and decode it with zxing-cpp
+    vars:
+      VENV: "{{.BIN_DIR}}/.venv-scan"
+    cmds:
+      - mkdir -p {{.BIN_DIR}}
+      - go build -ldflags "{{.LDFLAGS}}" -o {{.BIN_DIR}}/barcode-scantest ./cmd/barcode
+      - test -x {{.VENV}}/bin/python || (python3 -m venv {{.VENV}} && {{.VENV}}/bin/pip install -q zxing-cpp pillow)
+      - rm -rf {{.BIN_DIR}}/scantest
+      - '{{.VENV}}/bin/python tests/scan/scan_check.py {{.BIN_DIR}}/barcode-scantest {{.BIN_DIR}}/scantest'
+
   check:frontend:
     desc: Run svelte-check for TypeScript and Svelte diagnostics
     dir: frontend

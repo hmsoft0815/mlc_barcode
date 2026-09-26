@@ -1,12 +1,14 @@
 package main
 
 import (
+	"github.com/mlcmcp/mlc_barcode/internal/barcodes"
 	"github.com/modelcontextprotocol/go-sdk/mcp"
 )
 
 const serverInstructions = `Generates barcodes and QR codes as SVG (default) or PNG.
 
-- Plain codes: generate_barcode with type qr, datamatrix, code128, code39, ean13, ean8, upca or itf.
+- Plain codes: generate_barcode with type qr, datamatrix, aztec, pdf417, code128, code39, ean13, ean8, upca or itf.
+- Errors say which character or how much data is the problem and what to do instead (e.g. use code128 for lower case, aztec for more text) — correct the call accordingly.
 - For structured QR payloads use the dedicated tool instead of hand-building the text: generate_epc_qr (SEPA transfer / GiroCode), generate_wifi_qr, generate_vcard_qr, generate_event_qr, generate_crypto_qr, generate_geo_qr, generate_tel_qr, generate_sms_qr, generate_email_qr.
 - EAN-13, EAN-8 and UPC-A may be given without check digit; it is computed. A wrong check digit is rejected and the error names the right one.
 - text:true adds a caption showing the encoded content; caption:"…" sets your own caption text instead (e.g. a product name under an EAN or a name under a vCard); font_size sets its size.
@@ -52,4 +54,12 @@ func addBarcodeTool(s *mcp.Server, t *mcp.Tool, h mcp.ToolHandlerFor[map[string]
 	t.Title = toolTitles[t.Name]
 	t.OutputSchema = barcodeOutputSchema
 	mcp.AddTool(s, t, h)
+}
+
+func barcodeTypeNames() []string {
+	names := make([]string, len(barcodes.AllTypes))
+	for i, t := range barcodes.AllTypes {
+		names[i] = string(t)
+	}
+	return names
 }
