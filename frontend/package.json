@@ -11,17 +11,17 @@
     "check": "svelte-check --tsconfig ./tsconfig.json"
   },
   "dependencies": {
-    "@wailsio/runtime": "latest",
+    "@wailsio/runtime": "3.0.0-beta.26",
     "bootstrap": "^5.3.8",
     "bootstrap-icons": "^1.13.1"
   },
   "devDependencies": {
-    "@sveltejs/vite-plugin-svelte": "^7.0.0",
+    "@sveltejs/vite-plugin-svelte": "^7.3.1",
     "@tsconfig/svelte": "^5.0.8",
-    "svelte": "^5.46.4",
-    "svelte-check": "^4.4.8",
+    "svelte": "^5.57.1",
+    "svelte-check": "^4.7.6",
     "tslib": "^2.6.2",
     "typescript": "^5.2.2",
-    "vite": "^8.0.5"
+    "vite": "^8.3.1"
   }
 }
