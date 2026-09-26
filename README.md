@@ -35,7 +35,7 @@ visibly credits the author. If that credit does not fit your product, a
 commercial licence without it is available on request. See [LICENSE](LICENSE).
 
 ## Version
-Current Version: **1.4.0**
+Current Version: **1.5.0**
 
 ## Features
 
