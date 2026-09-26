@@ -213,6 +213,8 @@ roughly 3–5.
 | Shipping label: 2 × Code 128 + DataMatrix | one Code 128 missing | all found |
 | ZXing blackbox datamatrix-1 / -2 (real photos) | 23/23, 18/18 | 23/23, 18/18 |
 | ZXing blackbox aztec-2 | 7/22 | 7/22 (ZXing's own test expects fewer) |
+| Codes on bottles, facing the camera (OpticScript set, `t0`) | — | DataMatrix and EAN-13 up to 90° of the circumference, QR up to 120° |
+| Codes on bottles, turned 35° (`t35`) | — | none from 30° on (see known limits) |
 
 ## Tests
 
@@ -223,7 +225,7 @@ roughly 3–5.
 | `TestDecodeShippingLabel` | `decode_scene_test.go` | two Code 128 and a DataMatrix |
 | `TestDecodePhonePhotoTime` | `decode_scene_test.go` | 12 MP photo under 2 s (skipped with `-short`) |
 | `BenchmarkDecodeCameraFrame` | `decode_scene_test.go` | time per camera frame |
-| `TestDecodeBlackbox` | `decode_blackbox_test.go` | real photos from ZXing (`testdata/zxing`, Apache-2.0); `minFound` per set may only rise |
+| `TestDecodeBlackbox` | `decode_blackbox_test.go` | real photos from ZXing (`testdata/zxing`, Apache-2.0) and codes on bottles made with mlc OpticScript (`testdata/cylinder`, `task testdata:cylinder`); `minFound` per set may only rise |
 | round trip | `decode_test.go` | every symbology we generate is read back with the same content |
 | exported codes | `quietzone_test.go` | codes are readable exactly as exported, without the decoder's extra quiet zone |
 | `task test:scan` | `tests/scan` | an independent reader (zxing-cpp) reads what we generate |
@@ -239,6 +241,16 @@ roughly 3–5.
   `paintOverLinear`'s line match; the code is then found again and
   painting stops after `maxLinearCodes` rounds — no wrong result, only
   time.
+- **Codes on bottles and tubes** (T-20260926-12): facing the camera,
+  DataMatrix reads up to about 90° of the circumference. A bottle turned
+  by 25° or more fails already at 30° — with no glare or noise at all —
+  while the same code squeezed evenly to 60 % reads fine. The detectors
+  sample on a perspective grid; on a cylinder the modules narrow along a
+  cosine, so off-centre the samples miss the middle modules. Fix idea:
+  for a candidate that did not decode, unwrap the window under a few
+  assumed radii and axis positions (x = cx + R·sin θ) and decode again.
+  Glare across the code's solid "L" edge destroys the information; only
+  turning the bottle helps there.
 - **Aztec with non-Latin-1 text** needs ECI (ticket T-20260926-09).
 - **Next step if needed:** run the candidate windows in parallel
   goroutines; the readers are independent per window.

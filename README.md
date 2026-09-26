@@ -175,6 +175,16 @@ task test:mcp
 - `task clean`: Clean up.
 - `task test`: Run unit tests.
 - `task test:mcp`: MCP compliance check with mlc mcp-tester.
+- `task test:scan`: every generated symbology is read back by an independent reader (zxing-cpp).
+
+### Test data for the reader
+
+The decoder is tested against photo-like images, not only clean renders (see [docs/decoder.md](docs/decoder.md)):
+
+- **Real photos** from ZXing's blackbox test sets (Apache-2.0) in `internal/barcodes/testdata/zxing/`.
+- **Codes on bottles and tubes** — DataMatrix pack codes, QR and EAN-13 wrapped around a cylinder, with shading, glare, sensor noise and JPEG compression — **generated with [mlc OpticScript](https://mlcgo.eu/products/mlc-opticscript/)** from our own clean codes (`tests/testdata/cylinder.js`, `task testdata:cylinder`). The images are in `internal/barcodes/testdata/cylinder/`; regenerating them needs OpticScript, running the tests does not.
+
+Each set has a lower bound of codes that must be read (`decode_blackbox_test.go`), so the reader can only get better.
 
 ## Reference
 

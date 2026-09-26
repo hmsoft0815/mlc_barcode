@@ -24,6 +24,14 @@ var blackboxSets = []struct {
 	{"datamatrix-1", TypeDataMatrix, 23},
 	{"datamatrix-2", TypeDataMatrix, 18},
 	{"aztec-2", TypeAztec, 7},
+	// Codes on bottles, made with mlc OpticScript (task testdata:cylinder,
+	// tests/testdata/cylinder.js): s<degrees of circumference>-t<turn>.
+	// Turned bottles (t35) fail even at small curvature: the detectors
+	// sample on a perspective grid, the cylinder narrows modules along a
+	// cosine (T-20260926-12).
+	{"../cylinder/datamatrix", TypeDataMatrix, 3},
+	{"../cylinder/qr", TypeQR, 4},
+	{"../cylinder/ean13", TypeEAN13, 4},
 }
 
 func TestDecodeBlackbox(t *testing.T) {

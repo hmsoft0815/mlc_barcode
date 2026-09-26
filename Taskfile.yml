@@ -447,6 +447,42 @@ tasks:
       - rm -rf {{.BIN_DIR}}/scantest
       - '{{.VENV}}/bin/python tests/scan/scan_check.py {{.BIN_DIR}}/barcode-scantest {{.BIN_DIR}}/scantest'
 
+  testdata:cylinder:
+    desc: Regenerate the test photos of codes on bottles (internal/barcodes/testdata/cylinder) with mlc OpticScript
+    # Die Bilder liegen im Repo; dieser Task ist nur zum Neuerzeugen nötig
+    # und braucht mlc OpticScript (https://mlcgo.eu/products/mlc-opticscript/)
+    # als Nachbar-Checkout. Skript: tests/testdata/cylinder.js.
+    vars:
+      OPTICSCRIPT: '{{.OPTICSCRIPT | default "../mlc_opticscript/bin/mlcos-run"}}'
+      OUT: internal/barcodes/testdata/cylinder
+    cmds:
+      - test -x {{.OPTICSCRIPT}} || { echo "mlcos-run fehlt ({{.OPTICSCRIPT}}); OPTICSCRIPT=… setzen"; exit 1; }
+      - mkdir -p {{.BIN_DIR}}
+      - go build -ldflags "{{.LDFLAGS}}" -o {{.BIN_DIR}}/barcode-testdata ./cmd/barcode
+      - rm -rf {{.OUT}}
+      - |
+        set -e
+        # A securPharm pack code (IFA format 06), a link, an EAN-13.
+        PHARMA=$(printf '[)>\03606\0359N111234567842\0351TCHARGE7\035D280331\035SSN9X2K4\036\004')
+        TMP=$(mktemp -d)
+        for spec in "datamatrix:$PHARMA:400:400" "qr:https://mlcgo.eu/products/mlc-barcode/:400:400" "ean13:4006381333931:600:300"; do
+          TYPE=${spec%%:*}; REST=${spec#*:}
+          H=${REST##*:}; REST=${REST%:*}; W=${REST##*:}; DATA=${REST%:*}
+          {{.BIN_DIR}}/barcode-testdata -type $TYPE -data "$DATA" -width $W -height $H -out $TMP/$TYPE.png >/dev/null
+          mkdir -p {{.OUT}}/$TYPE
+          for SPAN in 30 60 90 120 150; do
+            for TURN in 0 35; do
+              NAME={{.OUT}}/$TYPE/s$SPAN-t$TURN
+              GLARE=$([ $TURN = 0 ] && echo 0.25 || echo 0.15)
+              {{.OPTICSCRIPT}} tests/testdata/cylinder.js --CONTENT=$TMP/$TYPE.png --OUTPUT=$NAME.jpg \
+                --SPAN=$SPAN --TURN=$TURN --GLARE=$GLARE >/dev/null
+              printf '%s' "$DATA" > $NAME.txt
+            done
+          done
+        done
+        rm -rf $TMP
+        echo "→ $(ls {{.OUT}}/*/*.jpg | wc -l) Bilder in {{.OUT}}"
+
   check:frontend:
     desc: Run svelte-check for TypeScript and Svelte diagnostics
     dir: frontend
