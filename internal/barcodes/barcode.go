@@ -1,13 +1,15 @@
 /*
- * PDF Generation Service
+ * MLC Barcode — barcode engine
  * Copyright (c) 2026 Michael Lechner
  *
- * This source code is licensed under the MIT license found in the
- * LICENSE file in the root directory of this source tree.
+ * This source code is licensed under the MIT license with attribution
+ * clause (MIT with Attribution) found in the LICENSE file in the root
+ * directory of this source tree.
  */
 package barcodes
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 
@@ -85,6 +87,9 @@ func Generate(btype BarcodeType, data string, opts BarcodeOptions) (barcode.Barc
 	var err error
 
 	data = strings.TrimSpace(data)
+	if data == "" {
+		return nil, errors.New("data must not be empty")
+	}
 
 	switch btype {
 	case TypeQR:
@@ -96,7 +101,18 @@ func Generate(btype BarcodeType, data string, opts BarcodeOptions) (barcode.Barc
 	case TypeCode39:
 		bc, err = code39.Encode(data, opts.IncludeChecksum, opts.FullASCIICode39)
 	case TypeEAN13, TypeEAN8, TypeUPCA:
-		bc, err = ean.Encode(data)
+		check := CheckRetail(btype, data)
+		if !check.Valid {
+			return nil, fmt.Errorf("invalid %s: %s", btype, check.Error())
+		}
+		code := check.Code
+		if btype == TypeUPCA {
+			// A UPC-A is an EAN-13 with a leading 0. Passed on as is, the
+			// encoder would read 12 digits as an EAN-13 without check digit
+			// and encode a different number.
+			code = "0" + code
+		}
+		bc, err = ean.Encode(code)
 	case TypeITF:
 		bc, err = twooffive.Encode(data, true)
 	default:

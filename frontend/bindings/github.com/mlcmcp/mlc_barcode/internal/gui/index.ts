@@ -19,6 +19,7 @@ export type {
     EmailInput,
     EventInput,
     GeoInput,
+    RetailValidation,
     SMSInput,
     SaveSingleFileRequest,
     TableFile,

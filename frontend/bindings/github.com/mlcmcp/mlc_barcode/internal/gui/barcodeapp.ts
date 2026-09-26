@@ -133,3 +133,11 @@ export function PickTableFile(): $CancellablePromise<$models.TableFile> {
 export function SaveSingleFile(req: $models.SaveSingleFileRequest): $CancellablePromise<string> {
     return $Call.ByID(2139578368, req);
 }
+
+/**
+ * ValidateBarcode checks length and check digit of EAN-13, EAN-8 and UPC-A
+ * input while the user types.
+ */
+export function ValidateBarcode(barcodeType: string, data: string): $CancellablePromise<$models.RetailValidation> {
+    return $Call.ByID(890961503, barcodeType, data);
+}

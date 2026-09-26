@@ -116,6 +116,27 @@ func (a *BarcodeApp) FormatEmail(opts EmailInput) string {
 	})
 }
 
+// ValidateBarcode checks length and check digit of EAN-13, EAN-8 and UPC-A
+// input while the user types.
+func (a *BarcodeApp) ValidateBarcode(barcodeType, data string) RetailValidation {
+	btype := barcodes.BarcodeType(strings.ToLower(barcodeType))
+	if !barcodes.IsRetail(btype) {
+		return RetailValidation{Valid: true}
+	}
+	c := barcodes.CheckRetail(btype, strings.TrimSpace(data))
+	return RetailValidation{
+		Applies:         true,
+		Valid:           c.Valid,
+		Reason:          c.Reason,
+		Code:            c.Code,
+		CheckDigitAdded: c.CheckDigitAdded,
+		Given:           c.Given,
+		Expected:        c.Expected,
+		MinLength:       c.Lengths[0],
+		MaxLength:       c.Lengths[1],
+	}
+}
+
 // GenerateBarcode generates SVG and PNG representations of a single barcode.
 func (a *BarcodeApp) GenerateBarcode(req BarcodeRequest) (BarcodeResult, error) {
 	btype := barcodes.BarcodeType(strings.ToLower(req.Type))

@@ -199,6 +199,29 @@ export interface GeoInput {
 }
 
 /**
+ * RetailValidation is the live check of an EAN-13, EAN-8 or UPC-A input.
+ * Reason is "", "non_digit", "length" or "checksum"; the GUI words it.
+ */
+export interface RetailValidation {
+    /**
+     * false for types without check digit
+     */
+    "applies": boolean;
+    "valid": boolean;
+    "reason": string;
+
+    /**
+     * complete / corrected code
+     */
+    "code": string;
+    "checkDigitAdded": boolean;
+    "given": number;
+    "expected": number;
+    "minLength": number;
+    "maxLength": number;
+}
+
+/**
  * SMSInput contains SMS message parameters.
  */
 export interface SMSInput {

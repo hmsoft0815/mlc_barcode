@@ -144,3 +144,17 @@ type SaveSingleFileRequest struct {
 	Format      string `json:"format"`  // "svg" or "png"
 	Content     string `json:"content"` // Raw SVG or Base64 PNG
 }
+
+// RetailValidation is the live check of an EAN-13, EAN-8 or UPC-A input.
+// Reason is "", "non_digit", "length" or "checksum"; the GUI words it.
+type RetailValidation struct {
+	Applies         bool   `json:"applies"` // false for types without check digit
+	Valid           bool   `json:"valid"`
+	Reason          string `json:"reason"`
+	Code            string `json:"code"` // complete / corrected code
+	CheckDigitAdded bool   `json:"checkDigitAdded"`
+	Given           int    `json:"given"`
+	Expected        int    `json:"expected"`
+	MinLength       int    `json:"minLength"`
+	MaxLength       int    `json:"maxLength"`
+}

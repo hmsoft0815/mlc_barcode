@@ -13,8 +13,10 @@
     FormatSMS,
     FormatEmail,
     SaveSingleFile,
+    ValidateBarcode,
     CopyToClipboard
   } from '../../../bindings/github.com/mlcmcp/mlc_barcode/internal/gui/barcodeapp';
+  import type { RetailValidation } from '../../../bindings/github.com/mlcmcp/mlc_barcode/internal/gui/models';
   import type { BarcodeResult } from '../../../bindings/github.com/mlcmcp/mlc_barcode/internal/gui/models';
 
   export let onSendToPrint: ((item: { data: string; svg: string; type: string }) => void) | undefined = undefined;
@@ -299,10 +301,21 @@
     }, 100);
   }
 
+  // Live check of EAN/UPC input (length, check digit); null for other types.
+  let retailCheck: RetailValidation | null = null;
+
   async function generate() {
     if (!rawData.trim()) {
       result = null;
+      retailCheck = null;
       return;
+    }
+
+    try {
+      const check = await ValidateBarcode(selectedType, rawData);
+      retailCheck = check.applies ? check : null;
+    } catch {
+      retailCheck = null;
     }
 
     isGenerating = true;
@@ -995,10 +1008,44 @@
               class="form-control form-control-sm font-monospace"
               rows={qrMode === 'text' ? 3 : 2}
               placeholder="Text oder Link eingeben..."
+              class:is-invalid={retailCheck && !retailCheck.valid}
+              class:is-valid={retailCheck?.valid}
               bind:value={rawData}
               on:input={triggerGenerate}
               readonly={qrMode !== 'text'}
             ></textarea>
+            {#if retailCheck}
+              {@const typeName = BARCODE_TYPES.find((t) => t.id === selectedType)?.name ?? selectedType}
+              {#if retailCheck.valid}
+                <div class="valid-feedback d-block">
+                  {#if retailCheck.checkDigitAdded}
+                    Prüfziffer <strong>{retailCheck.code.slice(-1)}</strong> wird ergänzt →
+                    <span class="font-monospace">{retailCheck.code}</span>
+                  {:else}
+                    Prüfziffer korrekt.
+                  {/if}
+                </div>
+              {:else}
+                <div class="invalid-feedback d-block">
+                  {#if retailCheck.reason === 'non_digit'}
+                    {typeName} erlaubt nur Ziffern.
+                  {:else if retailCheck.reason === 'length'}
+                    {typeName} braucht {retailCheck.maxLength} Ziffern (oder {retailCheck.minLength} ohne
+                    Prüfziffer) — eingegeben: {rawData.trim().length}.
+                  {:else}
+                    Prüfziffer {retailCheck.given} ist falsch, richtig wäre <strong>{retailCheck.expected}</strong>.
+                    <button
+                      type="button"
+                      class="btn btn-link btn-sm p-0 align-baseline"
+                      on:click={() => {
+                        rawData = retailCheck?.code ?? rawData;
+                        triggerGenerate();
+                      }}>Korrigieren → <span class="font-monospace">{retailCheck.code}</span></button
+                    >
+                  {/if}
+                </div>
+              {/if}
+            {/if}
           </div>
 
           <!-- Custom Text / Caption Input -->
