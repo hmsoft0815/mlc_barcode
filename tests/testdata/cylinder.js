@@ -8,6 +8,7 @@
 //!PARAM: SPAN:number=60,min=10,max=160
 //!PARAM: TURN:number=0,min=-60,max=60
 //!PARAM: CODEW:number=320,min=80,max=700
+//!PARAM: TILT:number=20,min=0,max=60
 //!PARAM: GLARE:number=0.5,min=0,max=1
 //!PARAM: GLAREPOS:number=999,min=-170,max=999
 //!PARAM: SHADE:number=0.55,min=0,max=0.9
@@ -21,6 +22,9 @@
 //           changes
 // TURN      degrees the code is turned away from the camera
 // CODEW     width of the code in the image (unrolled, px)
+// TILT      degrees the camera looks down on the bottle: horizontal lines
+//           on the label become arcs (the near middle lower than the
+//           sides) and the code is foreshortened vertically
 // GLARE     strength of the glare stripe, GLAREPOS its angle relative to
 //           the code's centre (the default lies beside the code)
 // SHADE     darkening towards the edges (0 = flat light)
@@ -45,15 +49,19 @@ base.fillRectangle(left, 0, right - left, H, "#f6f5f0");
 const code = Engine.loadImage(CONTENT);
 const cols = 33, rows = 3;
 const width = CODEW;
-const height = (width * code.height) / code.width;
+const height = ((width * code.height) / code.width) * Math.cos(rad(TILT));
 const top = (H - height) / 2;
+// Seen from above, a point of the surface at angle theta lies R·cos(theta)
+// closer to the camera than the axis and drops by that times sin(TILT);
+// relative to the code's centre (theta = TURN) the sides rise.
+const drop = (theta) => R * (Math.cos(theta) - Math.cos(rad(TURN))) * Math.sin(rad(TILT));
 const nodes = [];
 for (let r = 0; r < rows; r++) {
-  const y = (top + (height * r) / (rows - 1)) / H;
+  const y = top + (height * r) / (rows - 1);
   const row = [];
   for (let c = 0; c < cols; c++) {
     const theta = rad(TURN) + (c / (cols - 1) - 0.5) * rad(SPAN);
-    row.push(xAt(theta) / W, y);
+    row.push(xAt(theta) / W, (y + drop(theta)) / H);
   }
   nodes.push(row);
 }

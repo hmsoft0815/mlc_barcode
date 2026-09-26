@@ -470,13 +470,17 @@ tasks:
           H=${REST##*:}; REST=${REST%:*}; W=${REST##*:}; DATA=${REST%:*}
           {{.BIN_DIR}}/barcode-testdata -type $TYPE -data "$DATA" -width $W -height $H -out $TMP/$TYPE.png >/dev/null
           mkdir -p {{.OUT}}/$TYPE
-          for SPAN in 30 60 90 120 150; do
+          # s = degrees of the circumference, t = bottle turned, v = camera
+          # looking down (rows become arcs).
+          for SPAN in 30 60 90 120; do
             for TURN in 0 35; do
-              NAME={{.OUT}}/$TYPE/s$SPAN-t$TURN
-              GLARE=$([ $TURN = 0 ] && echo 0.25 || echo 0.15)
-              {{.OPTICSCRIPT}} tests/testdata/cylinder.js --CONTENT=$TMP/$TYPE.png --OUTPUT=$NAME.jpg \
-                --SPAN=$SPAN --TURN=$TURN --GLARE=$GLARE >/dev/null
-              printf '%s' "$DATA" > $NAME.txt
+              for TILT in 0 20; do
+                NAME={{.OUT}}/$TYPE/s$SPAN-t$TURN-v$TILT
+                GLARE=$([ $TURN = 0 ] && echo 0.25 || echo 0.15)
+                {{.OPTICSCRIPT}} tests/testdata/cylinder.js --CONTENT=$TMP/$TYPE.png --OUTPUT=$NAME.jpg \
+                  --SPAN=$SPAN --TURN=$TURN --TILT=$TILT --GLARE=$GLARE >/dev/null
+                printf '%s' "$DATA" > $NAME.txt
+              done
             done
           done
         done

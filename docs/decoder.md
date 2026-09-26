@@ -213,8 +213,10 @@ roughly 3–5.
 | Shipping label: 2 × Code 128 + DataMatrix | one Code 128 missing | all found |
 | ZXing blackbox datamatrix-1 / -2 (real photos) | 23/23, 18/18 | 23/23, 18/18 |
 | ZXing blackbox aztec-2 | 7/22 | 7/22 (ZXing's own test expects fewer) |
-| Codes on bottles, facing the camera (OpticScript set, `t0`) | — | DataMatrix and EAN-13 up to 90° of the circumference, QR up to 120° |
-| Codes on bottles, turned 35° (`t35`) | — | none from 30° on (see known limits) |
+| Codes on bottles, facing the camera at code height (OpticScript set, `t0-v0`) | — | DataMatrix and EAN-13 up to 90° of the circumference, QR up to 120° |
+| … bottle turned 35° (`t35`) | — | 2D codes none from 30° on; EAN-13 up to 30° |
+| … camera looking down 20° (`v20`, rows become arcs) | — | DataMatrix none; QR only at 30°; EAN-13 up to 90° |
+| Whole bottle set (16 images per type) | — | DataMatrix 3, QR 5, EAN-13 8 |
 
 ## Tests
 
@@ -241,8 +243,9 @@ roughly 3–5.
   `paintOverLinear`'s line match; the code is then found again and
   painting stops after `maxLinearCodes` rounds — no wrong result, only
   time.
-- **Codes on bottles and tubes** (T-20260926-12): facing the camera,
-  DataMatrix reads up to about 90° of the circumference. A bottle turned
+- **Codes on bottles and tubes** (T-20260926-12): facing the camera at
+  code height, DataMatrix reads up to about 90° of the circumference. A
+  camera looking down on the bottle (rows become arcs) or a bottle turned
   by 25° or more fails already at 30° — with no glare or noise at all —
   while the same code squeezed evenly to 60 % reads fine. The detectors
   sample on a perspective grid; on a cylinder the modules narrow along a
