@@ -125,7 +125,10 @@ Available in English and German.
 ## License
 
 Copyright (c) 2026 Michael Lechner.
-Licensed under the MIT License.
+Licensed under the MIT License with an attribution clause — free to use, modify and
+redistribute, also commercially, as long as products using it credit "Michael Lechner"
+visibly (docs, About screen or similar). A commercial licence without attribution is
+available on request. See [LICENSE](LICENSE).
 
 ---
 **Note:** Currently, no further expansions or major changes are planned, as the tools have proven themselves effective in everyday use, particularly in combination with Large Language Models (LLMs).

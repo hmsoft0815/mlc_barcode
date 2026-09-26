@@ -21,6 +21,7 @@
   let bgColor = '#ffffff';
   let isTransparent = false;
   let showText = false;
+  let fontSize = 0; // caption px, 0 = automatic
 
   // Batch states
   let isGenerating = false;
@@ -68,6 +69,7 @@
         width: 0,
         height: 0,
         showText,
+        fontSize,
         foregroundColor: fgColor,
         backgroundColor: isTransparent ? 'transparent' : bgColor
       });
@@ -239,6 +241,21 @@
                 />
                 <label class="form-check-label" for="batchShowText">Text anzeigen</label>
               </div>
+              {#if showText}
+                <label for="batchFontSize" class="form-label small mb-0 mt-1 text-body-secondary">
+                  Textgröße: <span class="font-monospace">{fontSize > 0 ? `${fontSize} px` : 'Auto'}</span>
+                </label>
+                <input
+                  id="batchFontSize"
+                  type="range"
+                  class="form-range"
+                  min="0"
+                  max="96"
+                  step="1"
+                  bind:value={fontSize}
+                  on:change={runBatchGenerate}
+                />
+              {/if}
             </div>
           </div>
 

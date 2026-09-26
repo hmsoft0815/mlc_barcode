@@ -21,8 +21,14 @@ func GeneratePNG(btype BarcodeType, data string, opts BarcodeOptions) ([]byte, e
 	bg := parseColor(opts.BackgroundColor, color.White)
 
 	bounds := bc.Bounds()
-	img := image.NewRGBA(bounds)
-	draw.Draw(img, bounds, &image.Uniform{bg}, image.Point{}, draw.Src)
+	caption, fontSize, textHeight := "", 0, 0
+	if opts.ShowText {
+		caption = captionText(opts, bc.Content())
+		fontSize, textHeight = captionLayout(opts, caption, bounds.Dx(), bounds.Dy())
+	}
+
+	img := image.NewRGBA(image.Rect(bounds.Min.X, bounds.Min.Y, bounds.Max.X, bounds.Max.Y+textHeight))
+	draw.Draw(img, img.Bounds(), &image.Uniform{bg}, image.Point{}, draw.Src)
 
 	for y := bounds.Min.Y; y < bounds.Max.Y; y++ {
 		for x := bounds.Min.X; x < bounds.Max.X; x++ {
@@ -32,6 +38,10 @@ func GeneratePNG(btype BarcodeType, data string, opts BarcodeOptions) ([]byte, e
 				img.Set(x, y, fg)
 			}
 		}
+	}
+
+	if opts.ShowText {
+		drawCaption(img, caption, fontSize, bounds.Max.Y, textHeight, fg)
 	}
 
 	var buf bytes.Buffer

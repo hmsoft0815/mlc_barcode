@@ -121,7 +121,10 @@ Auf Deutsch und Englisch.
 ## Lizenz
 
 Copyright (c) 2026 Michael Lechner.
-Lizenziert unter der MIT-Lizenz.
+Lizenziert unter der MIT-Lizenz mit Namensnennungsklausel — frei nutzbar, veränderbar und
+weitergebbar, auch kommerziell, solange Produkte, die es verwenden, "Michael Lechner" sichtbar
+nennen (Dokumentation, Info-Dialog o. ä.). Eine kommerzielle Lizenz ohne Namensnennung gibt es
+auf Anfrage. Siehe [LICENSE](LICENSE).
 
 ---
 **Hinweis:** Aktuell sind keine weiteren Erweiterungen oder größeren Änderungen geplant, da sich die Werkzeuge im Alltag – insbesondere auch in Verbindung mit Large Language Models (LLMs) – bestens bewährt haben.

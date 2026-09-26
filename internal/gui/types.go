@@ -8,6 +8,7 @@ type BarcodeRequest struct {
 	Width           int    `json:"width"`           // Output width in px (0 for default)
 	Height          int    `json:"height"`          // Output height in px (0 for default)
 	ShowText        bool   `json:"showText"`        // Show readable text below barcode
+	FontSize        int    `json:"fontSize"`        // Caption size in px (0 = automatic)
 	ForegroundColor string `json:"foregroundColor"` // Foreground color (e.g. #000000)
 	BackgroundColor string `json:"backgroundColor"` // Background color (e.g. #ffffff or transparent)
 }
@@ -97,6 +98,7 @@ type BatchBarcodeRequest struct {
 	Width           int      `json:"width"`
 	Height          int      `json:"height"`
 	ShowText        bool     `json:"showText"`
+	FontSize        int      `json:"fontSize"`
 	ForegroundColor string   `json:"foregroundColor"`
 	BackgroundColor string   `json:"backgroundColor"`
 }

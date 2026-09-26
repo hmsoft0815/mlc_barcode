@@ -1,6 +1,6 @@
 <script lang="ts">
   import { BARCODE_TYPES } from '../types';
-  export let appVersion: string = '1.3.0';
+  export let appVersion: string = __APP_VERSION__;
 </script>
 
 <div class="container-fluid py-3" style="max-width: 900px;">
@@ -16,12 +16,12 @@
       </p>
       <div class="d-flex flex-wrap justify-content-center gap-2 mb-3">
         <span class="badge bg-primary">Version {appVersion}</span>
-        <span class="badge bg-success-subtle text-success-emphasis border">MIT Lizenz</span>
+        <span class="badge bg-success-subtle text-success-emphasis border">MIT with Attribution</span>
         <span class="badge bg-secondary-subtle text-secondary border">Wails v3 + Svelte + Go</span>
       </div>
       <div class="d-flex justify-content-center gap-2">
         <a
-          href="https://github.com/mlcmcp/mlc_barcode"
+          href="https://github.com/hmsoft0815/mlc_barcode"
           target="_blank"
           rel="noreferrer"
           class="btn btn-sm btn-outline-secondary"
@@ -129,14 +129,18 @@ mcp-barcode-server</code></pre>
       <div class="row g-3 align-items-center">
         <div class="col-md-7">
           <p class="fw-semibold text-body mb-1">
-            © 2026 Michael Lechner · Alle Rechte vorbehalten.
+            © 2026 Michael Lechner
           </p>
           <p class="mb-2">
-            Veröffentlicht als Open-Source-Software unter der <strong>MIT Lizenz</strong>. Der Quellcode ist frei zugänglich, darf modifiziert und weiterverteilt werden.
+            Veröffentlicht als Open-Source-Software unter der <strong>MIT-Lizenz mit Namensnennung</strong>
+            (MIT with Attribution). Der Quellcode darf frei genutzt, verändert und weitergegeben werden —
+            auch kommerziell. Produkte, die ihn verwenden, müssen den Autor „Michael Lechner“ sichtbar
+            nennen (z.&nbsp;B. in der Dokumentation oder einem Info-Dialog). Eine kommerzielle Lizenz
+            ohne Namensnennung ist auf Anfrage erhältlich.
           </p>
           <div class="font-monospace p-2 bg-body-secondary rounded border small">
-            SPDX-License-Identifier: MIT<br />
-            Git Repository: <a href="https://github.com/mlcmcp/mlc_barcode" target="_blank" rel="noreferrer" class="text-decoration-none">https://github.com/mlcmcp/mlc_barcode</a>
+            Lizenz: MIT with Attribution (siehe LICENSE)<br />
+            Git Repository: <a href="https://github.com/hmsoft0815/mlc_barcode" target="_blank" rel="noreferrer" class="text-decoration-none">https://github.com/hmsoft0815/mlc_barcode</a>
           </div>
         </div>
         <div class="col-md-5 border-start-md ps-md-3">

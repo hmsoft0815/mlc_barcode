@@ -30,12 +30,10 @@ func barcodeToSVG(bc barcode.Barcode, opts BarcodeOptions) (string, error) {
 
 	// If we show text, we need extra height in the viewBox
 	viewBoxHeight := height
-	textHeight := 0
+	caption, fontSize, textHeight := "", 0, 0
 	if opts.ShowText {
-		textHeight = height / 5 // Reserve 20% of height for text
-		if textHeight < 20 {
-			textHeight = 20
-		}
+		caption = captionText(opts, bc.Content())
+		fontSize, textHeight = captionLayout(opts, caption, width, height)
 		viewBoxHeight += textHeight
 	}
 
@@ -68,15 +66,10 @@ func barcodeToSVG(bc barcode.Barcode, opts BarcodeOptions) (string, error) {
 
 	textElement := ""
 	if opts.ShowText {
-		content := opts.CustomText
-		if content == "" {
-			content = bc.Content()
-		}
-		fontSize := textHeight * 8 / 10
-		textY := height + (textHeight * 7 / 10)
+		textY := captionBaseline(height, textHeight)
 		textElement = fmt.Sprintf(
 			`<text x="%d" y="%d" font-family="sans-serif, monospace" font-size="%d" text-anchor="middle" fill="%s">%s</text>`,
-			width/2, textY, fontSize, opts.ForegroundColor, escapeXML(content),
+			width/2, textY, fontSize, opts.ForegroundColor, escapeXML(caption),
 		)
 	}
 

@@ -31,6 +31,10 @@ func getCommonProperties() map[string]any {
 			"type":        "boolean",
 			"description": "Show text below barcode (if supported)",
 		},
+		"font_size": map[string]any{
+			"type":        "integer",
+			"description": "Caption font size in pixels (6-200); omit for automatic size",
+		},
 		"fg_color": map[string]any{
 			"type":        "string",
 			"description": "Foreground color (e.g. black, #ff0000)",
@@ -71,6 +75,9 @@ func handleBarcodeGeneration(ctx context.Context, btype barcodes.BarcodeType, da
 	}
 	if t, ok := args["text"].(bool); ok {
 		opts.ShowText = t
+	}
+	if fs, ok := args["font_size"].(float64); ok {
+		opts.FontSize = int(fs)
 	}
 	if fg, ok := args["fg_color"].(string); ok && fg != "" {
 		opts.ForegroundColor = fg

@@ -79,6 +79,7 @@
   let bgColor = '#ffffff';
   let isTransparent = false;
   let showText = false;
+  let fontSize = 0; // caption px, 0 = automatic
   let customWidth = 0;
   let customHeight = 0;
 
@@ -258,6 +259,7 @@
         width: customWidth > 0 ? Number(customWidth) : 0,
         height: customHeight > 0 ? Number(customHeight) : 0,
         showText,
+        fontSize,
         foregroundColor: fgColor,
         backgroundColor: isTransparent ? 'transparent' : bgColor
       });
@@ -941,6 +943,35 @@
                   bind:value={customLabelText}
                   on:input={() => {
                     customLabelTouched = true;
+                    triggerGenerate();
+                  }}
+                />
+                <div class="d-flex justify-content-between align-items-center mt-2 mb-1">
+                  <label for="fontSizeRange" class="form-label small mb-0 text-body-secondary">Textgröße</label>
+                  <div class="d-flex align-items-center gap-2 small">
+                    <span class="font-monospace">{fontSize > 0 ? `${fontSize} px` : 'Auto'}</span>
+                    {#if fontSize > 0}
+                      <button
+                        type="button"
+                        class="btn btn-link btn-sm p-0 small"
+                        on:click={() => {
+                          fontSize = 0;
+                          triggerGenerate();
+                        }}>Auto</button
+                      >
+                    {/if}
+                  </div>
+                </div>
+                <input
+                  id="fontSizeRange"
+                  type="range"
+                  class="form-range"
+                  min="8"
+                  max="96"
+                  step="1"
+                  value={fontSize || 24}
+                  on:input={(e) => {
+                    fontSize = Number(e.currentTarget.value);
                     triggerGenerate();
                   }}
                 />

@@ -1,5 +1,7 @@
 import 'bootstrap/dist/css/bootstrap.min.css';
 import 'bootstrap-icons/font/bootstrap-icons.css';
+import '@fontsource-variable/inter';
+import './theme.css';
 import { mount } from 'svelte';
 import App from './App.svelte';
 

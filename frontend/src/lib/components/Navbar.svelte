@@ -1,6 +1,6 @@
 <script lang="ts">
   export let activeTab: 'single' | 'batch' | 'print' | 'about' = 'single';
-  export let appVersion: string = '1.3.0';
+  export let appVersion: string = __APP_VERSION__;
   export let theme: 'light' | 'dark' = 'light';
   export let onToggleTheme: () => void = () => {};
 </script>
@@ -60,7 +60,7 @@
         type="button"
         aria-label="Design umschalten"
       >
-        <i class="bi bi-{theme === 'dark' ? 'sun-fill text-warning' : 'moon-stars-fill'}"></i>
+        <i class="bi bi-{theme === 'dark' ? 'sun-fill text-primary' : 'moon-stars-fill'}"></i>
       </button>
     </div>
   </div>

@@ -23,6 +23,7 @@ func main() {
 	width := flag.Int("width", 0, "Width of the barcode (0 for default)")
 	height := flag.Int("height", 0, "Height of the barcode (0 for default)")
 	showText := flag.Bool("text", false, "Show text below barcode (if supported)")
+	fontSize := flag.Int("font-size", 0, "Caption font size in pixels (0 = automatic)")
 	fgColor := flag.String("fg", "black", "Foreground color (e.g. black, #ff0000)")
 	bgColor := flag.String("bg", "white", "Background color (e.g. white, transparent, #ffffff)")
 
@@ -162,6 +163,7 @@ func main() {
 	}
 	opts.ShowText = *showText
 	opts.CustomText = *customText
+	opts.FontSize = *fontSize
 	opts.ForegroundColor = *fgColor
 	opts.BackgroundColor = *bgColor
 

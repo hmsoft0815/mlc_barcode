@@ -340,6 +340,17 @@ tasks:
         echo "────────────────────────────────────────────"
         if [ "$MISSING" -gt 0 ]; then echo "⚠ $MISSING artifact(s) missing"; exit 1; fi
 
+  dropzone:gui:
+    desc: "Windows GUI test build (+ debug) → {{.DROPZONE}}, version in the file name"
+    # Versioned names so a new build never overwrites an exe that is still
+    # running on the Windows box — bump the patch level in VERSION per change.
+    deps: [build:gui:windows, build:debug:windows]
+    cmds:
+      - mkdir -p {{.DROPZONE}}
+      - cp {{.BIN_DIR}}/{{.GUI_BINARY}}-windows-amd64.exe {{.DROPZONE}}/{{.GUI_BINARY}}-{{.VERSION}}-windows-amd64.exe
+      - cp {{.BIN_DIR}}/{{.GUI_BINARY}}-windows-amd64-debug.exe {{.DROPZONE}}/{{.GUI_BINARY}}-{{.VERSION}}-windows-amd64-debug.exe
+      - ls -lh {{.DROPZONE}}/{{.GUI_BINARY}}-{{.VERSION}}-*
+
   dev:deploy:
     desc: "Alias for deploy:dropzone"
     cmds:

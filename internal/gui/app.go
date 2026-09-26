@@ -142,6 +142,7 @@ func (a *BarcodeApp) GenerateBarcode(req BarcodeRequest) (BarcodeResult, error) 
 		opts.Height = req.Height
 	}
 	opts.ShowText = req.ShowText
+	opts.FontSize = req.FontSize
 	opts.CustomText = req.CustomText
 	if req.ForegroundColor != "" {
 		opts.ForegroundColor = req.ForegroundColor
@@ -190,6 +191,7 @@ func (a *BarcodeApp) GenerateBatch(req BatchBarcodeRequest) (BatchBarcodeRespons
 		opts.Height = req.Height
 	}
 	opts.ShowText = req.ShowText
+	opts.FontSize = req.FontSize
 	if req.ForegroundColor != "" {
 		opts.ForegroundColor = req.ForegroundColor
 	}

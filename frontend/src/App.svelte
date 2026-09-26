@@ -8,8 +8,8 @@
   import { GetVersion } from '../bindings/github.com/mlcmcp/mlc_barcode/internal/gui/barcodeapp';
 
   let activeTab: 'single' | 'batch' | 'print' | 'about' = 'single';
-  let appVersion = '1.3.0';
-  let theme: 'light' | 'dark' = 'light';
+  let appVersion = __APP_VERSION__;
+  let theme: 'light' | 'dark' = 'dark';
 
   let printItems: Array<{ data: string; svg: string; type: string }> = [];
 
@@ -38,14 +38,12 @@
   }
 
   onMount(async () => {
-    // Theme preference
+    // Theme preference; dark is the house look (mlcgo.eu)
     const saved = localStorage.getItem('mlc_theme') as 'light' | 'dark' | null;
     if (saved === 'dark' || saved === 'light') {
       applyTheme(saved);
-    } else if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-      applyTheme('dark');
     } else {
-      applyTheme('light');
+      applyTheme('dark');
     }
 
     try {
@@ -74,10 +72,10 @@
 
   <footer class="py-2 px-3 border-top bg-body text-body-secondary small d-flex flex-wrap justify-content-between align-items-center">
     <div>
-      <span class="fw-medium">MLC Barcode v{appVersion}</span> · © 2026 Michael Lechner · <span class="badge bg-body-secondary text-body border">MIT License</span>
+      <span class="fw-medium">MLC Barcode v{appVersion}</span> · © 2026 Michael Lechner · <span class="badge bg-body-secondary text-body border">MIT with Attribution</span>
     </div>
     <div class="d-flex gap-3">
-      <a href="https://github.com/mlcmcp/mlc_barcode" target="_blank" rel="noreferrer" class="text-body-secondary text-decoration-none hover-primary">
+      <a href="https://github.com/hmsoft0815/mlc_barcode" target="_blank" rel="noreferrer" class="text-body-secondary text-decoration-none hover-primary">
         <i class="bi bi-github me-1"></i> GitHub
       </a>
       <a href="https://mlcgo.eu/products/mlc-barcode/" target="_blank" rel="noreferrer" class="text-body-secondary text-decoration-none hover-primary">
@@ -88,9 +86,6 @@
 </div>
 
 <style>
-  .app-root {
-    font-family: system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-  }
   .hover-primary:hover {
     color: var(--bs-primary) !important;
   }

@@ -37,6 +37,7 @@
         width: 0,
         height: 0,
         showText: false,
+        fontSize: 0,
         foregroundColor: '#000000',
         backgroundColor: '#ffffff'
       });

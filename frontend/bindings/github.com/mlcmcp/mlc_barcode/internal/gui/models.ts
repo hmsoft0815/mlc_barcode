@@ -36,6 +36,11 @@ export interface BarcodeRequest {
     "showText": boolean;
 
     /**
+     * Caption size in px (0 = automatic)
+     */
+    "fontSize": number;
+
+    /**
      * Foreground color (e.g. #000000)
      */
     "foregroundColor": string;
@@ -75,6 +80,7 @@ export interface BatchBarcodeRequest {
     "width": number;
     "height": number;
     "showText": boolean;
+    "fontSize": number;
     "foregroundColor": string;
     "backgroundColor": string;
 }

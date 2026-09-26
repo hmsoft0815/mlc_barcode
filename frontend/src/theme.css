@@ -1,0 +1,176 @@
+/* MLC Barcode — theme in the colours of mlcgo.eu.
+ *
+ * Source of truth for the palette: mlcgo.eu src/app.css. Dark is the house
+ * look; light keeps the same gold but a darker shade, because the site's
+ * #9e7b41 only reaches 3.7:1 on a light background.
+ *
+ * Bootstrap 5.3 compiles most component colours to literals, so overriding
+ * --bs-primary alone is not enough: buttons, pills, checkboxes and focus
+ * rings are set explicitly below.
+ */
+
+:root {
+  --bs-body-font-family: 'Inter Variable', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --mlc-gold: #c5a059;
+  --mlc-gold-bright: #e8d0a0;
+}
+
+/* ── Dark (default) ─────────────────────────────────────────────── */
+[data-bs-theme='dark'] {
+  --bs-body-bg: #141416;
+  --bs-body-bg-rgb: 20, 20, 22;
+  --bs-secondary-bg: #1c1c1f;
+  --bs-secondary-bg-rgb: 28, 28, 31;
+  --bs-tertiary-bg: #0a0a0b;
+  --bs-tertiary-bg-rgb: 10, 10, 11;
+  --bs-body-color: #e0e0e0;
+  --bs-body-color-rgb: 224, 224, 224;
+  --bs-emphasis-color: #ffffff;
+  --bs-secondary-color: #a0a0a0;
+  --bs-secondary-color-rgb: 160, 160, 160;
+
+  --bs-border-color: #34312b;
+  --bs-border-color-translucent: rgba(197, 160, 89, 0.2);
+
+  --bs-primary: #c5a059;
+  --bs-primary-rgb: 197, 160, 89;
+  --bs-primary-text-emphasis: #e8d0a0;
+  --bs-primary-bg-subtle: #2a2215;
+  --bs-primary-border-subtle: #5c4a28;
+
+  --bs-link-color: #c5a059;
+  --bs-link-color-rgb: 197, 160, 89;
+  --bs-link-hover-color: #e8d0a0;
+  --bs-link-hover-color-rgb: 232, 208, 160;
+  --bs-focus-ring-color: rgba(197, 160, 89, 0.3);
+
+  --mlc-on-primary: #0a0a0b;
+  --mlc-primary-hover: #d4b274;
+  --mlc-primary-active: #b08d4a;
+  --mlc-glow: rgba(197, 160, 89, 0.06);
+}
+
+/* ── Light ──────────────────────────────────────────────────────── */
+[data-bs-theme='light'] {
+  --bs-body-bg: #ffffff;
+  --bs-tertiary-bg: #f8f9fa;
+  --bs-tertiary-bg-rgb: 248, 249, 250;
+  --bs-body-color: #1a1a1c;
+  --bs-body-color-rgb: 26, 26, 28;
+  --bs-secondary-color: #4a4a4c;
+  --bs-secondary-color-rgb: 74, 74, 76;
+
+  --bs-border-color-translucent: rgba(158, 123, 65, 0.2);
+
+  --bs-primary: #7a5c2a;
+  --bs-primary-rgb: 122, 92, 42;
+  --bs-primary-text-emphasis: #5c451f;
+  --bs-primary-bg-subtle: #f3ead9;
+  --bs-primary-border-subtle: #e0cfae;
+
+  --bs-link-color: #7a5c2a;
+  --bs-link-color-rgb: 122, 92, 42;
+  --bs-link-hover-color: #9e7b41;
+  --bs-link-hover-color-rgb: 158, 123, 65;
+  --bs-focus-ring-color: rgba(122, 92, 42, 0.25);
+
+  --mlc-on-primary: #ffffff;
+  --mlc-primary-hover: #664c22;
+  --mlc-primary-active: #5c451f;
+  --mlc-glow: rgba(158, 123, 65, 0.08);
+}
+
+/* ── Background glow, as on the website ─────────────────────────── */
+.app-root {
+  background-image: radial-gradient(circle at 50% 35%, var(--mlc-glow) 0%, transparent 70%);
+  background-attachment: fixed;
+}
+
+/* ── Components Bootstrap compiles to fixed colours ─────────────── */
+.btn-primary {
+  --bs-btn-color: var(--mlc-on-primary);
+  --bs-btn-bg: var(--bs-primary);
+  --bs-btn-border-color: var(--bs-primary);
+  --bs-btn-hover-color: var(--mlc-on-primary);
+  --bs-btn-hover-bg: var(--mlc-primary-hover);
+  --bs-btn-hover-border-color: var(--mlc-primary-hover);
+  --bs-btn-focus-shadow-rgb: var(--bs-primary-rgb);
+  --bs-btn-active-color: var(--mlc-on-primary);
+  --bs-btn-active-bg: var(--mlc-primary-active);
+  --bs-btn-active-border-color: var(--mlc-primary-active);
+  --bs-btn-disabled-color: var(--mlc-on-primary);
+  --bs-btn-disabled-bg: var(--bs-primary);
+  --bs-btn-disabled-border-color: var(--bs-primary);
+}
+
+.btn-outline-primary {
+  --bs-btn-color: var(--bs-primary);
+  --bs-btn-border-color: var(--bs-primary);
+  --bs-btn-hover-color: var(--mlc-on-primary);
+  --bs-btn-hover-bg: var(--bs-primary);
+  --bs-btn-hover-border-color: var(--bs-primary);
+  --bs-btn-focus-shadow-rgb: var(--bs-primary-rgb);
+  --bs-btn-active-color: var(--mlc-on-primary);
+  --bs-btn-active-bg: var(--mlc-primary-active);
+  --bs-btn-active-border-color: var(--mlc-primary-active);
+  --bs-btn-disabled-color: var(--bs-primary);
+  --bs-btn-disabled-border-color: var(--bs-primary);
+}
+
+.nav-pills {
+  --bs-nav-pills-link-active-bg: var(--bs-primary);
+  --bs-nav-pills-link-active-color: var(--mlc-on-primary);
+}
+
+.form-control:focus,
+.form-select:focus,
+.form-check-input:focus {
+  border-color: rgba(var(--bs-primary-rgb), 0.6);
+  box-shadow: 0 0 0 0.25rem var(--bs-focus-ring-color);
+}
+
+.form-range::-webkit-slider-thumb,
+.form-range::-webkit-slider-thumb:active {
+  background-color: var(--bs-primary);
+}
+
+.form-range::-moz-range-thumb,
+.form-range::-moz-range-thumb:active {
+  background-color: var(--bs-primary);
+}
+
+.form-range:focus::-webkit-slider-thumb {
+  box-shadow: 0 0 0 1px var(--bs-body-bg), 0 0 0 0.25rem var(--bs-focus-ring-color);
+}
+
+.form-check-input:checked {
+  background-color: var(--bs-primary);
+  border-color: var(--bs-primary);
+}
+
+/* btn-light and table-light stay bright white in dark mode — tone them down. */
+[data-bs-theme='dark'] .btn-light {
+  --bs-btn-color: var(--bs-body-color);
+  --bs-btn-bg: var(--bs-secondary-bg);
+  --bs-btn-border-color: var(--bs-border-color);
+  --bs-btn-hover-color: var(--bs-emphasis-color);
+  --bs-btn-hover-bg: #26252a;
+  --bs-btn-hover-border-color: var(--bs-border-color);
+  --bs-btn-active-color: var(--bs-emphasis-color);
+  --bs-btn-active-bg: #2e2c30;
+  --bs-btn-active-border-color: var(--bs-border-color);
+}
+
+[data-bs-theme='dark'] .table-light {
+  --bs-table-color: var(--bs-body-color);
+  --bs-table-bg: var(--bs-secondary-bg);
+  --bs-table-border-color: var(--bs-border-color);
+  --bs-table-striped-bg: var(--bs-secondary-bg);
+  --bs-table-hover-bg: var(--bs-secondary-bg);
+  color: var(--bs-table-color);
+  border-color: var(--bs-table-border-color);
+}
+
+.card {
+  --bs-card-border-color: var(--bs-border-color-translucent);
+}
