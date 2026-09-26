@@ -26,6 +26,8 @@ Alle Tools teilen sich gemeinsame optionale Parameter für die Formatierung:
 - `format`: `svg` (Standard) oder `png`.
 - `width` / `height`: Optionale Abmessungen.
 - `fg_color` / `bg_color`: Farben (z. B. `black`, `#ff0000`, `transparent`).
+- `text`: Beschriftung unter dem Barcode anzeigen.
+- `font_size`: Schriftgröße der Beschriftung in Pixeln (6–200); weggelassen = automatisch. Zu lange Beschriftungen werden auf Barcodebreite verkleinert.
 - `save_artifact` / `filename`: Nur verfügbar, wenn `-artifact-addr` beim Start angegeben wurde.
 
 ### 1. `generate_barcode`
@@ -44,7 +46,7 @@ Generiert einen QR-Code für einen vCard 3.0 Kontakt (unter Berücksichtigung vo
 
 ### 4. `generate_event_qr`
 Generiert einen QR-Code für einen iCalendar (RFC 5545) Termin.
-- **Erforderlich**: `summary`, `start_time` (YYYYMMDDTHHMMSS).
+- **Erforderlich**: `summary`, `start_time` (YYYYMMDDTHHMMSS, oder YYYYMMDD für einen ganztägigen Termin; `end_time` ist dann der Tag nach dem letzten Tag).
 - **Optional**: `end_time`, `description`, `location`, `timezone` (z. B. Europe/Berlin), `latitude`, `longitude`.
 
 ## Integrationsbeispiele

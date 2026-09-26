@@ -26,6 +26,8 @@ All tools share common optional parameters for formatting:
 - `format`: `svg` (default) or `png`.
 - `width` / `height`: Optional dimensions.
 - `fg_color` / `bg_color`: Colors (e.g., `black`, `#ff0000`, `transparent`).
+- `text`: Show a caption below the barcode.
+- `font_size`: Caption size in pixels (6–200); omitted = automatic. Over-long captions shrink to the barcode width.
 - `save_artifact` / `filename`: Only available if `-artifact-addr` is specified.
 
 ### 1. `generate_barcode`
@@ -44,7 +46,7 @@ Generates a QR code for a vCard 3.0 contact (referencing [RFC 6350](https://www.
 
 ### 4. `generate_event_qr`
 Generates a QR code for an iCalendar (RFC 5545) event.
-- **Required**: `summary`, `start_time` (YYYYMMDDTHHMMSS).
+- **Required**: `summary`, `start_time` (YYYYMMDDTHHMMSS, or YYYYMMDD for an all-day event; `end_time` is then the day after the last day).
 - **Optional**: `end_time`, `description`, `location`, `timezone` (e.g. Europe/Berlin), `latitude`, `longitude`.
 
 ## Integration Examples

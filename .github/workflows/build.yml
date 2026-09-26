@@ -73,7 +73,7 @@ jobs:
         # Prepare staging area
         mkdir -p staging
         cp dist/* staging/
-        cp README.md README.de.md MCP_INTEGRATION.md MCP_INTEGRATION.de.md staging/
+        cp README.md README.de.md docs/mcp-integration.md docs/mcp-integration.de.md staging/
         cp -r assets staging/
         
         if [ "${{ matrix.archive }}" = "zip" ]; then

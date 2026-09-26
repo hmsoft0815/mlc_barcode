@@ -92,8 +92,8 @@ func registerVCalendarTools(s *mcp.Server) {
 	props["summary"] = map[string]any{"type": "string", "description": "Event title"}
 	props["description"] = map[string]any{"type": "string"}
 	props["location"] = map[string]any{"type": "string"}
-	props["start_time"] = map[string]any{"type": "string", "description": "YYYYMMDDTHHMMSS(Z)"}
-	props["end_time"] = map[string]any{"type": "string", "description": "YYYYMMDDTHHMMSS(Z)"}
+	props["start_time"] = map[string]any{"type": "string", "description": "YYYYMMDDTHHMMSS(Z), or YYYYMMDD for an all-day event"}
+	props["end_time"] = map[string]any{"type": "string", "description": "YYYYMMDDTHHMMSS(Z); for an all-day event YYYYMMDD of the day after the last day"}
 	props["timezone"] = map[string]any{"type": "string", "description": "e.g. Europe/Berlin"}
 	props["latitude"] = map[string]any{"type": "number"}
 	props["longitude"] = map[string]any{"type": "number"}
