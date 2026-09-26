@@ -68,7 +68,13 @@ export interface BarcodeResult {
      */
     "pngData"?: string;
     "success": boolean;
+
+    /**
+     * English text (fallback)
+     */
     "error"?: string;
+    "errorCode"?: string;
+    "errorParams"?: { [_ in string]?: string } | null;
 }
 
 /**
@@ -138,6 +144,8 @@ export interface BatchItemResult {
     "pngData"?: string;
     "success": boolean;
     "error"?: string;
+    "errorCode"?: string;
+    "errorParams"?: { [_ in string]?: string } | null;
 }
 
 /**

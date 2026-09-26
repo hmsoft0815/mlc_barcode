@@ -25,12 +25,15 @@ func checkCharset(btype BarcodeType, data string, opts BarcodeOptions) error {
 		if pos == 0 {
 			return nil
 		}
-		hint := "use code128 for full ASCII or qr for any text"
+		// "upper": upper-casing alone fixes it; "other": the character has no
+		// Code 39 form at all.
+		fix, hint := "other", "use code128 for full ASCII or qr for any text"
 		if strings.ToUpper(data) != data && firstRuneIn(strings.ToUpper(data), code39Charset) == 0 {
-			hint = "convert the text to upper case, or use code128 to keep lower case"
+			fix, hint = "upper", "convert the text to upper case, or use code128 to keep lower case"
 		}
-		return fmt.Errorf("code39 cannot encode %s at position %d; allowed are A-Z, 0-9, space and - . $ / + %% — %s",
-			quoteRune(r), pos, hint)
+		return inputError(ErrCode39Charset,
+			fmt.Sprintf("code39 cannot encode %s at position %d; allowed are A-Z, 0-9, space and - . $ / + %% — %s", quoteRune(r), pos, hint),
+			map[string]string{"char": string(r), "pos": itoa(pos), "fix": fix})
 
 	case TypeCode128:
 		return checkASCII(btype, data, "use qr, datamatrix or aztec for umlauts and other Unicode text")
@@ -38,10 +41,14 @@ func checkCharset(btype BarcodeType, data string, opts BarcodeOptions) error {
 	case TypeITF:
 		pos, r := firstRune(data, func(r rune) bool { return r < '0' || r > '9' })
 		if pos != 0 {
-			return fmt.Errorf("itf encodes digits only; %s at position %d is not a digit — use code128 for letters", quoteRune(r), pos)
+			return inputError(ErrITFDigits,
+				fmt.Sprintf("itf encodes digits only; %s at position %d is not a digit — use code128 for letters", quoteRune(r), pos),
+				map[string]string{"char": string(r), "pos": itoa(pos)})
 		}
 		if len(data)%2 != 0 {
-			return fmt.Errorf("itf needs an even number of digits, got %d — add a leading 0 (0%s)", len(data), abbreviate(data))
+			return inputError(ErrITFEven,
+				fmt.Sprintf("itf needs an even number of digits, got %d — add a leading 0 (0%s)", len(data), abbreviate(data)),
+				map[string]string{"count": itoa(len(data)), "suggestion": "0" + abbreviate(data)})
 		}
 	}
 	return nil
@@ -52,7 +59,9 @@ func checkASCII(btype BarcodeType, data, hint string) error {
 	if pos == 0 {
 		return nil
 	}
-	return fmt.Errorf("%s encodes ASCII only; %s at position %d is not ASCII — %s", btype, quoteRune(r), pos, hint)
+	return inputError(ErrASCIIOnly,
+		fmt.Sprintf("%s encodes ASCII only; %s at position %d is not ASCII — %s", btype, quoteRune(r), pos, hint),
+		map[string]string{"type": string(btype), "char": string(r), "pos": itoa(pos)})
 }
 
 // capacityError explains an encoder failure that is caused by too much
@@ -73,8 +82,10 @@ func capacityError(btype BarcodeType, data string, encode func(string) error) er
 			hi = mid - 1
 		}
 	}
-	return fmt.Errorf("too much data for %s: %d characters (%d bytes), at most %d characters of this content fit — %s",
-		btype, len(runes), len(data), lo, capacityHint(btype))
+	return inputError(ErrCapacity,
+		fmt.Sprintf("too much data for %s: %d characters (%d bytes), at most %d characters of this content fit — %s",
+			btype, len(runes), len(data), lo, capacityHint(btype)),
+		map[string]string{"type": string(btype), "chars": itoa(len(runes)), "bytes": itoa(len(data)), "max": itoa(lo)})
 }
 
 func capacityHint(btype BarcodeType) string {
@@ -96,7 +107,8 @@ func encoderError(btype BarcodeType, err error) error {
 	if i := strings.IndexByte(msg, '"'); i >= 0 {
 		msg = strings.TrimSpace(msg[:i]) + " (input omitted)"
 	}
-	return fmt.Errorf("%s cannot encode this input: %s", btype, msg)
+	return inputError(ErrEncoder, fmt.Sprintf("%s cannot encode this input: %s", btype, msg),
+		map[string]string{"type": string(btype), "detail": msg})
 }
 
 // firstRune returns the 1-based position and value of the first rune that

@@ -108,3 +108,11 @@ func gs1CheckDigit(body string) int {
 	}
 	return (10 - sum%10) % 10
 }
+
+func (c RetailCheck) inputError(btype BarcodeType) *InputError {
+	codes := map[string]string{ReasonNonDigit: ErrRetailNonDigit, ReasonLength: ErrRetailLength, ReasonChecksum: ErrRetailChecksum}
+	return inputError(codes[c.Reason], fmt.Sprintf("invalid %s: %s", btype, c.Error()), map[string]string{
+		"type": string(btype), "min": itoa(c.Lengths[0]), "max": itoa(c.Lengths[1]),
+		"given": itoa(c.Given), "expected": itoa(c.Expected), "code": c.Code,
+	})
+}

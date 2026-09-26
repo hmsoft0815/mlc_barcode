@@ -147,10 +147,11 @@ func (a *BarcodeApp) GenerateBarcode(req BarcodeRequest) (BarcodeResult, error) 
 	data := strings.TrimSpace(req.Data)
 	if data == "" {
 		return BarcodeResult{
-			Type:    string(btype),
-			Data:    data,
-			Success: false,
-			Error:   "Data cannot be empty",
+			Type:      string(btype),
+			Data:      data,
+			Success:   false,
+			Error:     "Data cannot be empty",
+			ErrorInfo: ErrorInfo{ErrorCode: barcodes.ErrEmpty},
 		}, nil
 	}
 
@@ -174,10 +175,11 @@ func (a *BarcodeApp) GenerateBarcode(req BarcodeRequest) (BarcodeResult, error) 
 	svgStr, err := barcodes.GenerateSVG(btype, data, opts)
 	if err != nil {
 		return BarcodeResult{
-			Type:    string(btype),
-			Data:    data,
-			Success: false,
-			Error:   err.Error(),
+			Type:      string(btype),
+			Data:      data,
+			Success:   false,
+			Error:     err.Error(),
+			ErrorInfo: errorInfo(err),
 		}, nil
 	}
 
@@ -234,10 +236,11 @@ func (a *BarcodeApp) GenerateBatch(req BatchBarcodeRequest) (BatchBarcodeRespons
 		svgStr, err := barcodes.GenerateSVG(btype, data, opts)
 		if err != nil {
 			results = append(results, BatchItemResult{
-				Index:   itemIndex,
-				Data:    data,
-				Success: false,
-				Error:   err.Error(),
+				Index:     itemIndex,
+				Data:      data,
+				Success:   false,
+				Error:     err.Error(),
+				ErrorInfo: errorInfo(err),
 			})
 			errorCount++
 			continue

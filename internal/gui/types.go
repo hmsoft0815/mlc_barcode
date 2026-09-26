@@ -1,5 +1,7 @@
 package gui
 
+import "github.com/mlcmcp/mlc_barcode/internal/barcodes"
+
 // BarcodeRequest contains parameters for generating a single barcode.
 type BarcodeRequest struct {
 	Type            string `json:"type"`            // qr, datamatrix, code128, code39, ean13, ean8, upca, itf
@@ -20,7 +22,22 @@ type BarcodeResult struct {
 	SVG     string `json:"svg,omitempty"`     // Raw SVG XML
 	PNGData string `json:"pngData,omitempty"` // Base64 data URI (data:image/png;base64,...)
 	Success bool   `json:"success"`
-	Error   string `json:"error,omitempty"`
+	Error   string `json:"error,omitempty"` // English text (fallback)
+	ErrorInfo
+}
+
+// ErrorInfo lets the GUI translate an input error: a stable code plus the
+// values the message needs (see barcodes.InputError).
+type ErrorInfo struct {
+	ErrorCode   string            `json:"errorCode,omitempty"`
+	ErrorParams map[string]string `json:"errorParams,omitempty"`
+}
+
+func errorInfo(err error) ErrorInfo {
+	if ie, ok := barcodes.AsInputError(err); ok {
+		return ErrorInfo{ErrorCode: ie.Code, ErrorParams: ie.Params}
+	}
+	return ErrorInfo{}
 }
 
 // WifiInput contains options for Wi-Fi QR codes.
@@ -111,6 +128,7 @@ type BatchItemResult struct {
 	PNGData string `json:"pngData,omitempty"`
 	Success bool   `json:"success"`
 	Error   string `json:"error,omitempty"`
+	ErrorInfo
 }
 
 // BatchBarcodeResponse summarizes batch generation results.

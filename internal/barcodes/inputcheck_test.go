@@ -1,6 +1,8 @@
 package barcodes
 
 import (
+	"os"
+	"regexp"
 	"strings"
 	"testing"
 )
@@ -32,6 +34,9 @@ func TestHelpfulErrors(t *testing.T) {
 			_, err := Generate(tt.btype, tt.data, DefaultOptions(tt.btype))
 			if err == nil {
 				t.Fatal("expected an error")
+			}
+			if ie, ok := AsInputError(err); !ok || ie.Code == "" {
+				t.Errorf("not an InputError with code: %v", err)
 			}
 			msg := err.Error()
 			for _, w := range tt.want {
@@ -88,5 +93,27 @@ func TestPDF417SecurityByLength(t *testing.T) {
 	}
 	if got := pdf417Security(7, "a"); got != 7 {
 		t.Errorf("explicit level ignored: %d", got)
+	}
+}
+
+// Every error code must have a German text in the GUI catalog, or the GUI
+// silently falls back to English.
+func TestErrorCodesTranslated(t *testing.T) {
+	src, err := os.ReadFile("../../frontend/src/lib/i18n/errors.ts")
+	if err != nil {
+		t.Fatal(err)
+	}
+	start := strings.Index(string(src), "const de: Catalog = {")
+	if start < 0 {
+		t.Fatal("German catalog not found")
+	}
+	keys := map[string]bool{}
+	for _, m := range regexp.MustCompile(`(?m)^  ([a-z0-9_]+): `).FindAllStringSubmatch(string(src[start:]), -1) {
+		keys[m[1]] = true
+	}
+	for _, c := range ErrorCodes {
+		if !keys[c] {
+			t.Errorf("error code %q has no German text in frontend/src/lib/i18n/errors.ts", c)
+		}
 	}
 }

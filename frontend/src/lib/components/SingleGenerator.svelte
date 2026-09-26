@@ -1,6 +1,7 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import { BARCODE_TYPES, type BarcodeType } from '../types';
+  import { formatError } from '../i18n/errors';
   import {
     GenerateBarcode,
     FormatWifi,
@@ -1223,7 +1224,7 @@
             <div class="alert alert-danger w-100 text-center py-4 my-auto">
               <i class="bi bi-exclamation-octagon fs-2 d-block mb-2 text-danger"></i>
               <strong class="d-block mb-1">Ungültige Eingabedaten für {selectedType.toUpperCase()}</strong>
-              <small class="text-body-secondary">{result.error}</small>
+              <small class="text-body-secondary">{formatError(result)}</small>
             </div>
           {:else}
             <div class="text-center text-body-secondary py-5 my-auto">

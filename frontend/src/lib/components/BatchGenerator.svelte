@@ -1,6 +1,7 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import { BARCODE_TYPES, type BarcodeType, type PrintItem } from '../types';
+  import { formatError } from '../i18n/errors';
   import {
     GenerateBatch,
     PickTableFile,
@@ -392,7 +393,7 @@
                       <td>
                         <span class="font-monospace small text-break">{item.data}</span>
                         {#if !item.success && item.error}
-                          <div class="text-danger small">{item.error}</div>
+                          <div class="text-danger small">{formatError(item)}</div>
                         {/if}
                       </td>
                       <td>

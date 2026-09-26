@@ -104,13 +104,13 @@ func DefaultOptions(btype BarcodeType) BarcodeOptions {
 func Generate(btype BarcodeType, data string, opts BarcodeOptions) (barcode.Barcode, error) {
 	data = strings.TrimSpace(data)
 	if data == "" {
-		return nil, errors.New("data must not be empty")
+		return nil, inputError(ErrEmpty, "data must not be empty", nil)
 	}
 
 	if IsRetail(btype) {
 		check := CheckRetail(btype, data)
 		if !check.Valid {
-			return nil, fmt.Errorf("invalid %s: %s", btype, check.Error())
+			return nil, check.inputError(btype)
 		}
 		data = check.Code
 	}
@@ -120,7 +120,7 @@ func Generate(btype BarcodeType, data string, opts BarcodeOptions) (barcode.Barc
 
 	bc, err := encode(btype, data, opts)
 	if err != nil {
-		if errors.Is(err, errUnsupportedType) {
+		if ie, ok := AsInputError(err); ok && ie.Code == ErrUnsupportedType {
 			return nil, err
 		}
 		fits := func(s string) error { _, e := encode(btype, s, opts); return e }
@@ -174,7 +174,8 @@ func encode(btype BarcodeType, data string, opts BarcodeOptions) (barcode.Barcod
 	case TypeITF:
 		return twooffive.Encode(data, true)
 	}
-	return nil, fmt.Errorf("%w: %s (supported: %s)", errUnsupportedType, btype, typeList())
+	return nil, &InputError{Code: ErrUnsupportedType, Params: map[string]string{"type": string(btype), "supported": typeList()},
+		msg: fmt.Sprintf("%s: %s (supported: %s)", errUnsupportedType, btype, typeList())}
 }
 
 // pdf417Security returns the requested level, or the minimum ISO 15438
