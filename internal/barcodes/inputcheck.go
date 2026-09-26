@@ -38,6 +38,16 @@ func checkCharset(btype BarcodeType, data string, opts BarcodeOptions) error {
 	case TypeCode128:
 		return checkASCII(btype, data, "use qr, datamatrix or aztec for umlauts and other Unicode text")
 
+	case TypeAztec:
+		// Aztec text defaults to ISO-8859-1; the encoder cannot mark UTF-8
+		// (no ECI), so standard readers would show UTF-8 bytes as mojibake.
+		pos, r := firstRune(data, func(r rune) bool { return r > 0xFF })
+		if pos != 0 {
+			return inputError(ErrAztecCharset,
+				fmt.Sprintf("aztec encodes ISO-8859-1 (Latin-1) text only; %s at position %d is outside it — use qr or datamatrix for such characters", quoteRune(r), pos),
+				map[string]string{"char": string(r), "pos": itoa(pos)})
+		}
+
 	case TypeITF:
 		pos, r := firstRune(data, func(r rune) bool { return r < '0' || r > '9' })
 		if pos != 0 {
@@ -52,6 +62,15 @@ func checkCharset(btype BarcodeType, data string, opts BarcodeOptions) error {
 		}
 	}
 	return nil
+}
+
+// latin1 converts text that checkCharset accepted for Aztec to ISO-8859-1.
+func latin1(s string) []byte {
+	b := make([]byte, 0, len(s))
+	for _, r := range s {
+		b = append(b, byte(r))
+	}
+	return b
 }
 
 func checkASCII(btype BarcodeType, data, hint string) error {

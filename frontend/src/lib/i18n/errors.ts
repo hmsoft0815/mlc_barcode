@@ -47,7 +47,11 @@ const de: Catalog = {
     `Zu viele Daten für ${typeName(p.type)}: ${p.chars} Zeichen (${p.bytes} Bytes), höchstens ${p.max} Zeichen dieses Inhalts passen hinein – ` +
     (capacityHintDe[p.type ?? ''] ?? 'kürzen oder auf mehrere Codes aufteilen.'),
   unsupported_type: (p) => `Unbekannter Barcode-Typ „${p.type}“.`,
-  encoder: (p) => `${typeName(p.type)} kann diese Eingabe nicht codieren (${p.detail}).`
+  encoder: (p) => `${typeName(p.type)} kann diese Eingabe nicht codieren (${p.detail}).`,
+  aztec_charset: (p) =>
+    `Aztec kann nur Zeichen aus ISO-8859-1 (Latin-1, mit äöüß) darstellen; ${quoted(p.char)} an Position ${p.pos} gehört nicht dazu. Dafür QR oder DataMatrix nehmen.`,
+  nothing_found: () =>
+    'Im Bild wurde kein Barcode gefunden. Ist der Code scharf, vollständig sichtbar und nicht zu klein? PDF417 kann noch nicht gelesen werden.'
 };
 
 const catalogs: Partial<Record<Lang, Catalog>> = { de };

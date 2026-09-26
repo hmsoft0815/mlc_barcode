@@ -157,7 +157,7 @@ func encode(btype BarcodeType, data string, opts BarcodeOptions) (barcode.Barcod
 		if ecc <= 0 {
 			ecc = 23
 		}
-		return aztec.Encode([]byte(data), ecc, 0)
+		return aztec.Encode(latin1(data), ecc, 0)
 	case TypePDF417:
 		return pdf417.Encode(data, pdf417Security(opts.PDF417Security, data))
 	case TypeCode128:

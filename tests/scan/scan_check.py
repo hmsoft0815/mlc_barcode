@@ -65,6 +65,8 @@ for btype in SWEEP_TYPES:
     for src_name, src in SWEEP_SOURCES.items():
         for n in range(1, 61):
             data = src[:n].strip() or "x"
+            if btype == "aztec" and any(ord(c) > 0xFF for c in data):
+                continue  # rejected on purpose: Aztec is ISO-8859-1 only (no ECI)
             total += 1
             failed += not check(btype, data, None, f"{btype}-{src_name}-{n}")
 
