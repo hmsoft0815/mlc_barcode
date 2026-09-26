@@ -81,7 +81,7 @@ export interface BarcodeResult {
     /**
      * ReadBack is the result of reading the generated PNG with the decoder:
      * "ok", "mismatch" (read something else), "unreadable" (e.g. too little
-     * contrast) or "unsupported" (no reader for the symbology yet).
+     * contrast) or "unsupported" (no reader for the symbology).
      */
     "readBack"?: string;
 

@@ -36,6 +36,14 @@ func main() {
 		Mac: application.MacOptions{
 			ApplicationShouldTerminateAfterLastWindowClosed: true,
 		},
+		// The camera preview is a <video> in the page. Without inline
+		// playback WKWebView shows a still frame and plays the stream in its
+		// own fullscreen player instead.
+		IOS: application.IOSOptions{
+			EnableInlineMediaPlayback:       true,
+			EnableAutoplayWithoutUserAction: true,
+			BackgroundColour:                application.NewRGB(20, 20, 22), // dark theme body, no white flash
+		},
 	})
 
 	wailsApp.Window.NewWithOptions(application.WebviewWindowOptions{

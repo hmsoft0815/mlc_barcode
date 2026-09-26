@@ -121,6 +121,22 @@ export function GetVersion(): $CancellablePromise<string> {
 }
 
 /**
+ * Haptic gives a short vibration: "success", "warning", "error" or
+ * "selection".
+ */
+export function Haptic(kind: string): $CancellablePromise<void> {
+    return $Call.ByID(4228547540, kind);
+}
+
+/**
+ * OpenExternal opens a link in the system browser (or the app registered
+ * for it, e.g. mail). It reports false where the frontend must do it.
+ */
+export function OpenExternal(url: string): $CancellablePromise<boolean> {
+    return $Call.ByID(629571012, url);
+}
+
+/**
  * PickExportFolder opens a native folder selection dialog.
  */
 export function PickExportFolder(): $CancellablePromise<string> {
@@ -136,10 +152,42 @@ export function PickTableFile(): $CancellablePromise<$models.TableFile> {
 }
 
 /**
+ * Platform reports the OS the app runs on (runtime.GOOS). The frontend
+ * shows the mobile UI on "ios" and "android".
+ */
+export function Platform(): $CancellablePromise<string> {
+    return $Call.ByID(188390092);
+}
+
+/**
  * SaveSingleFile opens a native save-file dialog and writes the given SVG or PNG content.
  */
 export function SaveSingleFile(req: $models.SaveSingleFileRequest): $CancellablePromise<string> {
     return $Call.ByID(2139578368, req);
+}
+
+/**
+ * SetTorch switches the camera light. It reports false where there is none.
+ */
+export function SetTorch(on: boolean): $CancellablePromise<boolean> {
+    return $Call.ByID(661381237, on);
+}
+
+/**
+ * ShareImage writes a PNG (base64 or data URL) to the app's temporary
+ * directory and opens the share sheet with the file, so it can be sent as
+ * a picture. It reports false where that is not possible.
+ */
+export function ShareImage(pngBase64: string, name: string): $CancellablePromise<boolean> {
+    return $Call.ByID(266954079, pngBase64, name);
+}
+
+/**
+ * ShareText opens the system share sheet with a text or link. It reports
+ * false where there is none.
+ */
+export function ShareText(text: string): $CancellablePromise<boolean> {
+    return $Call.ByID(386250273, text);
 }
 
 /**

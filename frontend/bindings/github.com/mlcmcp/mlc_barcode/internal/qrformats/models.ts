@@ -3,7 +3,7 @@
 
 /**
  * Parsed is a decoded payload split into fields. Kind is one of epc, wifi,
- * vcard, event, geo, tel, sms, email, crypto, url or text; Fields holds
+ * vcard, event, geo, tel, sms, email, crypto, url, pharma or text; Fields holds
  * only what the payload carries. It is the inverse of the Format*
  * functions, so a round trip returns the same values.
  */
