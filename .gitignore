@@ -37,3 +37,6 @@ go.work.sum
 # OS
 .DS_Store
 Thumbs.db
+
+# Windows resources, generated per build (task generate:syso:windows)
+*.syso

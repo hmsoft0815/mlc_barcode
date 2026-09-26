@@ -5,9 +5,35 @@
 
 Ein Werkzeug zur Generierung von Barcodes und QR-Codes — als Desktop-GUI, als Kommandozeilen-Tool (CLI) und als Model Context Protocol (MCP) Server.
 
+**MCP-Konformität geprüft mit [mlc mcp-tester](https://github.com/hmsoft0815/mlc_mcptester)** — Spezifikation 2026-07-28, Qualitäts-Score 100/100, siehe [MCP-Konformität](#mcp-konformität).
+
 <img src="assets/qrcode-product-teaser-960.jpg" alt="MLC Barcode — Desktop GUI, CLI and MCP Server" width="960">
 
 <img src="assets/mlc_barcode_mpc3.png" >
+
+## Warum es das gibt
+
+Am Anfang stand ein ganz praktischer Bedarf: ein MCP-Server, mit dem ein
+KI-Assistent Barcodes und QR-Codes erzeugen kann — EAN-Etiketten, WLAN-Zugänge,
+Zahlungscodes, Visitenkarten —, ohne dass jemand die zugrunde liegenden Formate
+von Hand zusammenbaut. Dieser Server ist bis heute der Kern des Projekts.
+
+Die Desktop-App kam obendrauf. Sie hat sich als praktisch erwiesen für schnelle
+Tests und für alle, die an der Tastatur nicht so sattelfest sind oder gerade kein
+LLM zur Hand haben: eintippen, Code sehen, Etikettenbogen drucken.
+
+### Warum Open Source — und warum mit Namensnennung
+
+Ich glaube an Open Source. Code, den man lesen kann, ist Code, dem man vertrauen
+kann: Man sieht, was er mit den eigenen Daten macht, kann ihn selbst bauen und
+weiter betreiben, auch wenn ich es irgendwann nicht mehr tue.
+
+Offen heißt aber nicht herrenlos. Die Arbeit zu nehmen und als die eigene
+auszugeben, ist nicht in Ordnung. Deshalb steht das Projekt unter der
+**MIT-Lizenz mit Namensnennungsklausel**: frei nutzen, ändern, weitergeben —
+auch kommerziell —, solange das eigene Produkt den Autor sichtbar nennt. Passt
+diese Nennung nicht ins Produkt, gibt es auf Anfrage eine kommerzielle Lizenz
+ohne sie. Siehe [LICENSE](LICENSE).
 
 ## Version
 Aktuelle Version: **1.4.0**
@@ -117,12 +143,29 @@ Das MCP-Tool `generate_barcode` hat zusätzliche Parameter:
 ./bin/mcp-barcode-server -addr :8080 -artifact-addr localhost:9590
 ```
 
+Schritt-für-Schritt-Anleitung für Claude Desktop, Claude Code, Gemini CLI und Cursor: **[MCP-Anleitung auf mlcgo.eu](https://mlcgo.eu/products/mlc-barcode/de/mcp/)**.
+
+### MCP-Konformität
+
+Der Server wird gegen die MCP-Spezifikation **2026-07-28** mit dem **[mlc mcp-tester](https://github.com/hmsoft0815/mlc_mcptester)** geprüft. Der Tester sieht den Server so, wie ein Client ihn sieht — über den echten Transport, nicht durch direkten Aufruf der Handler:
+
+- `inspect`: Protokollversion, Capabilities, Metadaten von Werkzeugen und Prompts, Instructions — **Qualitäts-Score 100/100**.
+- Protokoll-Testskript [`tests/mcp/barcode.mcp`](tests/mcp/barcode.mcp): jedes Werkzeug und jede Symbologie, PNG/SVG, Beschriftungen, Ergänzen und Ablehnen von Prüfziffern, leere und schemawidrige Eingaben (als Tool-Fehler, die das Modell korrigieren kann), unbekannte Werkzeuge (`-32602`) sowie `structuredContent`, geprüft gegen das Output-Schema jedes Werkzeugs — so, wie strikte Clients (etwa das offizielle TypeScript-SDK) es verlangen.
+- Beide Prompts (`payment_qr_from_invoice`, `product_labels`) über `prompts/get`, einschließlich des Fehlers `-32602` bei fehlendem Argument.
+
+Selbst ausführen (braucht `mcp-tester` im `PATH` oder einen Checkout neben diesem Repo):
+
+```bash
+task test:mcp
+```
+
 ## Entwicklung
 
 - `task build`: Kompiliert alles.
 - `task dev:server`: Startet den MCP Server über stdio.
 - `task clean`: Aufräumen.
 - `task test`: Unit-Tests ausführen.
+- `task test:mcp`: MCP-Konformitätsprüfung mit dem mlc mcp-tester.
 
 ## Referenz
 

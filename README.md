@@ -5,9 +5,34 @@
 
 A tool for generating barcodes and QR codes — as a desktop GUI, a Command Line Interface (CLI) and a Model Context Protocol (MCP) server.
 
+**MCP compliance checked with [mlc mcp-tester](https://github.com/hmsoft0815/mlc_mcptester)** — spec 2026-07-28, quality score 100/100, see [MCP compliance](#mcp-compliance).
+
 <img src="assets/qrcode-product-teaser-960.jpg" alt="MLC Barcode — Desktop GUI, CLI and MCP Server" width="960">
 
 <img src="assets/mlc_barcode_mpc3.png" >
+
+## Why this exists
+
+It started with a plain need: an MCP server that lets an AI assistant generate
+barcodes and QR codes — EAN labels, Wi-Fi access, payment codes, business
+cards — without anyone hand-assembling the underlying formats. That server is
+still the core of the project.
+
+The desktop app came on top. It turned out to be handy for quick tests, and for
+everyone who is not fluent at the keyboard or has no LLM at hand: type, see the
+code, print the label sheet.
+
+### Why open source — and why with attribution
+
+I believe in open source. Code you can read is code you can trust: you can see
+what it does with your data, build it yourself and keep it running when I no
+longer do.
+
+Open does not mean ownerless, though. Taking the work and passing it off as your
+own is not okay. That is why the licence is **MIT with an attribution clause**:
+use it freely, change it, ship it — also commercially — as long as your product
+visibly credits the author. If that credit does not fit your product, a
+commercial licence without it is available on request. See [LICENSE](LICENSE).
 
 ## Version
 Current Version: **1.4.0**
@@ -121,12 +146,29 @@ The MCP tool `generate_barcode` has additional parameters:
 ./bin/mcp-barcode-server -addr :8080 -artifact-addr localhost:9590
 ```
 
+Step-by-step setup for Claude Desktop, Claude Code, Gemini CLI and Cursor: **[MCP server guide on mlcgo.eu](https://mlcgo.eu/products/mlc-barcode/en/mcp/)**.
+
+### MCP compliance
+
+The server is checked against the MCP specification **2026-07-28** with **[mlc mcp-tester](https://github.com/hmsoft0815/mlc_mcptester)**, which looks at a server the way a client does — over the real transport, not by calling handlers directly:
+
+- `inspect`: protocol version, capabilities, tool and prompt metadata, instructions — **quality score 100/100**.
+- Protocol test script [`tests/mcp/barcode.mcp`](tests/mcp/barcode.mcp): every tool and symbology, PNG/SVG, captions, check-digit completion and rejection, empty and schema-violating input (reported as tool errors the model can correct), unknown tools (`-32602`), and `structuredContent` validated against each tool's output schema — the check strict clients such as the official TypeScript SDK apply.
+- Both prompts (`payment_qr_from_invoice`, `product_labels`) via `prompts/get`, including the `-32602` error for a missing argument.
+
+Run it yourself (needs `mcp-tester` in `PATH` or a checkout next to this repo):
+
+```bash
+task test:mcp
+```
+
 ## Development
 
 - `task build`: Compiles everything.
 - `task dev:server`: Starts the MCP server via stdio.
 - `task clean`: Clean up.
 - `task test`: Run unit tests.
+- `task test:mcp`: MCP compliance check with mlc mcp-tester.
 
 ## Reference
 

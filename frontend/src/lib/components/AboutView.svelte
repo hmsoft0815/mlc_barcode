@@ -89,9 +89,10 @@
         <div class="card-body small text-body-secondary">
           <ul class="mb-0 ps-3">
             <li><strong>Live-Vorschau:</strong> Direkte Vektordarstellung in SVG und hochauflösendem PNG.</li>
-            <li><strong>10 QR-Sonderformate:</strong> GiroCode (SEPA-Überweisung), Krypto-Wallets, Maps (Geo), Telefon, SMS, E-Mail, WLAN, vCard 3.0 und Kalender-Events.</li>
-            <li><strong>Batch-Generierung:</strong> Import von `.txt`/`.csv` Textdateien und Stapel-Export in Zielordner.</li>
-            <li><strong>Etiketten-Druckbogen:</strong> DIN A4 Layouts nach gängigen Avery-Zweckform-Rastern mit Sofortdruck.</li>
+            <li><strong>9 QR-Sonderformate:</strong> GiroCode (SEPA-Überweisung), Krypto-Wallets, Maps (Geo), Telefon, SMS, E-Mail, WLAN, vCard 3.0 und Kalender-Events.</li>
+            <li><strong>Beschriftung:</strong> Freitext unter dem Barcode mit einstellbarer Schriftgröße, in SVG und PNG.</li>
+            <li><strong>Batch-Generierung:</strong> Import von <code>.txt</code>/<code>.csv</code> (Format siehe unten) und Stapel-Export in einen Zielordner.</li>
+            <li><strong>Etiketten-Druckbogen:</strong> DIN-A4-Layouts nach gängigen Avery-Zweckform-Rastern; Etiketten aus dem Batch-Generator übernehmen oder direkt aus TXT/CSV mit eigenem Etikett-Text importieren.</li>
           </ul>
         </div>
       </div>
@@ -113,6 +114,14 @@ barcode -type qr -data "https://mlcgo.eu" -out qr.svg
 
 # MCP Server (Stdio/SSE):
 mcp-barcode-server</code></pre>
+          <a
+            href="https://mlcgo.eu/products/mlc-barcode/de/mcp/"
+            target="_blank"
+            rel="noreferrer"
+            class="btn btn-sm btn-outline-primary mt-2"
+          >
+            <i class="bi bi-plug me-1"></i> Anleitung: MCP-Server in Claude, Gemini &amp; Cursor einbinden
+          </a>
         </div>
       </div>
     </div>
@@ -177,10 +186,16 @@ ART-1002
               <i class="bi bi-box-seam me-1 text-primary"></i> <strong>boombuler/barcode</strong> (MIT) — Barcode Engine
             </li>
             <li class="mb-1">
-              <i class="bi bi-box-seam me-1 text-primary"></i> <strong>MCP Go-SDK</strong> (MIT) — Model Context Protocol
+              <i class="bi bi-box-seam me-1 text-primary"></i> <strong>MCP Go-SDK</strong> (Apache-2.0 / MIT) — Model Context Protocol
             </li>
             <li>
-              <i class="bi bi-box-seam me-1 text-primary"></i> <strong>Bootstrap 5.3</strong> (MIT) — UI Styling & Icons
+              <i class="bi bi-box-seam me-1 text-primary"></i> <strong>Bootstrap 5.3 &amp; Bootstrap Icons</strong> (MIT) — UI Styling & Icons
+            </li>
+            <li class="mt-1">
+              <i class="bi bi-box-seam me-1 text-primary"></i> <strong>Inter</strong> (SIL OFL 1.1) — Schrift der Oberfläche
+            </li>
+            <li class="mt-1">
+              <i class="bi bi-box-seam me-1 text-primary"></i> <strong>golang.org/x/image &amp; Go-Schriften</strong> (BSD-3-Clause) — Beschriftung im PNG
             </li>
           </ul>
         </div>
