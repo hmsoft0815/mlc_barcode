@@ -221,6 +221,17 @@ func readBack(btype barcodes.BarcodeType, data string, png []byte) string {
 // DecodeImage reads the barcodes in an image (PNG, JPEG, GIF, WebP), given
 // as base64 or data URI, and splits known payloads into fields.
 func (a *BarcodeApp) DecodeImage(imageBase64 string) DecodeImageResult {
+	return decodeImage(imageBase64, barcodes.DecodeOptions{})
+}
+
+// DecodeCameraFrame is DecodeImage for a live camera frame: the next frame
+// follows a moment later, so the slow search for codes on bottles is cut
+// short (barcodes.DecodeOptions.Live).
+func (a *BarcodeApp) DecodeCameraFrame(imageBase64 string) DecodeImageResult {
+	return decodeImage(imageBase64, barcodes.DecodeOptions{Live: true})
+}
+
+func decodeImage(imageBase64 string, opts barcodes.DecodeOptions) DecodeImageResult {
 	if i := strings.Index(imageBase64, ","); strings.HasPrefix(imageBase64, "data:") && i > 0 {
 		imageBase64 = imageBase64[i+1:]
 	}
@@ -228,7 +239,7 @@ func (a *BarcodeApp) DecodeImage(imageBase64 string) DecodeImageResult {
 	if err != nil {
 		return DecodeImageResult{Error: "invalid image data", ErrorInfo: ErrorInfo{ErrorCode: barcodes.ErrImageFormat}}
 	}
-	found, size, err := barcodes.DecodeImageBytes(raw)
+	found, size, err := barcodes.DecodeImageBytesWith(raw, opts)
 	res := DecodeImageResult{Width: size.X, Height: size.Y, Codes: []DecodedCode{}}
 	if err != nil {
 		res.Error, res.ErrorInfo = err.Error(), errorInfo(err)

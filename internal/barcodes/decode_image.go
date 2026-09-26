@@ -22,6 +22,11 @@ const (
 // barcodes in it. It also returns the image size, so a UI can place the
 // reported points over the picture.
 func DecodeImageBytes(data []byte) ([]Decoded, image.Point, error) {
+	return DecodeImageBytesWith(data, DecodeOptions{})
+}
+
+// DecodeImageBytesWith is DecodeImageBytes with options (see DecodeWith).
+func DecodeImageBytesWith(data []byte, opts DecodeOptions) ([]Decoded, image.Point, error) {
 	if len(data) > MaxImageBytes {
 		return nil, image.Point{}, inputError(ErrImageTooLarge,
 			fmt.Sprintf("image is %d MB, at most %d MB are accepted", len(data)>>20, MaxImageBytes>>20),
@@ -42,6 +47,6 @@ func DecodeImageBytes(data []byte) ([]Decoded, image.Point, error) {
 		return nil, image.Point{}, inputError(ErrImageFormat, fmt.Sprintf("cannot decode %s image: %v", format, err), nil)
 	}
 	size := image.Pt(img.Bounds().Dx(), img.Bounds().Dy())
-	found, err := Decode(img)
+	found, err := DecodeWith(img, opts)
 	return found, size, err
 }

@@ -25,7 +25,8 @@ at the end guard every stage.
         b. 2D candidates   → a window per candidate, DataMatrix + Aztec
         c. 1D paint-over   → found 1D codes whited out, 1D readers again
    4. fallbacks, only while nothing was found:
-        scale2x → invert → decodeScene at full resolution
+        scale2x → invert → decodeCurved (codes on bottles)
+        → decodeScene at full resolution
                                    │
                                    ▼
              []Decoded {Type, Text, Points in the caller's pixels}
@@ -151,8 +152,37 @@ finds anything wins:
 1. **Doubled** (`scale2x`, nearest neighbour) — dense codes on very few
    pixels, e.g. a small screenshot.
 2. **Inverted** (`invert`) — light codes on dark ground.
-3. **Full resolution** — `decodeScene` on the unreduced image, only if
+3. **Codes on bottles and tubes** — `decodeCurved` (`cylinder.go`), see
+   below.
+4. **Full resolution** — `decodeScene` on the unreduced image, only if
    stage 2 had shrunk it: small codes in a large photo.
+
+### Codes on bottles — `decodeCurved`
+
+The 2D detectors sample on a perspective grid. On a cylinder the modules
+narrow along a cosine towards the edges, and when the camera looks down
+(or up) the rows bend into arcs; off-centre the samples miss the middle
+modules and a sharp code is not read. `decodeCurved` takes the largest
+2D-code candidates (stage 3b) and unwraps each window under assumed
+shapes (`cylinderGuesses`): the code covers 70° or 110° of the
+circumference, is turned 0°, ±20° or ±35°, the camera looks 15° down,
+level or 15° up. For a guess, `fitCylinder` places the shape so the code
+spans the candidate box — a point at angle θ lies at
+x = cx + R·sin θ and drops by R·(cos θ − cos θ₀)·sin(tilt) — and `unwrap`
+renders the window flat: columns at equal arc length, rows straightened.
+DataMatrix, Aztec and QR then read the flat image; result points are
+mapped back through the same shape (`cylinderMapper`), so the marks sit
+on the photo.
+
+Cost: 11–18 ms per guess. A photo gets 30 guesses for the largest
+candidate and 9 for the next two (`guessesPerCandidate`) — at most about
+a second, and only when nothing else was read. A camera frame
+(`DecodeOptions.Live`, GUI `DecodeCameraFrame`) gets the 12 most likely
+guesses of the largest candidate; the next frame follows anyway.
+
+2D reader sets get the grey image as gozxing's planar luminance source
+(`binaryBitmap`) instead of the generic per-pixel conversion; the 1D
+readers keep the generic one, which can rotate for vertical codes.
 
 ### Coordinates — `frame`
 
@@ -181,7 +211,8 @@ as files.
 
 - **Live camera** (`getUserMedia`, rear camera preferred): one frame
   every 300 ms (`SCAN_INTERVAL_MS`), the next only after the decoder
-  answered, so a slow device never builds a queue. Frames are sent as
+  answered, so a slow device never builds a queue. Frames go through
+  `DecodeCameraFrame` (shorter bottle search, see above). Frames are sent as
   JPEG with at most 1600 px on the long side (`FRAME_MAX_SIDE`).
 - **Guide frame:** every other frame only the area inside the drawn
   guide frame (18 % inset, `GUIDE_INSET`, must match `.camera-frame`) is
@@ -213,10 +244,8 @@ roughly 3–5.
 | Shipping label: 2 × Code 128 + DataMatrix | one Code 128 missing | all found |
 | ZXing blackbox datamatrix-1 / -2 (real photos) | 23/23, 18/18 | 23/23, 18/18 |
 | ZXing blackbox aztec-2 | 7/22 | 7/22 (ZXing's own test expects fewer) |
-| Codes on bottles, facing the camera at code height (OpticScript set, `t0-v0`) | — | DataMatrix and EAN-13 up to 90° of the circumference, QR up to 120° |
-| … bottle turned 35° (`t35`) | — | 2D codes none from 30° on; EAN-13 up to 30° |
-| … camera looking down 20° (`v20`, rows become arcs) | — | DataMatrix none; QR only at 30°; EAN-13 up to 90° |
-| Whole bottle set (16 images per type) | — | DataMatrix 3, QR 5, EAN-13 8 |
+| Codes on bottles (OpticScript set, 16 images per type: 30°–120° of the circumference, turned 0/35°, camera level/20° from above) | DataMatrix 3, QR 5, EAN-13 8 | DataMatrix 11, QR 14, EAN-13 8 (camera frames: 9, 12) |
+| … still not read | | 2D: 90°/120° turned 35°, 120° from above; EAN-13: everything turned beyond 30° and 120° (no 1D unwrapping yet) |
 
 ## Tests
 
@@ -243,17 +272,12 @@ roughly 3–5.
   `paintOverLinear`'s line match; the code is then found again and
   painting stops after `maxLinearCodes` rounds — no wrong result, only
   time.
-- **Codes on bottles and tubes** (T-20260926-12): facing the camera at
-  code height, DataMatrix reads up to about 90° of the circumference. A
-  camera looking down on the bottle (rows become arcs) or a bottle turned
-  by 25° or more fails already at 30° — with no glare or noise at all —
-  while the same code squeezed evenly to 60 % reads fine. The detectors
-  sample on a perspective grid; on a cylinder the modules narrow along a
-  cosine, so off-centre the samples miss the middle modules. Fix idea:
-  for a candidate that did not decode, unwrap the window under a few
-  assumed radii and axis positions (x = cx + R·sin θ) and decode again.
-  Glare across the code's solid "L" edge destroys the information; only
-  turning the bottle helps there.
+- **Codes on bottles and tubes** (T-20260926-12): `decodeCurved` reads
+  most 2D codes; strongly curved and turned ones (code over 90° of the
+  circumference, turned 35°) are still lost — the shape guesses do not
+  reach them, and near the silhouette one pixel covers several modules.
+  1D codes have no unwrapping yet. Glare across a DataMatrix's solid "L"
+  edge destroys the information; only turning the bottle helps there.
 - **Aztec with non-Latin-1 text** needs ECI (ticket T-20260926-09).
 - **Next step if needed:** run the candidate windows in parallel
   goroutines; the readers are independent per window.

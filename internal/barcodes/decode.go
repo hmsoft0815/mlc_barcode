@@ -23,10 +23,23 @@ type Decoded struct {
 	Points []image.Point // corner or finder points in image coordinates
 }
 
+// DecodeOptions tune Decode for where the image comes from.
+type DecodeOptions struct {
+	// Live marks a camera frame: another one follows a moment later, so
+	// the expensive search for codes on bottles (decodeCurved) is cut to
+	// the most likely shapes of the largest candidate.
+	Live bool
+}
+
 // Decode finds every barcode in img, all ten symbologies we generate
 // (PDF417 through the ported ZXing reader in internal/pdf417decode). When
 // nothing is found it returns an InputError with code ErrNothingFound.
 func Decode(img image.Image) ([]Decoded, error) {
+	return DecodeWith(img, DecodeOptions{})
+}
+
+// DecodeWith is Decode with options.
+func DecodeWith(img image.Image, opts DecodeOptions) ([]Decoded, error) {
 	gray := toGray(img)
 	b := img.Bounds()
 	base := frame{ox: float64(b.Min.X), oy: float64(b.Min.Y), f: 1}
@@ -42,12 +55,16 @@ func Decode(img image.Image) ([]Decoded, error) {
 	}
 	// Attempts from cheap to expensive; the first that finds anything wins.
 	// Doubling helps dense codes on few pixels, inverting helps light codes
-	// on dark ground, full resolution helps small codes in a large photo.
+	// on dark ground, unwrapping codes on bottles and tubes, full
+	// resolution small codes in a large photo.
 	padded, pf := withQuietZone(work), wf.crop(image.Pt(-quietZone, -quietZone))
 	if found := decodeOnce(scale2x(padded), pf.scaled(2), allReaders); len(found) > 0 {
 		return found, nil
 	}
 	if found := decodeOnce(invert(padded), pf, allReaders); len(found) > 0 {
+		return found, nil
+	}
+	if found := decodeCurved(work, wf, opts.Live); len(found) > 0 {
 		return found, nil
 	}
 	if work != gray {
@@ -98,6 +115,7 @@ const (
 	allReaders    readerSet = iota
 	matrixReaders           // DataMatrix and Aztec, see decodeScene
 	linearReaders           // the 1D readers, see decodeLinearRest
+	curvedReaders           // DataMatrix, Aztec and QR, see decodeCurved
 )
 
 func readers(set readerSet) []namedReader {
@@ -112,7 +130,7 @@ func readers(set readerSet) []namedReader {
 		{gozxing.BarcodeFormat_ITF, oned.NewITFReader()},
 	}
 	switch set {
-	case matrixReaders:
+	case matrixReaders, curvedReaders:
 		return matrix
 	case linearReaders:
 		return linear
@@ -421,11 +439,19 @@ func merge(found, more []Decoded) []Decoded {
 	return found
 }
 
+// pointMapper maps a result point of the image a reader saw to the
+// caller's image: a frame for crops and scalings, an unwrapped cylinder
+// (cylinder.go) for codes on bottles.
+type pointMapper interface {
+	point(x, y float64) image.Point
+}
+
 // decodeOnce runs the readers of set on one image and collects distinct
 // results; allReaders adds QR (the multi reader, so several QR codes are
-// all reported) and PDF417. Result points are mapped through fr.
-func decodeOnce(img image.Image, fr frame, set readerSet) []Decoded {
-	bmp, err := gozxing.NewBinaryBitmapFromImage(img)
+// all reported) and PDF417, curvedReaders adds the single QR reader.
+// Result points are mapped through fr.
+func decodeOnce(img image.Image, fr pointMapper, set readerSet) []Decoded {
+	bmp, err := binaryBitmap(img, set)
 	if err != nil {
 		return nil
 	}
@@ -436,6 +462,11 @@ func decodeOnce(img image.Image, fr frame, set readerSet) []Decoded {
 		if qrs, err := multiqr.NewQRCodeMultiReader().DecodeMultiple(bmp, hints); err == nil {
 			results = append(results, qrs...)
 		} else if r, err := qrcode.NewQRCodeReader().Decode(bmp, hints); err == nil {
+			results = append(results, r)
+		}
+	}
+	if set == curvedReaders {
+		if r, err := qrcode.NewQRCodeReader().Decode(bmp, hints); err == nil {
 			results = append(results, r)
 		}
 	}
@@ -470,6 +501,22 @@ func decodeOnce(img image.Image, fr frame, set readerSet) []Decoded {
 		out = append(out, d)
 	}
 	return out
+}
+
+// binaryBitmap hands img to the readers. gozxing's generic conversion reads
+// every pixel through image.At; a grey image is already the luminance
+// plane and is passed as it is — but that source cannot rotate, which the
+// 1D readers need for vertical codes, so it is used only for 2D reader
+// sets.
+func binaryBitmap(img image.Image, set readerSet) (*gozxing.BinaryBitmap, error) {
+	if g, ok := img.(*image.Gray); ok && (set == matrixReaders || set == curvedReaders) &&
+		g.Rect.Min == (image.Point{}) && g.Stride == g.Rect.Dx() {
+		w, h := g.Rect.Dx(), g.Rect.Dy()
+		if src, err := gozxing.NewPlanarYUVLuminanceSource(g.Pix, w, h, 0, 0, w, h, false); err == nil {
+			return gozxing.NewBinaryBitmap(gozxing.NewHybridBinarizer(src))
+		}
+	}
+	return gozxing.NewBinaryBitmapFromImage(img)
 }
 
 func typeOfFormat(f gozxing.BarcodeFormat) BarcodeType {

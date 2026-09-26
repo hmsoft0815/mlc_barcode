@@ -22,6 +22,15 @@ export function CopyToClipboard(text: string): $CancellablePromise<boolean> {
 }
 
 /**
+ * DecodeCameraFrame is DecodeImage for a live camera frame: the next frame
+ * follows a moment later, so the slow search for codes on bottles is cut
+ * short (barcodes.DecodeOptions.Live).
+ */
+export function DecodeCameraFrame(imageBase64: string): $CancellablePromise<$models.DecodeImageResult> {
+    return $Call.ByID(2213658271, imageBase64);
+}
+
+/**
  * DecodeImage reads the barcodes in an image (PNG, JPEG, GIF, WebP), given
  * as base64 or data URI, and splits known payloads into fields.
  */

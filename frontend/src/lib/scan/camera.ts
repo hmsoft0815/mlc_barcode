@@ -1,7 +1,9 @@
 // Live camera scanning, shared by the desktop "Prüfen" tab and the mobile
-// scan screen. Frames go to the same decoder as files (DecodeImage); the
+// scan screen. Frames go to the same decoder as files; the
 // pipeline is described in docs/decoder.md.
-import { DecodeImage } from '../../../bindings/github.com/mlcmcp/mlc_barcode/internal/gui/barcodeapp';
+// Frames go through DecodeCameraFrame: like DecodeImage, but the slow search
+// for codes on bottles is cut short — the next frame follows anyway.
+import { DecodeCameraFrame } from '../../../bindings/github.com/mlcmcp/mlc_barcode/internal/gui/barcodeapp';
 import type { DecodeImageResult } from '../../../bindings/github.com/mlcmcp/mlc_barcode/internal/gui/models';
 import type { Lang } from '../i18n/errors';
 import { UI_TEXT } from '../i18n/ui';
@@ -180,7 +182,7 @@ export class CameraScanner {
       const dataUrl = grab(video, g ?? { x: 0, y: 0, w, h });
       this.onAttempt();
       try {
-        const result = await DecodeImage(dataUrl);
+        const result = await DecodeCameraFrame(dataUrl);
         if (this.scanning && result.success && (result.codes?.length ?? 0) > 0) {
           this.pause();
           this.onHit({ dataUrl, result, guide: g !== null });

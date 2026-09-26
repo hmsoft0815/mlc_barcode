@@ -27,11 +27,11 @@ var blackboxSets = []struct {
 	// Codes on bottles, made with mlc OpticScript (task testdata:cylinder,
 	// tests/testdata/cylinder.js): s<degrees of circumference>-t<bottle
 	// turned>-v<camera looking down>.
-	// Turned bottles (t35) and a camera looking down (v20, rows become
-	// arcs) defeat the 2D detectors even at small curvature: they sample
-	// on a perspective grid (T-20260926-12).
-	{"../cylinder/datamatrix", TypeDataMatrix, 3},
-	{"../cylinder/qr", TypeQR, 5},
+	// The 2D detectors sample on a perspective grid; turned bottles (t35)
+	// and a camera looking down (v20, rows become arcs) are read through
+	// decodeCurved (cylinder.go). Before it: DataMatrix 3, QR 5.
+	{"../cylinder/datamatrix", TypeDataMatrix, 11},
+	{"../cylinder/qr", TypeQR, 14},
 	{"../cylinder/ean13", TypeEAN13, 8},
 }
 
