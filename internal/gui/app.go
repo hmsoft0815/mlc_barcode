@@ -232,9 +232,14 @@ func (a *BarcodeApp) DecodeImage(imageBase64 string) DecodeImageResult {
 // DecodeCameraFrame is DecodeImage for a live camera frame: the next frame
 // follows a moment later, so the slow search for codes on bottles is cut
 // short (barcodes.DecodeOptions.Live). surface is the scan view's shape
-// switch: "auto", "flat", "bottle" or "tube".
-func (a *BarcodeApp) DecodeCameraFrame(imageBase64, surface string) DecodeImageResult {
-	return decodeImage(imageBase64, barcodes.DecodeOptions{Live: true, Surface: barcodes.ParseSurface(surface)})
+// switch ("auto", "flat", "bottle", "tube"), family its code switch
+// ("auto", "square", "wide"): only those readers run.
+func (a *BarcodeApp) DecodeCameraFrame(imageBase64, surface, family string) DecodeImageResult {
+	return decodeImage(imageBase64, barcodes.DecodeOptions{
+		Live:    true,
+		Surface: barcodes.ParseSurface(surface),
+		Family:  barcodes.ParseFamily(family),
+	})
 }
 
 func decodeImage(imageBase64 string, opts barcodes.DecodeOptions) DecodeImageResult {

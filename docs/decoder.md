@@ -227,7 +227,16 @@ as files.
   every 300 ms (`SCAN_INTERVAL_MS`), the next only after the decoder
   answered, so a slow device never builds a queue. Frames go through
   `DecodeCameraFrame` (shorter bottle search, see above) together with
-  the shape switch (auto / flat / bottle / tube), remembered per device. Frames are sent as
+  the shape switch (auto / flat / bottle / tube) and the code switch,
+  both remembered per device.
+- **Code switch** (top left, `DecodeOptions.Family`): *all codes*,
+  *square* — QR, DataMatrix, Aztec, square guide frame, bottle search on —
+  or *barcode* — 1D codes and PDF417, a wide 3:1 guide frame, no 2D
+  candidates and no bottle search. Only those readers run: on a
+  1600×900 frame one pass took 180 ms with all readers and 16 ms with the
+  2D ones for a DataMatrix, 128 ms and 71 ms with the 1D ones for an
+  EAN-13 (`TestDecodeFamily` checks that each kind finds its own codes
+  and ignores the other). Frames are sent as
   JPEG with at most 1600 px on the long side (`FRAME_MAX_SIDE`).
 - **Guide frame:** every other frame only the area inside the drawn
   guide frame (18 % inset, `GUIDE_INSET`, must match `.camera-frame`) is

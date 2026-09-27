@@ -72,7 +72,10 @@ export class CameraScanner {
     private onAttempt: () => void = () => {},
     // What the code sits on ("auto", "flat", "bottle", "tube"): narrows the
     // decoder's search for codes on curved surfaces.
-    private surface: () => string = () => 'auto'
+    private surface: () => string = () => 'auto',
+    // What kind of code is scanned ("auto", "square", "wide"): only those
+    // readers run — 2D alone is about ten times faster per frame.
+    private family: () => string = () => 'auto'
   ) {}
 
   get running() {
@@ -185,7 +188,7 @@ export class CameraScanner {
       const dataUrl = grab(video, g ?? { x: 0, y: 0, w, h });
       this.onAttempt();
       try {
-        const result = await DecodeCameraFrame(dataUrl, this.surface());
+        const result = await DecodeCameraFrame(dataUrl, this.surface(), this.family());
         if (this.scanning && result.success && (result.codes?.length ?? 0) > 0) {
           this.pause();
           this.onHit({ dataUrl, result, guide: g !== null });

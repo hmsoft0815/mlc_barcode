@@ -32,6 +32,42 @@ type DecodeOptions struct {
 	// Surface is what the user said the code sits on (the scan view's
 	// shape switch); SurfaceAuto guesses.
 	Surface Surface
+	// Family is what kind of code the user scans (the scan view's code
+	// switch): only those readers run. A camera frame with the 2D readers
+	// alone takes a tenth of the time of all readers.
+	Family Family
+}
+
+// Family narrows the readers to one kind of code.
+type Family int
+
+const (
+	FamilyAll    Family = iota
+	FamilySquare        // QR, DataMatrix, Aztec (and codes on bottles)
+	FamilyWide          // 1D codes and PDF417
+)
+
+// ParseFamily maps "square" and "wide" to a Family; anything else is
+// FamilyAll.
+func ParseFamily(s string) Family {
+	switch s {
+	case "square":
+		return FamilySquare
+	case "wide":
+		return FamilyWide
+	}
+	return FamilyAll
+}
+
+// firstReaders is the reader set of the first pass and the fallbacks.
+func (f Family) firstReaders() readerSet {
+	switch f {
+	case FamilySquare:
+		return squareReaders
+	case FamilyWide:
+		return wideReaders
+	}
+	return allReaders
 }
 
 // Surface is a hint for the shape under the code. On a bottle the user
@@ -127,7 +163,7 @@ func decodeAll(img image.Image, opts DecodeOptions) ([]Decoded, error) {
 	if k := (max(gray.Rect.Dx(), gray.Rect.Dy()) + maxWorkSide - 1) / maxWorkSide; k > 1 {
 		work, wf = shrink(gray, k), base.scaled(1/float64(k))
 	}
-	if found := decodeScene(work, wf); len(found) > 0 {
+	if found := decodeScene(work, wf, opts.Family); len(found) > 0 {
 		return found, nil
 	}
 	// Attempts from cheap to expensive; the first that finds anything wins.
@@ -135,17 +171,20 @@ func decodeAll(img image.Image, opts DecodeOptions) ([]Decoded, error) {
 	// on dark ground, unwrapping codes on bottles and tubes, full
 	// resolution small codes in a large photo.
 	padded, pf := withQuietZone(work), wf.crop(image.Pt(-quietZone, -quietZone))
-	if found := decodeOnce(scale2x(padded), pf.scaled(2), allReaders); len(found) > 0 {
+	set := opts.Family.firstReaders()
+	if found := decodeOnce(scale2x(padded), pf.scaled(2), set); len(found) > 0 {
 		return found, nil
 	}
-	if found := decodeOnce(invert(padded), pf, allReaders); len(found) > 0 {
+	if found := decodeOnce(invert(padded), pf, set); len(found) > 0 {
 		return found, nil
 	}
-	if found := decodeCurved(work, wf, opts); len(found) > 0 {
-		return found, nil
+	if opts.Family != FamilyWide {
+		if found := decodeCurved(work, wf, opts); len(found) > 0 {
+			return found, nil
+		}
 	}
 	if work != gray {
-		if found := decodeScene(gray, base); len(found) > 0 {
+		if found := decodeScene(gray, base, opts.Family); len(found) > 0 {
 			return found, nil
 		}
 	}
@@ -193,6 +232,8 @@ const (
 	matrixReaders           // DataMatrix and Aztec, see decodeScene
 	linearReaders           // the 1D readers, see decodeLinearRest
 	curvedReaders           // DataMatrix, Aztec and QR, see decodeCurved
+	squareReaders           // QR (multi), DataMatrix, Aztec: FamilySquare
+	wideReaders             // the 1D readers and PDF417: FamilyWide
 )
 
 func readers(set readerSet) []namedReader {
@@ -207,9 +248,9 @@ func readers(set readerSet) []namedReader {
 		{gozxing.BarcodeFormat_ITF, oned.NewITFReader()},
 	}
 	switch set {
-	case matrixReaders, curvedReaders:
+	case matrixReaders, curvedReaders, squareReaders:
 		return matrix
-	case linearReaders:
+	case linearReaders, wideReaders:
 		return linear
 	}
 	return append(matrix, linear...)
@@ -221,8 +262,11 @@ func readers(set readerSet) []namedReader {
 // around every spot that looks like a 2D code. The 1D readers report the
 // first code they meet: each found one is painted over and the image read
 // again. QR and PDF417 readers report all codes in one pass.
-func decodeScene(img *image.Gray, fr frame) []Decoded {
-	found := decodeOnce(withQuietZone(img), fr.crop(image.Pt(-quietZone, -quietZone)), allReaders)
+func decodeScene(img *image.Gray, fr frame, family Family) []Decoded {
+	found := decodeOnce(withQuietZone(img), fr.crop(image.Pt(-quietZone, -quietZone)), family.firstReaders())
+	if family == FamilyWide {
+		return decodeLinearRest(img, fr, found)
+	}
 	for _, box := range matrixCandidates(img) {
 		// The box covers the busy part; a margin gives the detector the
 		// code's edge and quiet zone.
@@ -231,6 +275,9 @@ func decodeScene(img *image.Gray, fr frame) []Decoded {
 			continue
 		}
 		found = merge(found, decodePart(img, r, fr, matrixReaders))
+	}
+	if family == FamilySquare {
+		return found
 	}
 	return decodeLinearRest(img, fr, found)
 }
@@ -537,7 +584,7 @@ func decodeOnce(img image.Image, fr pointMapper, set readerSet) []Decoded {
 	hints := map[gozxing.DecodeHintType]interface{}{gozxing.DecodeHintType_TRY_HARDER: true}
 
 	var results []*gozxing.Result
-	if set == allReaders {
+	if set == allReaders || set == squareReaders {
 		if qrs, err := multiqr.NewQRCodeMultiReader().DecodeMultiple(bmp, hints); err == nil {
 			results = append(results, qrs...)
 		} else if r, err := qrcode.NewQRCodeReader().Decode(bmp, hints); err == nil {
@@ -554,7 +601,7 @@ func decodeOnce(img image.Image, fr pointMapper, set readerSet) []Decoded {
 			results = append(results, r)
 		}
 	}
-	if set == allReaders {
+	if set == allReaders || set == wideReaders {
 		if rs, err := pdf417decode.NewReader().DecodeMultiple(bmp, hints); err == nil {
 			results = append(results, rs...)
 		}
@@ -588,7 +635,7 @@ func decodeOnce(img image.Image, fr pointMapper, set readerSet) []Decoded {
 // 1D readers need for vertical codes, so it is used only for 2D reader
 // sets.
 func binaryBitmap(img image.Image, set readerSet) (*gozxing.BinaryBitmap, error) {
-	if g, ok := img.(*image.Gray); ok && (set == matrixReaders || set == curvedReaders) &&
+	if g, ok := img.(*image.Gray); ok && (set == matrixReaders || set == curvedReaders || set == squareReaders) &&
 		g.Rect.Min == (image.Point{}) && g.Stride == g.Rect.Dx() {
 		w, h := g.Rect.Dx(), g.Rect.Dy()
 		if src, err := gozxing.NewPlanarYUVLuminanceSource(g.Pix, w, h, 0, 0, w, h, false); err == nil {

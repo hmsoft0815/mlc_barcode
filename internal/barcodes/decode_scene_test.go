@@ -129,3 +129,29 @@ func BenchmarkDecodeCameraFrame(b *testing.B) {
 		}
 	}
 }
+
+// The scan view's code switch runs only one kind of readers: square codes
+// (QR, DataMatrix, Aztec) or wide ones (1D, PDF417). Each finds its own
+// kind and ignores the other.
+func TestDecodeFamily(t *testing.T) {
+	dm := codeImage(t, TypeDataMatrix, pharmaCode(4), 200)
+	ean := codeImage(t, TypeEAN13, "4006381333931", 200)
+	img := scene(t, 1400, 900, []image.Image{dm, ean}, []image.Point{{150, 200}, {800, 300}})
+	for _, c := range []struct {
+		family      Family
+		want, never BarcodeType
+	}{{FamilySquare, TypeDataMatrix, TypeEAN13}, {FamilyWide, TypeEAN13, TypeDataMatrix}} {
+		found, _ := DecodeWith(img, DecodeOptions{Live: true, Family: c.family})
+		has := map[BarcodeType]bool{}
+		for _, d := range found {
+			has[d.Type] = true
+		}
+		if !has[c.want] || has[c.never] {
+			t.Errorf("family %d: want %s and no %s, got %+v", c.family, c.want, c.never, found)
+		}
+	}
+	found, _ := DecodeWith(img, DecodeOptions{Live: true})
+	if len(found) != 2 {
+		t.Errorf("all readers: want both codes, got %+v", found)
+	}
+}

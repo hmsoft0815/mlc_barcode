@@ -38,6 +38,43 @@
   let surfaceHint = '';
   let surfaceHintTimer: ReturnType<typeof setTimeout> | undefined;
 
+  // What kind of code is scanned: the guide frame takes its shape and only
+  // those readers run (a frame with the 2D readers alone is about ten
+  // times faster). One button, each tap the next kind.
+  type Family = 'auto' | 'square' | 'wide';
+  const FAMILIES: { id: Family; label: UIKey; icon: string }[] = [
+    { id: 'auto', label: 'familyAuto', icon: 'bi-upc-scan' },
+    { id: 'square', label: 'familySquare', icon: 'bi-qr-code' },
+    { id: 'wide', label: 'familyWide', icon: 'bi-upc' },
+  ];
+  const FAMILY_KEY = 'mlc_family';
+  let family: Family = (() => {
+    try {
+      const v = localStorage.getItem(FAMILY_KEY);
+      return FAMILIES.some((x) => x.id === v) ? (v as Family) : 'auto';
+    } catch {
+      return 'auto';
+    }
+  })();
+  $: familyInfo = FAMILIES.find((x) => x.id === family)!;
+
+  function nextFamily() {
+    family = FAMILIES[(FAMILIES.findIndex((x) => x.id === family) + 1) % FAMILIES.length].id;
+    haptic('selection');
+    try {
+      localStorage.setItem(FAMILY_KEY, family);
+    } catch {
+      // not remembered; still used for this session
+    }
+    showHint($t(familyInfo.label));
+  }
+
+  function showHint(text: string) {
+    surfaceHint = text;
+    clearTimeout(surfaceHintTimer);
+    surfaceHintTimer = setTimeout(() => (surfaceHint = ''), 2200);
+  }
+
   function setSurface(s: Surface) {
     surface = s;
     haptic('selection');
@@ -46,16 +83,15 @@
     } catch {
       // not remembered; still used for this session
     }
-    surfaceHint = $t(SURFACES.find((x) => x.id === s)!.label);
-    clearTimeout(surfaceHintTimer);
-    surfaceHintTimer = setTimeout(() => (surfaceHint = ''), 2200);
+    showHint($t(SURFACES.find((x) => x.id === s)!.label));
   }
 
   let scanner = new CameraScanner(
     onHit,
     coverGuide(() => frameEl?.getBoundingClientRect() ?? null),
     onAttempt,
-    () => surface
+    () => surface,
+    () => family
   );
   // Blinks once per frame the decoder looks at.
   let attempts = 0;
@@ -169,10 +205,10 @@
   <video bind:this={video} class:mirrored={scanner.facingUser} autoplay playsinline muted disablepictureinpicture></video>
 
   {#if running && codes.length === 0}
-    <div class="frame" bind:this={frameEl} aria-hidden="true">
+    <div class="frame {family}" bind:this={frameEl} aria-hidden="true">
       {#key attempts}<span class="pulse"></span>{/key}
+      <div class="hint">{$t('holdInFrame')}</div>
     </div>
-    <div class="hint">{$t('holdInFrame')}</div>
   {/if}
 
   {#if error}
@@ -185,7 +221,7 @@
     </div>
   {/if}
 
-  {#if running && codes.length === 0}
+  {#if running && codes.length === 0 && family !== 'wide'}
     <div class="surfaces" role="radiogroup" aria-label={$t('surface')}>
       {#each SURFACES as s}
         <button
@@ -200,11 +236,16 @@
           <SurfaceIcon kind={s.id} />
         </button>
       {/each}
-      {#if surfaceHint}<div class="surface-hint">{surfaceHint}</div>{/if}
     </div>
   {/if}
+  {#if surfaceHint}<div class="hint-bubble">{surfaceHint}</div>{/if}
 
   <div class="tools top">
+    {#if running}
+      <button class="round family" on:click={nextFamily} aria-label={$t('family') + ' ' + $t(familyInfo.label)} title={$t(familyInfo.label)}>
+        <i class="bi {familyInfo.icon}"></i>
+      </button>
+    {/if}
     {#if running}
       <button class="round" class:on={torch} on:click={toggleTorch} aria-label={$t('torch')}>
         <i class="bi {torch ? 'bi-lightbulb-fill' : 'bi-lightbulb'}"></i>
@@ -274,6 +315,7 @@
     top: 45%;
     width: min(80vw, 520px, 90vh);
     aspect-ratio: 4 / 3;
+    transition: aspect-ratio 0.2s ease;
     transform: translate(-50%, -50%);
     border: 3px solid rgba(var(--bs-primary-rgb), 0.95);
     border-radius: 18px;
@@ -300,11 +342,24 @@
       transform: scale(1);
     }
   }
+  /* square codes: a square frame; barcodes: wide and flat */
+  .frame.square {
+    aspect-ratio: 1 / 1;
+    width: min(70vw, 440px, 60vh);
+  }
+  .frame.wide {
+    aspect-ratio: 3 / 1;
+    width: min(88vw, 620px);
+  }
+  .round.family {
+    margin-right: auto; /* left end of the top bar */
+  }
+  /* under the frame, whatever its shape */
   .hint {
     position: absolute;
-    left: 0;
-    right: 0;
-    top: calc(45% + min(30vw, 195px, 34vh) + 1.25rem);
+    left: -50vw;
+    right: -50vw;
+    top: calc(100% + 1rem);
     text-align: center;
     color: #fff;
     font-size: 0.9rem;
@@ -365,13 +420,13 @@
     justify-content: center;
     padding: 0;
   }
-  .surface-hint {
+  .hint-bubble {
     position: absolute;
-    left: 50px;
-    top: 50%;
-    transform: translateY(-50%);
+    left: 50%;
+    top: 4.25rem;
+    transform: translateX(-50%);
     width: max-content;
-    max-width: 60vw;
+    max-width: 80vw;
     background: rgba(0, 0, 0, 0.75);
     color: #fff;
     border-radius: 0.6rem;
