@@ -12,6 +12,9 @@ import (
 	"github.com/modelcontextprotocol/go-sdk/mcp"
 )
 
+// listTTLMs is how long clients may cache the tool and prompt lists.
+const listTTLMs = 60 * 60 * 1000
+
 func main() {
 	addr := flag.String("addr", "", "Listen address for HTTP (e.g. \":8080\"): Streamable HTTP at /mcp, legacy SSE at /sse. If empty, uses stdio.")
 	artifactAddr := flag.String("artifact-addr", os.Getenv("ARTIFACT_GRPC_ADDR"), "Address of the mlcartifact gRPC server")
@@ -44,6 +47,15 @@ func main() {
 			Capabilities: &mcp.ServerCapabilities{
 				Tools:   &mcp.ToolCapabilities{ListChanged: true},
 				Prompts: &mcp.PromptCapabilities{ListChanged: true},
+			},
+			// Tools and prompts are fixed when the server is built, so
+			// clients may keep the lists (and server/discover) for a while
+			// instead of fetching them again for every use (SEP-2549);
+			// list_changed would still announce a change.
+			SetCacheable: func(_ context.Context, _ mcp.Request, c *mcp.Cacheable) {
+				if c.TTLMs == 0 {
+					c.TTLMs = listTTLMs
+				}
 			},
 		},
 	)
