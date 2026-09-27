@@ -20,6 +20,12 @@ var assets embed.FS
 //go:embed build/appicon.png
 var appIcon []byte
 
+// startUI selects the UI the window opens with. The Windows test build
+// "…-ipad.exe" sets it to "mobile" (-ldflags -X main.startUI=mobile): the
+// mobile UI in an iPad-shaped window, for debugging it at the desk; the
+// camera is the webcam, share sheet, torch and vibration fall back.
+var startUI = "desktop"
+
 func main() {
 	barcodeApp := gui.NewBarcodeApp()
 
@@ -46,12 +52,21 @@ func main() {
 		},
 	})
 
+	title, url := "MLC Barcode v"+version.Version, "/"
+	width, height, minWidth, minHeight := 1200, 850, 900, 650
+	if startUI == "mobile" {
+		// iPad portrait (768×1024 points) — fits a 1080p screen.
+		title += " — iPad-Ansicht (Test)"
+		url = "/?ui=mobile"
+		width, height, minWidth, minHeight = 768, 1024, 360, 560
+	}
+
 	wailsApp.Window.NewWithOptions(application.WebviewWindowOptions{
-		Title:           "MLC Barcode v" + version.Version,
-		Width:           1200,
-		Height:          850,
-		MinWidth:        900,
-		MinHeight:       650,
+		Title:           title,
+		Width:           width,
+		Height:          height,
+		MinWidth:        minWidth,
+		MinHeight:       minHeight,
 		DevToolsEnabled: isDebugBuild(),
 		KeyBindings:     devtoolsKeyBindings(),
 		Linux: application.LinuxWindow{
@@ -63,7 +78,7 @@ func main() {
 			TitleBar:                application.MacTitleBarHiddenInset,
 		},
 		BackgroundColour: application.NewRGB(248, 249, 250),
-		URL:              "/",
+		URL:              url,
 	})
 
 	if err := wailsApp.Run(); err != nil {

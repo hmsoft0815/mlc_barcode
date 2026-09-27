@@ -87,6 +87,15 @@ tasks:
       - mkdir -p {{.BIN_DIR}}
       - GOOS=windows GOARCH=amd64 CGO_ENABLED=0 go build -tags production,devtools -ldflags "{{.LDFLAGS}}" -o {{.BIN_DIR}}/{{.GUI_BINARY}}-windows-amd64-debug.exe .
 
+  build:ipad:windows:
+    desc: Cross-compile the Windows test build that opens the mobile UI in an iPad-shaped window (F12 DevTools)
+    # Zum Debuggen der mobilen Oberflaeche am Schreibtisch: Webcam statt
+    # iPad-Kamera, Teilen/Licht/Vibration fallen auf den Desktop zurueck.
+    deps: [build:frontend, generate:syso:windows]
+    cmds:
+      - mkdir -p {{.BIN_DIR}}
+      - GOOS=windows GOARCH=amd64 CGO_ENABLED=0 go build -tags production,devtools -ldflags "{{.LDFLAGS}} -X main.startUI=mobile" -o {{.BIN_DIR}}/{{.GUI_BINARY}}-windows-amd64-ipad.exe .
+
   package:windows:
     desc: Build the Windows NSIS setup installer (.exe)
     deps: [build:gui:windows, build:windows]
@@ -580,19 +589,20 @@ tasks:
         if [ "$MISSING" -gt 0 ]; then echo "⚠ $MISSING artifact(s) missing"; exit 1; fi
 
   dropzone:gui:
-    desc: "Windows GUI test build (+ debug) → {{.DROPZONE}}, version in the file name"
+    desc: "Windows GUI test build (+ debug, + iPad view) → {{.DROPZONE}}, version in the file name"
     # Versioned names so a new build never overwrites an exe that is still
     # running on the Windows box — bump the patch level in VERSION per change.
-    deps: [build:gui:windows, build:debug:windows]
+    deps: [build:gui:windows, build:debug:windows, build:ipad:windows]
     cmds:
       - mkdir -p {{.DROPZONE}}
       # The embedded frontend must be complete: every exe carries its index.html.
       - |
-        for f in {{.BIN_DIR}}/{{.GUI_BINARY}}-windows-amd64.exe {{.BIN_DIR}}/{{.GUI_BINARY}}-windows-amd64-debug.exe; do
+        for f in {{.BIN_DIR}}/{{.GUI_BINARY}}-windows-amd64.exe {{.BIN_DIR}}/{{.GUI_BINARY}}-windows-amd64-debug.exe {{.BIN_DIR}}/{{.GUI_BINARY}}-windows-amd64-ipad.exe; do
           grep -q -a '<title>MLC Barcode</title>' $f || { echo "$f: embedded index.html missing"; exit 1; }
         done
       - cp {{.BIN_DIR}}/{{.GUI_BINARY}}-windows-amd64.exe {{.DROPZONE}}/{{.GUI_BINARY}}-{{.VERSION}}-windows-amd64.exe
       - cp {{.BIN_DIR}}/{{.GUI_BINARY}}-windows-amd64-debug.exe {{.DROPZONE}}/{{.GUI_BINARY}}-{{.VERSION}}-windows-amd64-debug.exe
+      - cp {{.BIN_DIR}}/{{.GUI_BINARY}}-windows-amd64-ipad.exe {{.DROPZONE}}/{{.GUI_BINARY}}-{{.VERSION}}-windows-amd64-ipad.exe
       - ls -lh {{.DROPZONE}}/{{.GUI_BINARY}}-{{.VERSION}}-*
 
   dev:deploy:
