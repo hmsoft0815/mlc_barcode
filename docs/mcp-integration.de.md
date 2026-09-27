@@ -37,6 +37,7 @@ Generiert einen Standard-Barcode.
 - **Erforderlich**: `type`, `data`.
 - `type`: `qr`, `datamatrix`, `aztec`, `pdf417`, `code128`, `code39`, `ean13`, `ean8`, `upca`, `itf`.
 - Fehlermeldungen nennen das störende Zeichen oder die Datenmenge und sagen, was stattdessen zu tun ist (z. B. `code128` für Kleinbuchstaben, `aztec` für mehr Text, als ein QR-Code fasst).
+- Codes, die sich zwar erzeugen, aber nicht nutzen ließen, werden mit Grund und Abhilfe abgelehnt: ein GiroCode mit ungültiger IBAN oder Feldern über den EPC-Grenzen (`epc_iban`, `epc_name`, `epc_reference`, `epc_amount`), ein QR-/DataMatrix-/Aztec-Code über 125 Module — zu dicht, um ihn vom Papier zu scannen (`too_dense`), ein Bild mit weniger als 1,5 px pro Modul (`too_small`, nennt die Mindestgröße).
 - `ean13` / `ean8` / `upca`: nur Ziffern; mit Prüfziffer (13/8/12 Stellen) oder ohne (12/7/11 — sie wird berechnet). Eine falsche Prüfziffer wird abgelehnt, die Fehlermeldung nennt die richtige.
 
 ### 2. `generate_wifi_qr`

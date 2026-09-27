@@ -120,6 +120,9 @@ func Generate(btype BarcodeType, data string, opts BarcodeOptions) (barcode.Barc
 	if err := checkCharset(btype, data, opts); err != nil {
 		return nil, err
 	}
+	if err := checkEPC(data); err != nil {
+		return nil, err
+	}
 
 	bc, err := encode(btype, data, opts)
 	if err != nil {
@@ -131,6 +134,9 @@ func Generate(btype BarcodeType, data string, opts BarcodeOptions) (barcode.Barc
 			return nil, capErr
 		}
 		return nil, encoderError(btype, err)
+	}
+	if err := checkPrintable(btype, bc, opts); err != nil {
+		return nil, err
 	}
 
 	// Scale to the requested size with the quiet zone inside it.

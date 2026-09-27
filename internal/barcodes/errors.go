@@ -23,6 +23,12 @@ const (
 	ErrAztecCharset    = "aztec_charset"
 	ErrImageFormat     = "image_format"
 	ErrImageTooLarge   = "image_too_large"
+	ErrEPCIBAN         = "epc_iban"
+	ErrEPCName         = "epc_name"
+	ErrEPCReference    = "epc_reference"
+	ErrEPCAmount       = "epc_amount"
+	ErrTooDense        = "too_dense"
+	ErrTooSmall        = "too_small"
 )
 
 // ErrorCodes lists every code; a test checks the GUI translates each one.
@@ -30,6 +36,7 @@ var ErrorCodes = []string{
 	ErrEmpty, ErrRetailNonDigit, ErrRetailLength, ErrRetailChecksum, ErrCode39Charset,
 	ErrASCIIOnly, ErrITFDigits, ErrITFEven, ErrCapacity, ErrUnsupportedType, ErrEncoder, ErrNothingFound, ErrAztecCharset,
 	ErrImageFormat, ErrImageTooLarge,
+	ErrEPCIBAN, ErrEPCName, ErrEPCReference, ErrEPCAmount, ErrTooDense, ErrTooSmall,
 }
 
 // InputError is an input the symbology cannot encode. Error() is the

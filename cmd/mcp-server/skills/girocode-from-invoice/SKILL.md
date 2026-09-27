@@ -21,7 +21,8 @@ Tool: `generate_epc_qr` (EPC069-12, SEPA credit transfer, euro only). The prompt
 
 - **Never guess** IBAN or amount. If the invoice shows several accounts or amounts (net/gross, partial payments, discount), ask which one.
 - Amount with a dot as decimal separator; no currency sign. Omit `amount` only if the user wants the payer to fill it in.
-- **Check the IBAN:** `generate_epc_qr` does not verify it. Read the generated code back with `decode_barcode` (the PNG, `format: png`): its `content` shows `iban_valid` (mod-97 check) and the fields as a bank app will see them. If `iban_valid` is `false`, the IBAN is mistyped — tell the user and do not hand out the code; never change digits yourself.
+- **The IBAN is checked:** `generate_epc_qr` refuses an IBAN with a wrong checksum or length (error `epc_iban`), as well as a name over 70 or a reference over 140 characters and amounts beyond the EPC limit. On such an error tell the user the value from the invoice is mistyped — never change digits yourself to make it pass.
+- To show the user what a banking app will see, read the code back with `decode_barcode` (the PNG): its `content` lists name, IBAN, amount and reference.
 
 ## Example
 

@@ -56,6 +56,16 @@ const de: Catalog = {
     p.max_mp
       ? `Das Bild ist ${p.width}×${p.height} Pixel groß, höchstens ${p.max_mp} Megapixel sind erlaubt. Bitte verkleinern.`
       : `Das Bild ist ${p.size_mb} MB groß, höchstens ${p.max_mb} MB sind erlaubt.`,
+  epc_iban: (p) =>
+    `Die IBAN ${p.iban ? '„' + p.iban + '“ ' : ''}ist ungültig (Prüfsumme oder Länge) — eine Banking-App würde diesen GiroCode ablehnen. Bitte mit der Rechnung vergleichen.`,
+  epc_name: (p) => `Der Empfängername hat ${p.length} Zeichen, ein GiroCode erlaubt höchstens ${p.max}. Bitte kürzen.`,
+  epc_reference: (p) =>
+    `Der Verwendungszweck hat ${p.length} Zeichen, ein GiroCode erlaubt höchstens ${p.max}. Rechnungs- und Kundennummer genügen.`,
+  epc_amount: (p) => `Der Betrag ${p.amount} € ist größer als das GiroCode-Maximum von 999.999.999,99 €.`,
+  too_dense: (p) =>
+    `Dieser ${typeName(p.type)} bräuchte ${p.modules}×${p.modules} Module — zu dicht, um ihn vom Papier zu scannen (höchstens ${p.max}). Bitte den Inhalt kürzen oder stattdessen einen Link darauf kodieren.`,
+  too_small: (p) =>
+    `${p.width}×${p.height} px ist zu klein für diesen Code — die Module würden unscharf. Bitte mindestens ${p.min}×${p.min} px wählen.`,
   nothing_found: () =>
     'Im Bild wurde kein Barcode gefunden. Ist der Code scharf, vollständig sichtbar und nicht zu klein?'
 };
