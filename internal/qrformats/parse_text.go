@@ -65,24 +65,50 @@ func contentLines(t string) []contentLine {
 	}
 	var out []contentLine
 	for _, l := range unfolded {
-		head, value, ok := strings.Cut(l, ":")
-		if !ok {
+		// Parameter values may be quoted and contain ":" or ";"
+		// (CN="Lechner, Michael"): split outside quotes only.
+		i := indexUnquoted(l, ':')
+		if i < 0 {
 			continue
 		}
-		name, params, _ := strings.Cut(head, ";")
+		head, value := l[:i], l[i+1:]
+		name, params := head, ""
+		if j := indexUnquoted(head, ';'); j >= 0 {
+			name, params = head[:j], head[j+1:]
+		}
 		out = append(out, contentLine{name: strings.ToUpper(name), params: params, value: value})
 	}
 	return out
 }
 
 func param(params, key string) string {
-	for _, p := range strings.Split(params, ";") {
+	for params != "" {
+		p := params
+		if j := indexUnquoted(params, ';'); j >= 0 {
+			p, params = params[:j], params[j+1:]
+		} else {
+			params = ""
+		}
 		k, v, ok := strings.Cut(p, "=")
 		if ok && strings.EqualFold(k, key) {
-			return v
+			return strings.Trim(v, `"`)
 		}
 	}
 	return ""
+}
+
+// indexUnquoted is strings.IndexByte, skipping double-quoted parts.
+func indexUnquoted(s string, c byte) int {
+	quoted := false
+	for i := 0; i < len(s); i++ {
+		switch {
+		case s[i] == '"':
+			quoted = !quoted
+		case s[i] == c && !quoted:
+			return i
+		}
+	}
+	return -1
 }
 
 func parseVCardFields(t string) map[string]string {
@@ -144,6 +170,11 @@ func parseEventFields(t string) map[string]string {
 		case "GEO":
 			if lat, lon, ok := strings.Cut(cl.value, ";"); ok {
 				f["latitude"], f["longitude"] = lat, lon
+			}
+		case "ORGANIZER":
+			put(f, "organizer", param(cl.params, "CN"))
+			if v := cl.value; len(v) > 7 && strings.EqualFold(v[:7], "mailto:") {
+				put(f, "organizer_email", v[7:])
 			}
 		}
 	}

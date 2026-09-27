@@ -4,6 +4,9 @@
   import thirdPartyText from '../../../../THIRD_PARTY_NOTICES.txt?raw';
   import { openLink } from './native';
   import { lang, setLang, t } from '../i18n/lang';
+  import ProfileForm from '../components/ProfileForm.svelte';
+
+  let editingProfile = false;
 
   export let appVersion: string;
   export let desktop = false; // offer the way back to the desktop UI
@@ -13,6 +16,15 @@
   const SOURCE_URL = 'https://github.com/hmsoft0815/mlc_barcode';
 </script>
 
+{#if editingProfile}
+<div class="page">
+  <button class="btn btn-sm btn-link px-0 mb-2" on:click={() => (editingProfile = false)}>
+    <i class="bi bi-chevron-left"></i> {$t('back')}
+  </button>
+  <h5 class="mb-3">{$t('myDetails')}</h5>
+  <ProfileForm compact />
+</div>
+{:else}
 <div class="page">
   <div class="text-center mb-4">
     <img src="/appicon.png" alt="" width="84" height="84" class="rounded-4 mb-2" />
@@ -22,6 +34,9 @@
   </div>
 
   <div class="list-group mb-4">
+    <button class="list-group-item list-group-item-action d-flex align-items-center gap-2" on:click={() => (editingProfile = true)}>
+      <i class="bi bi-person-gear text-primary"></i> {$t('myDetails')} <i class="bi bi-chevron-right ms-auto small"></i>
+    </button>
     <button class="list-group-item list-group-item-action d-flex align-items-center gap-2" on:click={() => openLink(PRODUCT_URL)}>
       <i class="bi bi-globe text-primary"></i> {$t('productPage')} <i class="bi bi-box-arrow-up-right ms-auto small"></i>
     </button>
@@ -52,6 +67,7 @@
     <pre class="license">{thirdPartyText}</pre>
   </details>
 </div>
+{/if}
 
 <style>
   .page {

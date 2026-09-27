@@ -5,6 +5,9 @@
   import { lang } from '../i18n/lang';
   import { t, type SingleKey } from '../i18n/text/single';
   import { typeText, typeDescKey } from '../i18n/text/types';
+  import { toLocalInput, nextFullHour, shiftLocal, icalDateTime, icalDate, withDate, deviceTimeZone } from '../datetime';
+  import { profile, organizerName, profileCoords } from '../profile';
+  import { get } from 'svelte/store';
   import {
     GenerateBarcode,
     FormatWifi,
@@ -62,7 +65,12 @@
   let eventAllDay = false;
   let eventStart = toLocalInput(nextFullHour());
   let eventEnd = shiftLocal(eventStart, HOUR_MS);
-  let eventTZ = 'Europe/Berlin';
+  let eventTZ = get(profile).timeZone || deviceTimeZone() || 'Europe/Berlin';
+  let eventLocation = '';
+  let eventLat = 0;
+  let eventLon = 0;
+  let eventOrganizer = '';
+  let eventOrganizerEmail = '';
 
   // Structured QR inputs: Crypto
   let cryptoCoin = 'bitcoin';
@@ -243,7 +251,12 @@
         startTime: eventAllDay ? icalDate(eventStart) : icalDateTime(eventStart),
         // iCal all-day DTEND is exclusive: the day after the last day.
         endTime: eventAllDay ? icalDate(shiftLocal(eventEnd, DAY_MS)) : icalDateTime(eventEnd),
-        timeZone: eventTZ
+        timeZone: eventTZ,
+        location: eventLocation,
+        latitude: eventLat,
+        longitude: eventLon,
+        organizer: eventOrganizer,
+        organizerEmail: eventOrganizerEmail
       });
       if (!customLabelTouched) {
         customLabelText = eventSummary;
@@ -252,34 +265,6 @@
     triggerGenerate();
   }
 
-  function pad2(n: number): string {
-    return String(n).padStart(2, '0');
-  }
-
-  function toLocalInput(d: Date): string {
-    return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}T${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
-  }
-
-  function nextFullHour(): Date {
-    const d = new Date();
-    d.setHours(d.getHours() + 1, 0, 0, 0);
-    return d;
-  }
-
-  function shiftLocal(value: string, ms: number): string {
-    const d = new Date(value);
-    return isNaN(d.getTime()) ? value : toLocalInput(new Date(d.getTime() + ms));
-  }
-
-  // YYYY-MM-DDTHH:MM → YYYYMMDDTHHMM00
-  function icalDateTime(value: string): string {
-    return value ? value.replace(/[-:]/g, '').slice(0, 13) + '00' : '';
-  }
-
-  // YYYY-MM-DD… → YYYYMMDD
-  function icalDate(value: string): string {
-    return value ? value.slice(0, 10).replace(/-/g, '') : '';
-  }
 
   // Moving the start moves the end along and keeps the duration.
   function setEventStart(value: string) {
@@ -296,10 +281,6 @@
     updateStructuredQR();
   }
 
-  // Date inputs only change the date part and keep the time.
-  function withDate(current: string, date: string): string {
-    return date ? date + current.slice(10) : current;
-  }
 
   let debounceTimer: ReturnType<typeof setTimeout> | null = null;
   function triggerGenerate() {
@@ -353,9 +334,39 @@
     }
   }
 
+  // Empty fields of the chosen mode are filled from "My details"; what the
+  // user typed stays.
+  let prefilled = false;
+  function prefillFromProfile(mode: QRMode) {
+    const p = get(profile);
+    const coords = profileCoords(p);
+    prefilled = false;
+    if (mode === 'event') {
+      if (!eventOrganizer && organizerName(p)) (eventOrganizer = organizerName(p)), (prefilled = true);
+      if (!eventOrganizerEmail && p.email) (eventOrganizerEmail = p.email), (prefilled = true);
+      if (!eventLocation && p.location) (eventLocation = p.location), (prefilled = true);
+      if (coords && !eventLat && !eventLon) (eventLat = coords.latitude), (eventLon = coords.longitude);
+      if (p.timeZone) eventTZ = p.timeZone;
+    } else if (mode === 'geo' && coords) {
+      geoLat = coords.latitude;
+      geoLon = coords.longitude;
+      if (p.location) geoQuery = p.location;
+      prefilled = true;
+    } else if (mode === 'vcard') {
+      if (!vcardFirst && !vcardLast && (p.firstName || p.lastName)) {
+        vcardFirst = p.firstName;
+        vcardLast = p.lastName;
+        prefilled = true;
+      }
+      if (!vcardEmail && p.email) vcardEmail = p.email;
+      if (!vcardPhone && p.phone) vcardPhone = p.phone;
+    }
+  }
+
   function handleModeChange(mode: QRMode) {
     qrMode = mode;
     customLabelTouched = false;
+    prefillFromProfile(mode);
     if (mode !== 'text') {
       if (selectedType !== 'qr' && selectedType !== 'datamatrix') {
         selectedType = 'qr';
@@ -1015,6 +1026,29 @@
                   {/if}
                 </div>
               </div>
+              <div class="row g-2 mt-1">
+                <div class="col-12">
+                  <label for="eventLocationInput" class="form-label small mb-1 fw-medium">{$t('eventLocation')}</label>
+                  <input id="eventLocationInput" type="text" class="form-control form-control-sm" placeholder={$t('eventLocationPh')} bind:value={eventLocation} on:input={updateStructuredQR} />
+                </div>
+                <div class="col-6">
+                  <label for="eventOrganizerInput" class="form-label small mb-1 fw-medium">{$t('eventOrganizer')}</label>
+                  <input id="eventOrganizerInput" type="text" class="form-control form-control-sm" placeholder={$t('eventOrganizerPh')} bind:value={eventOrganizer} on:input={updateStructuredQR} />
+                </div>
+                <div class="col-6">
+                  <label for="eventOrganizerEmailInput" class="form-label small mb-1 fw-medium">{$t('eventOrganizerEmail')}</label>
+                  <input id="eventOrganizerEmailInput" type="email" class="form-control form-control-sm" bind:value={eventOrganizerEmail} on:input={updateStructuredQR} />
+                </div>
+                {#if !eventAllDay}
+                  <div class="col-12">
+                    <label for="eventTZInput" class="form-label small mb-1 fw-medium">{$t('eventTimeZone')}</label>
+                    <input id="eventTZInput" type="text" class="form-control form-control-sm" bind:value={eventTZ} on:input={updateStructuredQR} />
+                  </div>
+                {/if}
+              </div>
+              {#if prefilled}
+                <div class="form-text small mt-2"><i class="bi bi-person-check me-1"></i>{$t('fromProfile')}</div>
+              {/if}
             </div>
           {/if}
 

@@ -52,7 +52,7 @@ Generates a QR code for a vCard 3.0 contact (referencing [RFC 6350](https://www.
 ### 4. `generate_event_qr`
 Generates a QR code for an iCalendar (RFC 5545) event.
 - **Required**: `summary`, `start_time` (YYYYMMDDTHHMMSS, or YYYYMMDD for an all-day event; `end_time` is then the day after the last day).
-- **Optional**: `end_time`, `description`, `location`, `timezone` (e.g. Europe/Berlin), `latitude`, `longitude`.
+- **Optional**: `end_time`, `description`, `location`, `timezone` (e.g. Europe/Berlin), `latitude`, `longitude`, `organizer` (as shown, e.g. "Lechner, Michael"), `organizer_email`.
 
 ## Integration Examples
 

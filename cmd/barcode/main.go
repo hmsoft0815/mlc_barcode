@@ -46,6 +46,9 @@ func main() {
 	eventStart := flag.String("event-start", "", "Event Start Time (YYYYMMDDTHHMMSS)")
 	eventEnd := flag.String("event-end", "", "Event End Time")
 	eventTZ := flag.String("event-tz", "", "Event TimeZone (e.g. Europe/Berlin)")
+	eventLocation := flag.String("event-location", "", "Event location")
+	eventOrganizer := flag.String("event-organizer", "", "Event organizer as shown, e.g. \"Lechner, Michael\"")
+	eventOrganizerEmail := flag.String("event-organizer-email", "", "Event organizer e-mail address")
 
 	// Structured QR Flags: EPC / GiroCode (SEPA-Überweisung)
 	epcName := flag.String("epc-name", "", "EPC/GiroCode Beneficiary Name (triggers GiroCode QR)")
@@ -144,10 +147,13 @@ func main() {
 		})
 	} else if *eventSummary != "" {
 		dataStr = qrformats.FormatVCalendar(qrformats.VCalendarOptions{
-			Summary:   *eventSummary,
-			StartTime: *eventStart,
-			EndTime:   *eventEnd,
-			TimeZone:  *eventTZ,
+			Summary:        *eventSummary,
+			StartTime:      *eventStart,
+			EndTime:        *eventEnd,
+			TimeZone:       *eventTZ,
+			Location:       *eventLocation,
+			Organizer:      *eventOrganizer,
+			OrganizerEmail: *eventOrganizerEmail,
 		})
 	}
 

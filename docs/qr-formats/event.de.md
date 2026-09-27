@@ -17,6 +17,9 @@ Diese Implementierung folgt dem **iCalendar** Standard, wie in [RFC 5545](https:
 | `-event-tz` | `timezone` | Zeitzonen-Kennung (z. B. `Europe/Berlin`). |
 | (N/A) | `latitude` | Geografische Breite (Dezimalwert). |
 | (N/A) | `longitude` | Geografische Länge (Dezimalwert). |
+| `-event-location` | `location` | Ort des Termins (für MCP bereits oben). |
+| `-event-organizer` | `organizer` | Wer einlädt, wie es angezeigt werden soll, z. B. `Lechner, Michael`. Ein Name mit Komma, Doppelpunkt oder Semikolon wird in der Datei in Anführungszeichen gesetzt (RFC 5545 3.1). |
+| `-event-organizer-email` | `organizer_email` | E-Mail-Adresse des Organisators. Ohne sie lautet die Adresse `invalid:nomail` (wie bei Outlook) — Kalender zeigen den Namen trotzdem. |
 
 ## Nutzungsbeispiele
 
@@ -40,4 +43,4 @@ Diese Implementierung folgt dem **iCalendar** Standard, wie in [RFC 5545](https:
 ```
 
 ## Technische Details
-Die Ausgabe ist ein strukturierter String, der mit `BEGIN:VCALENDAR` beginnt und einen `BEGIN:VEVENT` Block enthält. Es werden die Felder `DTSTART`, `DTEND`, `SUMMARY`, `LOCATION`, `DESCRIPTION`, und `GEO` unterstützt. Zeitzonen werden über das `;TZID=` Präfix gehandhabt, sofern nicht UTC (`Z`) angegeben ist.
+Die Ausgabe ist ein strukturierter String, der mit `BEGIN:VCALENDAR` beginnt und einen `BEGIN:VEVENT` Block enthält. Es werden die Felder `DTSTART`, `DTEND`, `SUMMARY`, `LOCATION`, `DESCRIPTION`, `GEO` und `ORGANIZER` unterstützt. Zeitzonen werden über das `;TZID=` Präfix gehandhabt, sofern nicht UTC (`Z`) angegeben ist.

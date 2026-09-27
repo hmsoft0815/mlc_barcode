@@ -66,10 +66,15 @@ type VCardInput struct {
 
 // EventInput contains options for iCal/vCalendar QR codes.
 type EventInput struct {
-	Summary   string `json:"summary"`
-	StartTime string `json:"startTime"` // YYYYMMDDTHHMMSS
-	EndTime   string `json:"endTime"`
-	TimeZone  string `json:"timeZone"`
+	Summary        string  `json:"summary"`
+	StartTime      string  `json:"startTime"` // YYYYMMDDTHHMMSS
+	EndTime        string  `json:"endTime"`
+	TimeZone       string  `json:"timeZone"`
+	Location       string  `json:"location"`
+	Latitude       float64 `json:"latitude"`
+	Longitude      float64 `json:"longitude"`
+	Organizer      string  `json:"organizer"`      // as shown, e.g. "Lechner, Michael"
+	OrganizerEmail string  `json:"organizerEmail"` // optional
 }
 
 // EPCInput contains options for EPC-QR-Codes (GiroCode / SEPA-Überweisung).

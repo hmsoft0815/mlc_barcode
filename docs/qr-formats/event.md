@@ -17,6 +17,9 @@ This implementation follows the **iCalendar** standard, as defined in [RFC 5545]
 | `-event-tz` | `timezone` | TimeZone identifier (e.g., `Europe/Berlin`). |
 | (N/A) | `latitude` | Geographical latitude (decimal). |
 | (N/A) | `longitude` | Geographical longitude (decimal). |
+| `-event-location` | `location` | Place of the event (also listed above for MCP). |
+| `-event-organizer` | `organizer` | Who invites, as it should be shown, e.g. `Lechner, Michael`. A name with a comma, colon or semicolon is quoted in the file (RFC 5545 3.1). |
+| `-event-organizer-email` | `organizer_email` | E-mail address of the organizer. Without it the address is `invalid:nomail` (as Outlook writes it), so calendars still show the name. |
 
 ## Usage Examples
 
@@ -40,4 +43,4 @@ This implementation follows the **iCalendar** standard, as defined in [RFC 5545]
 ```
 
 ## Technical Details
-The output is a structured string starting with `BEGIN:VCALENDAR` and containing a `BEGIN:VEVENT` block. It supports `DTSTART`, `DTEND`, `SUMMARY`, `LOCATION`, `DESCRIPTION`, and `GEO` fields. Time zones are handled via the `;TZID=` prefix unless UTC (`Z`) is specified.
+The output is a structured string starting with `BEGIN:VCALENDAR` and containing a `BEGIN:VEVENT` block. It supports `DTSTART`, `DTEND`, `SUMMARY`, `LOCATION`, `DESCRIPTION`, `GEO` and `ORGANIZER` fields. Time zones are handled via the `;TZID=` prefix unless UTC (`Z`) is specified.

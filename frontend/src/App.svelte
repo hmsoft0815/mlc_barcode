@@ -6,6 +6,8 @@
   import LabelPrinter from './lib/components/LabelPrinter.svelte';
   import AboutView from './lib/components/AboutView.svelte';
   import Checker from './lib/components/Checker.svelte';
+  import ProfileForm from './lib/components/ProfileForm.svelte';
+  import { t as tp } from './lib/i18n/text/profile';
   import type { PrintItem } from './lib/types';
   import { get } from 'svelte/store';
   import { lang } from './lib/i18n/lang';
@@ -17,6 +19,7 @@
   let theme: 'light' | 'dark' = 'dark';
 
   let printItems: PrintItem[] = [];
+  let showProfile = false;
   // Last finished batch, offered on the label printer page.
   let lastBatchItems: PrintItem[] = [];
 
@@ -63,8 +66,32 @@
   });
 </script>
 
+<svelte:window on:keydown={(e) => showProfile && e.key === 'Escape' && (showProfile = false)} />
+
 <div class="app-root d-flex flex-column min-vh-100 bg-body-tertiary">
-  <Navbar bind:activeTab {appVersion} {theme} onToggleTheme={handleToggleTheme} />
+  <Navbar bind:activeTab {appVersion} {theme} onToggleTheme={handleToggleTheme} onOpenProfile={() => (showProfile = true)} />
+
+  {#if showProfile}
+    <!-- "My details": stored as typed, so closing needs no save -->
+    <div
+      class="profile-backdrop"
+      role="presentation"
+      on:click|self={() => (showProfile = false)}
+    >
+      <div class="card shadow-lg profile-card" role="dialog" aria-modal="true" aria-label={$tp('title')}>
+        <div class="card-header d-flex justify-content-between align-items-center">
+          <h6 class="mb-0"><i class="bi bi-person-gear me-1 text-primary"></i>{$tp('title')}</h6>
+          <button type="button" class="btn-close" aria-label={$tp('done')} on:click={() => (showProfile = false)}></button>
+        </div>
+        <div class="card-body">
+          <ProfileForm />
+        </div>
+        <div class="card-footer text-end">
+          <button type="button" class="btn btn-primary btn-sm" on:click={() => (showProfile = false)}>{$tp('done')}</button>
+        </div>
+      </div>
+    </div>
+  {/if}
 
   <main class="flex-grow-1">
     <!-- Tabs stay mounted and are only hidden, so input survives a tab switch. -->
@@ -104,6 +131,20 @@
 </div>
 
 <style>
+  .profile-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 1050;
+    background: rgba(0, 0, 0, 0.55);
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding: 4rem 1rem 1rem;
+    overflow-y: auto;
+  }
+  .profile-card {
+    width: min(640px, 100%);
+  }
   .hover-primary:hover {
     color: var(--bs-primary) !important;
   }

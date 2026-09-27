@@ -297,3 +297,32 @@ func TestFormatVCalendarAllDay(t *testing.T) {
 		t.Errorf("all-day event must not carry a TZID: %v", got)
 	}
 }
+
+// The organizer: a name with a comma must be quoted (RFC 5545 3.1), and
+// without an e-mail the address is Outlook's invalid:nomail.
+func TestVCalendarOrganizer(t *testing.T) {
+	for _, c := range []struct {
+		opts       VCalendarOptions
+		line       string
+		name, mail string
+	}{
+		{VCalendarOptions{Organizer: "Lechner, Michael", OrganizerEmail: "m@example.org"},
+			`ORGANIZER;CN="Lechner, Michael":mailto:m@example.org`, "Lechner, Michael", "m@example.org"},
+		{VCalendarOptions{Organizer: "Praxis Dr. Meier"}, `ORGANIZER;CN=Praxis Dr. Meier:invalid:nomail`, "Praxis Dr. Meier", ""},
+		{VCalendarOptions{OrganizerEmail: "team@example.org"}, `ORGANIZER:mailto:team@example.org`, "", "team@example.org"},
+		{VCalendarOptions{Organizer: `Say "hi": 1;2`}, `ORGANIZER;CN="Say 'hi': 1;2":invalid:nomail`, "Say 'hi': 1;2", ""},
+	} {
+		c.opts.Summary, c.opts.StartTime = "Treffen", "20261001T100000"
+		got := FormatVCalendar(c.opts)
+		if !strings.Contains(got, c.line+"\n") {
+			t.Errorf("want line %q in\n%s", c.line, got)
+		}
+		p := Parse(got)
+		if p.Fields["organizer"] != c.name || p.Fields["organizer_email"] != c.mail {
+			t.Errorf("%q: parsed organizer %q <%q>, want %q <%q>", c.line, p.Fields["organizer"], p.Fields["organizer_email"], c.name, c.mail)
+		}
+		if p.Fields["summary"] != "Treffen" || p.Fields["start"] != "20261001T100000" {
+			t.Errorf("%q: other fields lost: %v", c.line, p.Fields)
+		}
+	}
+}

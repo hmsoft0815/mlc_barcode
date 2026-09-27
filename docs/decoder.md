@@ -208,7 +208,10 @@ and the GUI draws its marks directly over the picture.
 ### Results
 
 Codes are merged by (type, text); the same code found in several passes
-or windows is reported once. An EAN-13 with a leading 0 is reported as
+or windows is reported once. A 1D result that lies inside a 2D code read
+from the same image is dropped (`dropInside2D`): a row through a QR
+code's modules can match a short 1D pattern — UPC-E, with its weak check,
+was read from an event QR code. An EAN-13 with a leading 0 is reported as
 the 12-digit UPC-A it most likely was made as. `qrformats.Parse` then
 splits known payloads into fields. It looks at securPharm pack codes
 first, before any trimming, because their control characters (GS, RS,

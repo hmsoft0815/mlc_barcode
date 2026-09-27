@@ -53,10 +53,15 @@ func (a *BarcodeApp) FormatVCard(opts VCardInput) string {
 // FormatEvent formats event parameters into iCal/vCalendar QR data format.
 func (a *BarcodeApp) FormatEvent(opts EventInput) string {
 	return qrformats.FormatVCalendar(qrformats.VCalendarOptions{
-		Summary:   opts.Summary,
-		StartTime: opts.StartTime,
-		EndTime:   opts.EndTime,
-		TimeZone:  opts.TimeZone,
+		Summary:        opts.Summary,
+		StartTime:      opts.StartTime,
+		EndTime:        opts.EndTime,
+		TimeZone:       opts.TimeZone,
+		Location:       opts.Location,
+		Latitude:       opts.Latitude,
+		Longitude:      opts.Longitude,
+		Organizer:      opts.Organizer,
+		OrganizerEmail: opts.OrganizerEmail,
 	})
 }
 

@@ -97,6 +97,8 @@ func registerVCalendarTools(s *mcp.Server) {
 	props["timezone"] = map[string]any{"type": "string", "description": "e.g. Europe/Berlin"}
 	props["latitude"] = map[string]any{"type": "number"}
 	props["longitude"] = map[string]any{"type": "number"}
+	props["organizer"] = map[string]any{"type": "string", "description": "Who invites, as it should be shown, e.g. \"Lechner, Michael\""}
+	props["organizer_email"] = map[string]any{"type": "string", "description": "E-mail address of the organizer"}
 
 	addBarcodeTool(s, &mcp.Tool{
 		Name:        "generate_event_qr",
@@ -114,6 +116,8 @@ func registerVCalendarTools(s *mcp.Server) {
 		opts.StartTime, _ = args["start_time"].(string)
 		opts.EndTime, _ = args["end_time"].(string)
 		opts.TimeZone, _ = args["timezone"].(string)
+		opts.Organizer, _ = args["organizer"].(string)
+		opts.OrganizerEmail, _ = args["organizer_email"].(string)
 		if v, ok := args["latitude"].(float64); ok {
 			opts.Latitude = v
 		}

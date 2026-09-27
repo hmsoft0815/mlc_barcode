@@ -15,6 +15,10 @@ type VCalendarOptions struct {
 	TimeZone    string // e.g. Europe/Berlin
 	Latitude    float64
 	Longitude   float64
+	// Organizer is who invites, as it should be shown ("Lechner, Michael");
+	// OrganizerEmail the address answers go to. Either may be empty.
+	Organizer      string
+	OrganizerEmail string
 }
 
 // FormatVCalendar returns a formatted iCalendar 2.0 string (RFC 5545)
@@ -31,6 +35,21 @@ func FormatVCalendar(opts VCalendarOptions) string {
 	writeDateTime(&sb, "DTSTART", opts.StartTime, opts.TimeZone)
 	writeDateTime(&sb, "DTEND", opts.EndTime, opts.TimeZone)
 
+	if opts.Organizer != "" || opts.OrganizerEmail != "" {
+		sb.WriteString("ORGANIZER")
+		if opts.Organizer != "" {
+			sb.WriteString(";CN=" + paramValue(opts.Organizer))
+		}
+		// The value must be an address (CAL-ADDRESS, a URI). Without an
+		// e-mail, Outlook writes invalid:nomail — calendars accept it and
+		// still show the name.
+		if opts.OrganizerEmail != "" {
+			fmt.Fprintf(&sb, ":mailto:%s\n", opts.OrganizerEmail)
+		} else {
+			sb.WriteString(":invalid:nomail\n")
+		}
+	}
+
 	if opts.Location != "" {
 		fmt.Fprintf(&sb, "LOCATION:%s\n", escapeText(opts.Location))
 	}
@@ -46,6 +65,17 @@ func FormatVCalendar(opts VCalendarOptions) string {
 	sb.WriteString("END:VEVENT\n")
 	sb.WriteString("END:VCALENDAR")
 	return sb.String()
+}
+
+// paramValue quotes a parameter value (RFC 5545 3.1: a value with ":", ";"
+// or "," — "Lechner, Michael" — must be in double quotes, which themselves
+// cannot occur inside).
+func paramValue(v string) string {
+	v = strings.ReplaceAll(v, `"`, "'")
+	if strings.ContainsAny(v, ":;,") {
+		return `"` + v + `"`
+	}
+	return v
 }
 
 // writeDateTime writes DTSTART/DTEND. An 8-digit date (YYYYMMDD) is an

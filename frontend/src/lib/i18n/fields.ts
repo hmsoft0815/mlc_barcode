@@ -63,6 +63,8 @@ const FIELD_LABELS: Record<string, string> = {
   zip: 'PLZ',
   country: 'Land',
   summary: 'Titel',
+  organizer: 'Organisator',
+  organizer_email: 'E-Mail des Organisators',
   start: 'Beginn',
   end: 'Ende',
   timezone: 'Zeitzone',
@@ -95,7 +97,7 @@ const FIELD_LABELS: Record<string, string> = {
 };
 
 // Order in which fields are shown; the rest follows alphabetically.
-const ORDER = ['pzn', 'pzn_valid', 'expiry', 'batch', 'serial', 'name', 'full_name', 'first_name', 'last_name', 'ssid', 'summary', 'to', 'phone', 'iban', 'iban_valid', 'bic', 'amount', 'currency', 'reference', 'start', 'end', 'all_day'];
+const ORDER = ['pzn', 'pzn_valid', 'expiry', 'batch', 'serial', 'name', 'full_name', 'first_name', 'last_name', 'ssid', 'summary', 'to', 'phone', 'iban', 'iban_valid', 'bic', 'amount', 'currency', 'reference', 'start', 'end', 'all_day', 'location', 'organizer', 'organizer_email'];
 
 const FIELD_LABELS_EN: Record<string, string> = {
   name: 'Recipient',
@@ -125,6 +127,8 @@ const FIELD_LABELS_EN: Record<string, string> = {
   zip: 'Postcode',
   country: 'Country',
   summary: 'Title',
+  organizer: 'Organizer',
+  organizer_email: 'Organizer email',
   start: 'Start',
   end: 'End',
   timezone: 'Time zone',

@@ -242,6 +242,19 @@ export interface EventInput {
     "startTime": string;
     "endTime": string;
     "timeZone": string;
+    "location": string;
+    "latitude": number;
+    "longitude": number;
+
+    /**
+     * as shown, e.g. "Lechner, Michael"
+     */
+    "organizer": string;
+
+    /**
+     * optional
+     */
+    "organizerEmail": string;
 }
 
 /**

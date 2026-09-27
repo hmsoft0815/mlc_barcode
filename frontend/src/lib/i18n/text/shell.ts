@@ -12,6 +12,7 @@ const de = {
   toDark: 'Zu dunklem Modus wechseln',
   toggleTheme: 'Design umschalten',
   language: 'Sprache',
+  myDetails: 'Meine Angaben',
   footerLicense: 'MIT with Attribution',
 };
 
@@ -26,6 +27,7 @@ const en: Record<keyof typeof de, string> = {
   toDark: 'Switch to dark mode',
   toggleTheme: 'Toggle theme',
   language: 'Language',
+  myDetails: 'My details',
   footerLicense: 'MIT with Attribution',
 };
 

@@ -3,6 +3,7 @@
   export let appVersion: string = __APP_VERSION__;
   export let theme: 'light' | 'dark' = 'light';
   export let onToggleTheme: () => void = () => {};
+  export let onOpenProfile: () => void = () => {};
   import { lang, setLang } from '../i18n/lang';
   import { t } from '../i18n/text/shell';
 </script>
@@ -80,12 +81,23 @@
         >
       </div>
 
+      <!-- My details (profile) -->
+      <button
+        type="button"
+        class="btn btn-sm btn-outline-secondary px-2 ms-1"
+        on:click={onOpenProfile}
+        title={$t('myDetails')}
+        aria-label={$t('myDetails')}
+      >
+        <i class="bi bi-person-gear"></i>
+      </button>
+
       <!-- Theme Switcher -->
       <button
+        type="button"
         class="btn btn-sm btn-outline-secondary px-2 ms-1"
         on:click={onToggleTheme}
         title={theme === 'dark' ? $t('toLight') : $t('toDark')}
-        type="button"
         aria-label={$t('toggleTheme')}
       >
         <i class="bi bi-{theme === 'dark' ? 'sun-fill text-primary' : 'moon-stars-fill'}"></i>

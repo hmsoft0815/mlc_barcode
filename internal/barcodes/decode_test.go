@@ -192,3 +192,17 @@ func TestDecodeMixedSheet(t *testing.T) {
 		}
 	}
 }
+
+// A row through a QR code's modules must not come back as a 1D code: an
+// event QR code was also reported as UPC-E 17160889.
+func TestNoLinearCodeInsideQR(t *testing.T) {
+	data := "BEGIN:VCALENDAR\nVERSION:2.0\nBEGIN:VEVENT\nSUMMARY:Sprechstunde\nDTSTART;TZID=Europe/Berlin:20261005T090000\nDTEND;TZID=Europe/Berlin:20261005T093000\nORGANIZER;CN=\"Lechner, Michael\":mailto:m@example.org\nLOCATION:Praxis\\, Hauptstr. 1\nEND:VEVENT\nEND:VCALENDAR"
+	img := renderPNG(t, TypeQR, data, DefaultOptions(TypeQR))
+	found, err := Decode(img)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(found) != 1 || found[0].Type != TypeQR {
+		t.Errorf("want only the QR code, got %+v", found)
+	}
+}

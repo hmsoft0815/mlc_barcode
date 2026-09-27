@@ -69,6 +69,54 @@ func Decode(img image.Image) ([]Decoded, error) {
 
 // DecodeWith is Decode with options.
 func DecodeWith(img image.Image, opts DecodeOptions) ([]Decoded, error) {
+	found, err := decodeAll(img, opts)
+	return dropInside2D(found), err
+}
+
+// dropInside2D removes 1D results that lie inside a 2D code read from the
+// same image. A row through a QR code's modules can match a short 1D
+// pattern: UPC-E, with its weak check, was read from the modules of an
+// event QR code — in every version before this check.
+func dropInside2D(found []Decoded) []Decoded {
+	var areas []image.Rectangle
+	for _, d := range found {
+		if !isLinear(d.Type) && len(d.Points) > 0 {
+			r := image.Rectangle{Min: d.Points[0], Max: d.Points[0]}
+			for _, p := range d.Points[1:] {
+				r = r.Union(image.Rectangle{Min: p, Max: p.Add(image.Pt(1, 1))})
+			}
+			// QR points are finder centres, not corners: widen a little.
+			m := max(r.Dx(), r.Dy())/5 + 2
+			areas = append(areas, r.Inset(-m))
+		}
+	}
+	if len(areas) == 0 {
+		return found
+	}
+	out := found[:0]
+	for _, d := range found {
+		if isLinear(d.Type) && len(d.Points) > 0 && insideAny(d.Points, areas) {
+			continue
+		}
+		out = append(out, d)
+	}
+	return out
+}
+
+func insideAny(pts []image.Point, areas []image.Rectangle) bool {
+	for _, a := range areas {
+		inside := true
+		for _, p := range pts {
+			inside = inside && p.In(a)
+		}
+		if inside {
+			return true
+		}
+	}
+	return false
+}
+
+func decodeAll(img image.Image, opts DecodeOptions) ([]Decoded, error) {
 	gray := toGray(img)
 	b := img.Bounds()
 	base := frame{ox: float64(b.Min.X), oy: float64(b.Min.Y), f: 1}
@@ -225,12 +273,14 @@ func decodeLinearRest(img *image.Gray, fr frame, found []Decoded) []Decoded {
 	return found
 }
 
+// isLinear reports whether t is a 1D code — also formats we do not
+// generate but the readers report, such as UPC_E.
 func isLinear(t BarcodeType) bool {
 	switch t {
-	case TypeEAN13, TypeEAN8, TypeUPCA, TypeCode128, TypeCode39, TypeITF:
-		return true
+	case TypeQR, TypeDataMatrix, TypeAztec, TypePDF417:
+		return false
 	}
-	return false
+	return true
 }
 
 // paintOverLinear whites out the 1D code whose result points (on the line
