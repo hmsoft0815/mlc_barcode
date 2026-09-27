@@ -234,11 +234,13 @@ func (a *BarcodeApp) DecodeImage(imageBase64 string) DecodeImageResult {
 // short (barcodes.DecodeOptions.Live). surface is the scan view's shape
 // switch ("auto", "flat", "bottle", "tube"), family its code switch
 // ("auto", "square", "wide"): only those readers run.
-func (a *BarcodeApp) DecodeCameraFrame(imageBase64, surface, family string) DecodeImageResult {
+// front marks a frame of the front camera: it is sharpened first.
+func (a *BarcodeApp) DecodeCameraFrame(imageBase64, surface, family string, front bool) DecodeImageResult {
 	return decodeImage(imageBase64, barcodes.DecodeOptions{
 		Live:    true,
 		Surface: barcodes.ParseSurface(surface),
 		Family:  barcodes.ParseFamily(family),
+		Sharpen: front,
 	})
 }
 

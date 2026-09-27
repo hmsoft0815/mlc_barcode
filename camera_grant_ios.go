@@ -8,11 +8,22 @@ package main
 
 #import <UIKit/UIKit.h>
 #import <WebKit/WebKit.h>
+#import <objc/runtime.h>
 
 // Wails sets no WKUIDelegate on its web view, so WebKit asks "allow
 // camera?" for the app's own page on every launch. This delegate answers
 // for our own content only (the wails:// app page); the system permission
 // (NSCameraUsageDescription) is untouched and still asked once by iOS.
+//
+// It must be in place before the page asks: the scan view starts the camera
+// as soon as it shows. So it is set when the web view is created — the
+// category below extends -[WKWebView initWithFrame:configuration:] at load
+// time — not looked up afterwards.
+
+// Diagnostics go to the system log and to stderr (seen with
+// `devicectl device process launch --console`).
+#define MLCLog(fmt, ...) do { NSString *m = [NSString stringWithFormat:fmt, ##__VA_ARGS__]; NSLog(@"%@", m); fprintf(stderr, "%s\n", m.UTF8String); } while (0)
+
 API_AVAILABLE(ios(15.0))
 @interface MLCMediaGrant : NSObject <WKUIDelegate>
 @end
@@ -24,46 +35,41 @@ API_AVAILABLE(ios(15.0))
                                       type:(WKMediaCaptureType)type
                            decisionHandler:(void (^)(WKPermissionDecision))decisionHandler {
     BOOL own = [origin.protocol isEqualToString:@"wails"] || [origin.host isEqualToString:@"localhost"];
+    MLCLog(@"[mlc-camera] media request from %@://%@ type %ld -> %@", origin.protocol, origin.host, (long)type, own ? @"grant" : @"prompt");
     decisionHandler(own ? WKPermissionDecisionGrant : WKPermissionDecisionPrompt);
 }
 @end
 
 static id mlcGrant; // UIDelegate is weak: keep the delegate alive
 
-static WKWebView *mlcFindWebView(UIView *v) {
-    if ([v isKindOfClass:[WKWebView class]]) return (WKWebView *)v;
-    for (UIView *s in v.subviews) {
-        WKWebView *w = mlcFindWebView(s);
-        if (w) return w;
-    }
-    return nil;
-}
-
-// The web view appears some moments after launch: look for it on the main
-// queue, twice a second, for up to 20 seconds.
-static void mlcTryInstall(int attempt) {
-    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.5 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
-        if (@available(iOS 15.0, *)) {
-            for (UIScene *scene in UIApplication.sharedApplication.connectedScenes) {
-                if (![scene isKindOfClass:[UIWindowScene class]]) continue;
-                for (UIWindow *win in ((UIWindowScene *)scene).windows) {
-                    WKWebView *wv = mlcFindWebView(win);
-                    if (wv) {
-                        if (!mlcGrant) mlcGrant = [MLCMediaGrant new];
-                        if (!wv.UIDelegate) wv.UIDelegate = mlcGrant;
-                        return;
-                    }
-                }
-            }
-            if (attempt < 40) mlcTryInstall(attempt + 1);
-        }
+@implementation WKWebView (MLCMediaGrant)
++ (void)load {
+    static dispatch_once_t once;
+    dispatch_once(&once, ^{
+        Method original = class_getInstanceMethod(self, @selector(initWithFrame:configuration:));
+        Method extended = class_getInstanceMethod(self, @selector(mlc_initWithFrame:configuration:));
+        method_exchangeImplementations(original, extended);
     });
 }
 
-static void mlcInstallMediaGrant(void) { mlcTryInstall(0); }
+// After the exchange this calls the original initializer.
+- (instancetype)mlc_initWithFrame:(CGRect)frame configuration:(WKWebViewConfiguration *)configuration {
+    WKWebView *wv = [self mlc_initWithFrame:frame configuration:configuration];
+    if (@available(iOS 15.0, *)) {
+        if (wv && !wv.UIDelegate) {
+            if (!mlcGrant) mlcGrant = [MLCMediaGrant new];
+            wv.UIDelegate = mlcGrant;
+            MLCLog(@"[mlc-camera] media delegate set on new web view %@", NSStringFromClass([wv class]));
+        }
+    }
+    return wv;
+}
+@end
+
+static void mlcInstallMediaGrant(void) {}
 */
 import "C"
 
-// installCameraGrant lets the app's own page use the camera without
-// WebKit asking again on every launch (see the Objective-C above).
+// installCameraGrant: the Objective-C above does its work when the app
+// image loads (+load); calling it keeps the code linked in.
 func installCameraGrant() { C.mlcInstallMediaGrant() }

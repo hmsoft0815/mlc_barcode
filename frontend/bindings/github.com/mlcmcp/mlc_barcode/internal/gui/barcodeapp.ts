@@ -27,9 +27,10 @@ export function CopyToClipboard(text: string): $CancellablePromise<boolean> {
  * short (barcodes.DecodeOptions.Live). surface is the scan view's shape
  * switch ("auto", "flat", "bottle", "tube"), family its code switch
  * ("auto", "square", "wide"): only those readers run.
+ * front marks a frame of the front camera: it is sharpened first.
  */
-export function DecodeCameraFrame(imageBase64: string, surface: string, family: string): $CancellablePromise<$models.DecodeImageResult> {
-    return $Call.ByID(2213658271, imageBase64, surface, family);
+export function DecodeCameraFrame(imageBase64: string, surface: string, family: string, front: boolean): $CancellablePromise<$models.DecodeImageResult> {
+    return $Call.ByID(2213658271, imageBase64, surface, family, front);
 }
 
 /**

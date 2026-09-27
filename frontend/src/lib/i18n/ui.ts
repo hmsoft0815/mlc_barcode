@@ -19,6 +19,7 @@ const de = {
   // scan
   retry: 'Erneut versuchen',
   holdInFrame: 'Code in den Rahmen halten',
+  frontCameraHint: 'Frontkamera: Code etwa 30–40 cm entfernt halten — die Rückkamera liest deutlich besser.',
   torch: 'Licht',
   switchCamera: 'Kamera wechseln',
   pickPhoto: 'Foto wählen',
@@ -127,6 +128,7 @@ const en: Record<UIKey, string> = {
 
   retry: 'Try again',
   holdInFrame: 'Hold the code inside the frame',
+  frontCameraHint: 'Front camera: hold the code about 30–40 cm away — the rear camera reads far better.',
   torch: 'Light',
   switchCamera: 'Switch camera',
   pickPhoto: 'Choose photo',

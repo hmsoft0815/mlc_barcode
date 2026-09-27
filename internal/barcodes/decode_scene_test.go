@@ -155,3 +155,19 @@ func TestDecodeFamily(t *testing.T) {
 		t.Errorf("all readers: want both codes, got %+v", found)
 	}
 }
+
+// The front camera's fixed focus blurs a code held close. Sharpening reads
+// one blur step more — measured: a 120 px DataMatrix at blur sigma 2.0 is
+// read only sharpened.
+func TestDecodeSharpenFrontCamera(t *testing.T) {
+	code := codeImage(t, TypeDataMatrix, pharmaCode(5), 120)
+	blurred := gaussian(toGray(scene(t, 900, 600, []image.Image{code}, []image.Point{{300, 150}})), 2)
+	plain, _ := DecodeWith(blurred, DecodeOptions{Live: true, Family: FamilySquare})
+	sharp, _ := DecodeWith(blurred, DecodeOptions{Live: true, Family: FamilySquare, Sharpen: true})
+	if len(sharp) != 1 {
+		t.Errorf("sharpened: want the DataMatrix, got %+v", sharp)
+	}
+	if len(plain) != 0 {
+		t.Logf("note: read without sharpening too (%d) — the case is no longer on the edge", len(plain))
+	}
+}

@@ -198,7 +198,7 @@ export class CameraScanner {
       const dataUrl = grab(video, g ?? { x: 0, y: 0, w, h }, mirror);
       this.onAttempt();
       try {
-        const result = await DecodeCameraFrame(dataUrl, this.surface(), this.family());
+        const result = await DecodeCameraFrame(dataUrl, this.surface(), this.family(), this.facingUser);
         if (this.scanning && result.success && (result.codes?.length ?? 0) > 0) {
           this.pause();
           this.onHit({ dataUrl, result, guide: g !== null });

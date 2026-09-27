@@ -207,7 +207,10 @@
   {#if running && codes.length === 0}
     <div class="frame {family}" bind:this={frameEl} aria-hidden="true">
       {#key attempts}<span class="pulse"></span>{/key}
-      <div class="hint">{$t('holdInFrame')}</div>
+      <div class="hint">
+        {$t('holdInFrame')}
+        {#if scanner.facingUser}<div class="small mt-1 opacity-75">{$t('frontCameraHint')}</div>{/if}
+      </div>
     </div>
   {/if}
 

@@ -4,6 +4,7 @@ import (
 	"image"
 	"image/color"
 	"image/draw"
+	"math"
 	"sort"
 	"strings"
 
@@ -36,6 +37,11 @@ type DecodeOptions struct {
 	// switch): only those readers run. A camera frame with the 2D readers
 	// alone takes a tenth of the time of all readers.
 	Family Family
+	// Sharpen applies an unsharp mask first — for the front camera, whose
+	// fixed focus blurs a code held close. Measured on a blurred
+	// DataMatrix it reads one blur step more (sigma 2.0 instead of 1.5 at
+	// 120 px), no more: it helps at the margin only.
+	Sharpen bool
 }
 
 // Family narrows the readers to one kind of code.
@@ -162,6 +168,9 @@ func decodeAll(img image.Image, opts DecodeOptions) ([]Decoded, error) {
 	work, wf := gray, base
 	if k := (max(gray.Rect.Dx(), gray.Rect.Dy()) + maxWorkSide - 1) / maxWorkSide; k > 1 {
 		work, wf = shrink(gray, k), base.scaled(1/float64(k))
+	}
+	if opts.Sharpen {
+		work = unsharp(work, 2, 1.5)
 	}
 	if found := decodeScene(work, wf, opts.Family); len(found) > 0 {
 		return found, nil
@@ -747,6 +756,56 @@ func invert(img *image.Gray) *image.Gray {
 	out := image.NewGray(img.Rect)
 	for i, v := range img.Pix {
 		out.Pix[i] = 255 - v
+	}
+	return out
+}
+
+// unsharp sharpens img: the difference to a Gaussian blur of radius sigma,
+// times amount, is added back.
+func unsharp(img *image.Gray, sigma, amount float64) *image.Gray {
+	blurred := gaussian(img, sigma)
+	out := image.NewGray(img.Rect)
+	for i, v := range img.Pix {
+		d := float64(v) + amount*(float64(v)-float64(blurred.Pix[i]))
+		out.Pix[i] = uint8(min(max(d, 0), 255))
+	}
+	return out
+}
+
+// gaussian blurs img (separable kernel, edges repeated).
+func gaussian(img *image.Gray, sigma float64) *image.Gray {
+	r := int(math.Ceil(sigma * 3))
+	k := make([]float64, 2*r+1)
+	sum := 0.0
+	for i := range k {
+		x := float64(i - r)
+		k[i] = math.Exp(-x * x / (2 * sigma * sigma))
+		sum += k[i]
+	}
+	for i := range k {
+		k[i] /= sum
+	}
+	w, h := img.Rect.Dx(), img.Rect.Dy()
+	tmp := make([]float64, w*h)
+	for y := 0; y < h; y++ {
+		row := img.Pix[img.PixOffset(img.Rect.Min.X, img.Rect.Min.Y+y):]
+		for x := 0; x < w; x++ {
+			v := 0.0
+			for i := -r; i <= r; i++ {
+				v += k[i+r] * float64(row[min(max(x+i, 0), w-1)])
+			}
+			tmp[y*w+x] = v
+		}
+	}
+	out := image.NewGray(img.Rect)
+	for y := 0; y < h; y++ {
+		for x := 0; x < w; x++ {
+			v := 0.0
+			for i := -r; i <= r; i++ {
+				v += k[i+r] * tmp[min(max(y+i, 0), h-1)*w+x]
+			}
+			out.Pix[out.PixOffset(img.Rect.Min.X+x, img.Rect.Min.Y+y)] = uint8(min(max(v, 0), 255))
+		}
 	}
 	return out
 }

@@ -232,6 +232,12 @@ as files.
   `DecodeCameraFrame` (shorter bottle search, see above) together with
   the shape switch (auto / flat / bottle / tube) and the code switch,
   both remembered per device.
+- **Front camera:** its frames are sharpened first (`DecodeOptions.Sharpen`,
+  unsharp mask σ 2, amount 1.5) and every third one is also sent mirrored.
+  Front cameras have a fixed focus for faces (about 30–50 cm): a code held
+  closer is blurred, one held at that distance is small. Sharpening reads
+  one blur step more (a 120 px DataMatrix at σ 2.0, `TestDecodeSharpenFrontCamera`),
+  no more — the scan view says so and points to the rear camera.
 - **Code switch** (top left, `DecodeOptions.Family`): *all codes*,
   *square* — QR, DataMatrix, Aztec, square guide frame, bottle search on —
   or *barcode* — 1D codes and PDF417, a wide 3:1 guide frame, no 2D
