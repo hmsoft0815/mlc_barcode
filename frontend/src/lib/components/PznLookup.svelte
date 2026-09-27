@@ -3,9 +3,12 @@
   // database of the BfArM (AMIce). It has no link that searches directly —
   // a session and accepting its terms come first — so a short guide shows
   // the three steps, the PZN is copied, and "open search" goes there.
+  // The database speaks German only (and the PZN is a German number): the
+  // button shows in the German UI only.
   import type { DecodedCode } from '../../../bindings/github.com/mlcmcp/mlc_barcode/internal/gui/models';
   import { copyText, openLink } from '../mobile/native';
   import { t } from '../i18n/text/lookup';
+  import { lang } from '../i18n/lang';
 
   export let code: DecodedCode;
 
@@ -26,7 +29,7 @@
   }
 </script>
 
-{#if pzn}
+{#if pzn && $lang === 'de'}
   <button type="button" class="btn btn-sm btn-outline-secondary" on:click={start}>
     <i class="bi bi-search me-1"></i>{$t('button')}
   </button>
