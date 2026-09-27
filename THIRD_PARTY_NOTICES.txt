@@ -19,6 +19,10 @@ third-party software, which remains under its own licence.
 3. gozxing — https://github.com/makiuchi-d/gozxing
    Linked as a library (barcode reading). MIT License (full text below).
 
+4. mlc mcp-tester, package pkg/mcpskills — https://github.com/hmsoft0815/mlc_mcptester
+   Linked into the MCP server to publish Agent Skills (Skills extension).
+   MIT License, Copyright (c) 2026 Michael Lechner.
+
 Further libraries linked into the programs (Wails, the MCP Go SDK,
 golang.org/x/image and others) are listed with their licences in the
 program's Help section and in go.mod.

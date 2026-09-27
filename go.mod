@@ -4,6 +4,7 @@ go 1.26.0
 
 require (
 	github.com/boombuler/barcode v1.1.0
+	github.com/hmsoft0815/mlc_mcptester v1.6.0
 	github.com/hmsoft0815/mlcartifact v0.5.0
 	github.com/makiuchi-d/gozxing v0.1.1
 	github.com/modelcontextprotocol/go-sdk v1.8.0
@@ -33,4 +34,5 @@ require (
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20260706201446-f0a921348800 // indirect
 	google.golang.org/grpc v1.84.0 // indirect
 	google.golang.org/protobuf v1.36.12 // indirect
+	gopkg.in/yaml.v3 v3.0.1 // indirect
 )

@@ -44,6 +44,7 @@ Current Version: **1.7.0**
 - Adjustable size and optional caption (custom text, adjustable font size) in SVG and PNG.
 - Desktop GUI with batch generator and A4 label sheets.
 - **Reads** barcodes from images (CLI `-decode`, MCP `decode_barcode`): symbology and content, several codes per image — every generated code is tested against this reader.
+- **Agent Skills** for AI clients (MCP Skills extension): how-tos for event invitations, Wi-Fi for guests, contact cards, GiroCodes from invoices, checking medicine packs and label sheets — see [MCP integration](docs/mcp-integration.md#skills).
 
 ### File import (GUI: batch generator and label printer)
 

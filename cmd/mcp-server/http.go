@@ -20,12 +20,10 @@ import (
 // Cross-origin requests from browsers are rejected (the spec requires
 // servers to validate Origin, against DNS rebinding). Base64-encoded Mcp-*
 // headers are decoded first, see decodeMCPHeaders.
-func newHTTPServer(addr string, s *mcp.Server) *http.Server {
-	getServer := func(*http.Request) *mcp.Server { return s }
-
+func newHTTPServer(addr string, s, legacy *mcp.Server) *http.Server {
 	mux := http.NewServeMux()
-	mux.Handle("/mcp", mcp.NewStreamableHTTPHandler(getServer, &mcp.StreamableHTTPOptions{Stateless: true}))
-	mux.Handle("/sse", mcp.NewSSEHandler(getServer, nil))
+	mux.Handle("/mcp", mcp.NewStreamableHTTPHandler(func(*http.Request) *mcp.Server { return s }, &mcp.StreamableHTTPOptions{Stateless: true}))
+	mux.Handle("/sse", mcp.NewSSEHandler(func(*http.Request) *mcp.Server { return legacy }, nil))
 
 	return &http.Server{
 		Addr:              addr,

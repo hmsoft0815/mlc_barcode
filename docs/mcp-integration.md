@@ -90,6 +90,21 @@ Every successful call returns, next to the image, `structuredContent` matching t
 - `payment_qr_from_invoice` (`invoice`, required): extract beneficiary, IBAN, amount and reference from invoice text and call `generate_epc_qr`; asks instead of guessing when the IBAN or amount is unclear.
 - `product_labels` (`items`, required; `type`, default `ean13`): one labelled barcode per line `code;label text`.
 
+## Skills
+
+The server publishes **Agent Skills** (Skills extension `io.modelcontextprotocol/skills`, protocol 2026-07-28) — how-tos a client loads when a task needs one. Each file is a `skill://<name>/SKILL.md` resource; `skills/list` and `skills/get` return manifests with SHA-256 digests.
+
+| Skill | For |
+|---|---|
+| `event-invite` | a calendar QR code for an invitation or appointment: time zone, place, organizer, all-day events |
+| `wifi-guest-access` | Wi-Fi for guests: security type, special characters, guest networks |
+| `contact-card` | a vCard from a signature or business card |
+| `girocode-from-invoice` | a GiroCode from an invoice — never guessing IBAN or amount, checking the IBAN by reading the code back |
+| `medicine-pack-check` | reading a medicine pack from a photo: PZN, batch, expiry (end of month for day 00), expired or not |
+| `label-sheet` | barcodes for a list: which symbology for what, captions, sizes for printing |
+
+Only on the current transports (stdio, Streamable HTTP `/mcp`); the legacy SSE endpoint speaks 2025-11-25, where the extension does not exist, and does not announce it. Checked with `mcp-tester skills --verify` in `task test:mcp`.
+
 ## Compliance
 
 Checked with [mlc mcp-tester](https://github.com/hmsoft0815/mlc_mcptester) against spec 2026-07-28: `task test:mcp`.

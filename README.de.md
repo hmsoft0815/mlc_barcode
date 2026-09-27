@@ -44,6 +44,7 @@ Aktuelle Version: **1.7.0**
 - Anpassbare Größe und optionale Beschriftung (Freitext, einstellbare Schriftgröße) in SVG und PNG.
 - Desktop-GUI mit Batch-Generator und A4-Etikettenbögen.
 - **Liest** Barcodes aus Bildern (CLI `-decode`, MCP `decode_barcode`): Format und Inhalt, auch mehrere Codes pro Bild — jeder erzeugte Code wird gegen diesen Reader getestet.
+- **Agent Skills** für KI-Clients (MCP-Skills-Erweiterung): Anleitungen für Termin-Einladungen, WLAN für Gäste, Visitenkarten, GiroCodes aus Rechnungen, die Prüfung von Arzneimittelpackungen und Etikettenbögen — siehe [MCP-Integration](docs/mcp-integration.de.md#skills).
 
 ### Datei-Import (GUI: Batch-Generator und Etiketten-Druck)
 

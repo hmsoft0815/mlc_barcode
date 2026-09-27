@@ -37,6 +37,47 @@ func main() {
 	}
 
 	ctx := context.Background()
+	s, err := newServer(true, *addr == "")
+	if err != nil {
+		fmt.Fprintln(os.Stderr, "Error:", err)
+		os.Exit(1)
+	}
+
+	if *addr != "" {
+		fmt.Fprintf(os.Stderr, "Starting Barcode MCP Server on %s: Streamable HTTP at /mcp, legacy SSE at /sse\n", *addr)
+		// SSE is the 2024-11-05 transport: its clients speak 2025-11-25 at
+		// most, where the Skills extension does not exist — they get a
+		// server that does not announce it.
+		legacy, err := newServer(false, false)
+		if err != nil {
+			fmt.Fprintln(os.Stderr, "Error:", err)
+			os.Exit(1)
+		}
+		if err := newHTTPServer(*addr, s, legacy).ListenAndServe(); err != nil {
+			log.Fatalf("HTTP server failed: %v", err)
+		}
+	} else {
+		fmt.Fprintf(os.Stderr, "Starting Barcode MCP Server on stdio...\n")
+		transport := &mcp.StdioTransport{}
+		session, err := s.Connect(ctx, transport, nil)
+		if err != nil {
+			log.Fatal(err)
+		}
+		session.Wait()
+	}
+}
+
+// newServer builds the MCP server with every tool and prompt. withSkills
+// adds the Skills extension (protocol 2026-07-28); allowPath lets
+// decode_barcode read files by path (stdio only).
+func newServer(withSkills, allowPath bool) (*mcp.Server, error) {
+	caps := &mcp.ServerCapabilities{
+		Tools:   &mcp.ToolCapabilities{ListChanged: true},
+		Prompts: &mcp.PromptCapabilities{ListChanged: true},
+	}
+	if withSkills {
+		declareSkills(caps)
+	}
 	s := mcp.NewServer(
 		&mcp.Implementation{
 			Name:    "mlc-barcode-server",
@@ -44,10 +85,7 @@ func main() {
 		},
 		&mcp.ServerOptions{
 			Instructions: serverInstructions,
-			Capabilities: &mcp.ServerCapabilities{
-				Tools:   &mcp.ToolCapabilities{ListChanged: true},
-				Prompts: &mcp.PromptCapabilities{ListChanged: true},
-			},
+			Capabilities: caps,
 			// Tools and prompts are fixed when the server is built, so
 			// clients may keep the lists (and server/discover) for a while
 			// instead of fetching them again for every use (SEP-2549);
@@ -68,21 +106,12 @@ func main() {
 	registerCryptoTools(s)
 	registerGeoTools(s)
 	registerCommunicationTools(s)
-	registerDecodeTools(s, *addr == "")
+	registerDecodeTools(s, allowPath)
 	registerPrompts(s)
-
-	if *addr != "" {
-		fmt.Fprintf(os.Stderr, "Starting Barcode MCP Server on %s: Streamable HTTP at /mcp, legacy SSE at /sse\n", *addr)
-		if err := newHTTPServer(*addr, s).ListenAndServe(); err != nil {
-			log.Fatalf("HTTP server failed: %v", err)
+	if withSkills {
+		if err := registerSkills(s); err != nil {
+			return nil, err
 		}
-	} else {
-		fmt.Fprintf(os.Stderr, "Starting Barcode MCP Server on stdio...\n")
-		transport := &mcp.StdioTransport{}
-		session, err := s.Connect(ctx, transport, nil)
-		if err != nil {
-			log.Fatal(err)
-		}
-		session.Wait()
 	}
+	return s, nil
 }
