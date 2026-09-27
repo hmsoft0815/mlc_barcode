@@ -23,12 +23,15 @@
 
   const expired = (e: HistoryEntry) => e.code.content?.kind === 'pharma' && isExpired(e.code.content.fields?.expiry);
 
+  // When it was read: always date and time ("27.09.26, 14:05").
   function when(at: number, l: Lang): string {
-    const d = new Date(at);
-    const locale = l === 'en' ? 'en-GB' : 'de-DE';
-    return new Date().toDateString() === d.toDateString()
-      ? d.toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit' })
-      : d.toLocaleDateString(locale, { day: '2-digit', month: '2-digit', year: '2-digit' });
+    return new Date(at).toLocaleString(l === 'en' ? 'en-GB' : 'de-DE', {
+      day: '2-digit',
+      month: '2-digit',
+      year: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
   }
 </script>
 

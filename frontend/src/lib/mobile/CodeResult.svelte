@@ -3,6 +3,7 @@
   // is, its fields, and what one can do with it.
   import type { DecodedCode } from '../../../bindings/github.com/mlcmcp/mlc_barcode/internal/gui/models';
   import CodeDetails from '../components/CodeDetails.svelte';
+  import PznLookup from '../components/PznLookup.svelte';
   import { BARCODE_TYPES } from '../types';
   import { kindLabel } from '../i18n/fields';
   import { lang, t } from '../i18n/lang';
@@ -51,6 +52,7 @@
     <button class="btn btn-sm btn-outline-secondary" on:click={share}>
       <i class="bi bi-share me-1"></i> {$t('share')}
     </button>
+    <PznLookup {code} />
     {#if feedback}<span class="small text-success align-self-center">{feedback}</span>{/if}
   </div>
 </div>

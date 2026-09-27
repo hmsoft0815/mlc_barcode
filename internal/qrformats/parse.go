@@ -23,6 +23,9 @@ func Parse(text string) Parsed {
 	if isPharma(text) { // control characters matter: check before trimming
 		return parsePharma(text)
 	}
+	if p, ok := parsePZNBarcode(t); ok {
+		return p
+	}
 	switch {
 	case strings.HasPrefix(t, "BCD\n") || strings.HasPrefix(t, "BCD\r\n"):
 		return parseEPC(t)

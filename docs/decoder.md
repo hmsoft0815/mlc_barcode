@@ -216,7 +216,10 @@ the 12-digit UPC-A it most likely was made as. `qrformats.Parse` then
 splits known payloads into fields. It looks at securPharm pack codes
 first, before any trimming, because their control characters (GS, RS,
 EOT) matter: GS1 (AIs 01/17/10/21/710) and IFA format 06 (9N/1T/D/S),
-with PZN, PPN and GTIN check digits verified.
+with PZN, PPN and GTIN check digits verified. The classic German pack
+barcode — Code 39 `-12345678` (PZN8) or `-1234567` (PZN7, shown as PZN8
+with a leading 0) — is recognised too; it carries only the PZN, no batch
+or expiry (for that text see github.com/hmsoft0815/mlc_expiry).
 
 ## GUI camera and region selection
 

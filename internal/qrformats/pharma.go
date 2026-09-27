@@ -175,3 +175,32 @@ func allDigits(s string) bool {
 	}
 	return s != ""
 }
+
+// parsePZNBarcode reads the classic German pack barcode: Code 39 with the
+// PZN behind a hyphen, "-12345678" (PZN8) or, on older packs, "-1234567"
+// (PZN7). Also accepted as printed: "PZN-12345678", "PZN 12345678". A PZN7
+// is the PZN8 with a leading 0 — the same check digit rule — and is shown
+// as such. Packs without the securPharm DataMatrix carry only this code:
+// no batch, no expiry.
+func parsePZNBarcode(t string) (Parsed, bool) {
+	s := strings.TrimSpace(t)
+	if len(s) >= 3 && strings.EqualFold(s[:3], "PZN") {
+		s = strings.TrimLeft(s[3:], " :")
+		if !strings.HasPrefix(s, "-") {
+			s = "-" + s
+		}
+	}
+	s = strings.ReplaceAll(s, " ", "")
+	if !strings.HasPrefix(s, "-") || !allDigits(s[1:]) || (len(s) != 8 && len(s) != 9) {
+		return Parsed{}, false
+	}
+	pzn := s[1:]
+	if len(pzn) == 7 {
+		pzn = "0" + pzn
+	}
+	return Parsed{Kind: "pharma", Fields: map[string]string{
+		"format":    "pzn",
+		"pzn":       pzn,
+		"pzn_valid": strconv.FormatBool(validPZN(pzn)),
+	}}, true
+}

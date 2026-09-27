@@ -56,3 +56,26 @@ func TestPZNAndPPNChecks(t *testing.T) {
 		t.Error("PPN check")
 	}
 }
+
+// The classic Code 39 pack barcode carries only the PZN.
+func TestParsePZNBarcode(t *testing.T) {
+	for _, c := range []struct {
+		text, pzn, valid string
+	}{
+		{"-00266040", "00266040", "true"}, // Ibu-ratiopharm 400 akut, 20 St
+		{"-0266040", "00266040", "true"},  // the same as PZN7
+		{"PZN-00266040", "00266040", "true"},
+		{"PZN 00266040", "00266040", "true"},
+		{"-00266041", "00266041", "false"},
+	} {
+		p := Parse(c.text)
+		if p.Kind != "pharma" || p.Fields["pzn"] != c.pzn || p.Fields["pzn_valid"] != c.valid || p.Fields["format"] != "pzn" {
+			t.Errorf("Parse(%q) = %s %v, want pzn %s valid %s", c.text, p.Kind, p.Fields, c.pzn, c.valid)
+		}
+	}
+	for _, text := range []string{"-123", "-123456789", "12345678", "-1234abcd", "Hallo"} {
+		if k := Parse(text).Kind; k == "pharma" {
+			t.Errorf("Parse(%q) is pharma", text)
+		}
+	}
+}

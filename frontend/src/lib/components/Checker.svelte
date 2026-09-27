@@ -8,6 +8,7 @@
   import { lang } from '../i18n/lang';
   import { t } from '../i18n/text/checker';
   import CodeDetails from './CodeDetails.svelte';
+  import PznLookup from './PznLookup.svelte';
   import { CameraScanner, cameraErrorText, cameraSupported, grab, insetGuide, FRAME_MAX_SIDE, type ScanHit } from '../scan/camera';
 
   // Tabs stay mounted; paste (Ctrl+V) is only taken while this one is shown.
@@ -338,6 +339,7 @@
                   </button>
                 </div>
                 <CodeDetails {code} lang={$lang} />
+                <div class="d-flex flex-wrap gap-2 mt-2"><PznLookup {code} /></div>
               </div>
             {/each}
           {:else if !busy}

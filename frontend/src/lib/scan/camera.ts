@@ -22,13 +22,18 @@ export interface ScanHit {
 }
 
 // Copies a rectangle of an image or video frame into a JPEG data URL, at
-// most FRAME_MAX_SIDE on the long side.
-export function grab(source: CanvasImageSource, r: Rect): string {
+// most FRAME_MAX_SIDE on the long side; mirror flips it left to right.
+export function grab(source: CanvasImageSource, r: Rect, mirror = false): string {
   const scale = Math.min(1, FRAME_MAX_SIDE / Math.max(r.w, r.h));
   const canvas = document.createElement('canvas');
   canvas.width = Math.max(1, Math.round(r.w * scale));
   canvas.height = Math.max(1, Math.round(r.h * scale));
-  canvas.getContext('2d')!.drawImage(source, r.x, r.y, r.w, r.h, 0, 0, canvas.width, canvas.height);
+  const ctx = canvas.getContext('2d')!;
+  if (mirror) {
+    ctx.translate(canvas.width, 0);
+    ctx.scale(-1, 1);
+  }
+  ctx.drawImage(source, r.x, r.y, r.w, r.h, 0, 0, canvas.width, canvas.height);
   return canvas.toDataURL('image/jpeg', 0.92);
 }
 
@@ -184,8 +189,13 @@ export class CameraScanner {
     if (!this.scanning || !video) return;
     const w = video.videoWidth, h = video.videoHeight;
     if (w > 0 && h > 0) {
-      const g = this.tick++ % 2 === 0 ? this.guide(video) : null;
-      const dataUrl = grab(video, g ?? { x: 0, y: 0, w, h });
+      const tick = this.tick++;
+      const g = tick % 2 === 0 ? this.guide(video) : null;
+      // Front camera: every third frame also mirrored. Whether a browser
+      // hands out the front camera's picture mirrored is not specified;
+      // a mirrored DataMatrix or QR code is not read.
+      const mirror = this.facingUser && tick % 3 === 2;
+      const dataUrl = grab(video, g ?? { x: 0, y: 0, w, h }, mirror);
       this.onAttempt();
       try {
         const result = await DecodeCameraFrame(dataUrl, this.surface(), this.family());

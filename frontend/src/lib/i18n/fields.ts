@@ -221,7 +221,10 @@ export function formatFieldValue(key: string, value: string | undefined, lang: L
   }
   if (key === 'expiry') return formatPackDate(value, true, lang);
   if (key === 'production_date') return formatPackDate(value, false, lang);
-  if (key === 'format') return value === 'ifa' ? 'IFA (PPN)' : value === 'gs1' ? 'GS1' : value;
+  if (key === 'format') {
+    if (value === 'pzn') return en ? 'PZN barcode (Code 39, no expiry)' : 'PZN-Strichcode (Code 39, ohne Verfall)';
+    return value === 'ifa' ? 'IFA (PPN)' : value === 'gs1' ? 'GS1' : value;
+  }
   if (value === 'true') return en ? 'yes' : 'ja';
   if (value === 'false') return en ? 'no' : 'nein';
   if (key === 'start' || key === 'end') return formatICalDate(value, lang);
