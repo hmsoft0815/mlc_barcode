@@ -37,9 +37,15 @@ tasks:
 
   build:frontend:
     desc: Build the Svelte TypeScript frontend
+    # run: once — several builds depend on this and Task runs deps in
+    # parallel. Twice at once, one Vite run emptied dist while the other
+    # build was embedding it: 1.7.10's release exe shipped without
+    # index.html ("fs.FS: no index.html found") while the debug exe worked.
+    run: once
     dir: frontend
     cmds:
       - pnpm run build
+      - test -s dist/index.html
 
   build:gui:
     desc: Build the Wails v3 desktop GUI for Linux
@@ -580,6 +586,11 @@ tasks:
     deps: [build:gui:windows, build:debug:windows]
     cmds:
       - mkdir -p {{.DROPZONE}}
+      # The embedded frontend must be complete: every exe carries its index.html.
+      - |
+        for f in {{.BIN_DIR}}/{{.GUI_BINARY}}-windows-amd64.exe {{.BIN_DIR}}/{{.GUI_BINARY}}-windows-amd64-debug.exe; do
+          grep -q -a '<title>MLC Barcode</title>' $f || { echo "$f: embedded index.html missing"; exit 1; }
+        done
       - cp {{.BIN_DIR}}/{{.GUI_BINARY}}-windows-amd64.exe {{.DROPZONE}}/{{.GUI_BINARY}}-{{.VERSION}}-windows-amd64.exe
       - cp {{.BIN_DIR}}/{{.GUI_BINARY}}-windows-amd64-debug.exe {{.DROPZONE}}/{{.GUI_BINARY}}-{{.VERSION}}-windows-amd64-debug.exe
       - ls -lh {{.DROPZONE}}/{{.GUI_BINARY}}-{{.VERSION}}-*
