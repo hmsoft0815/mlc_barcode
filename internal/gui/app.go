@@ -345,7 +345,7 @@ func (a *BarcodeApp) GenerateBatch(req BatchBarcodeRequest) (BatchBarcodeRespons
 // PickExportFolder opens a native folder selection dialog.
 func (a *BarcodeApp) PickExportFolder() (string, error) {
 	dialog := application.Get().Dialog.OpenFile()
-	dialog.SetMessage("Zielordner für Barcode-Dateien auswählen")
+	dialog.SetMessage(tr("exportFolder"))
 	dialog.CanChooseDirectories(true)
 	dialog.CanChooseFiles(false)
 
@@ -359,11 +359,11 @@ func (a *BarcodeApp) PickExportFolder() (string, error) {
 // ExportBatchToFolder exports generated batch barcodes into a target directory.
 func (a *BarcodeApp) ExportBatchToFolder(req BatchExportRequest) (BatchExportResponse, error) {
 	if req.FolderPath == "" {
-		return BatchExportResponse{Error: "Zielordner ist nicht angegeben"}, nil
+		return BatchExportResponse{Error: tr("noExportFolder")}, nil
 	}
 
 	if err := os.MkdirAll(req.FolderPath, 0755); err != nil {
-		return BatchExportResponse{Error: fmt.Sprintf("Ordner konnte nicht erstellt werden: %v", err)}, nil
+		return BatchExportResponse{Error: fmt.Sprintf(tr("cannotMakeDir"), err)}, nil
 	}
 
 	ext := ".png"
@@ -432,12 +432,12 @@ func (a *BarcodeApp) ExportBatchToFolder(req BatchExportRequest) (BatchExportRes
 // SaveSingleFile opens a native save-file dialog and writes the given SVG or PNG content.
 func (a *BarcodeApp) SaveSingleFile(req SaveSingleFileRequest) (string, error) {
 	dialog := application.Get().Dialog.SaveFile()
-	dialog.SetMessage("Barcode speichern unter...")
+	dialog.SetMessage(tr("saveTitle"))
 	if req.Format == "svg" {
-		dialog.AddFilter("SVG Vektorgrafik (*.svg)", "*.svg")
+		dialog.AddFilter(tr("filterSVG"), "*.svg")
 		dialog.SetFilename(req.DefaultName)
 	} else {
-		dialog.AddFilter("PNG Bild (*.png)", "*.png")
+		dialog.AddFilter(tr("filterPNG"), "*.png")
 		dialog.SetFilename(req.DefaultName)
 	}
 

@@ -1,0 +1,3 @@
+/* Texte der iOS-Berechtigungsdialoge (Deutsch). Englisch: ../en.lproj */
+"NSCameraUsageDescription" = "Die Kamera wird zum Scannen von Barcodes und QR-Codes verwendet.";
+"NSLocationWhenInUseUsageDescription" = "Der Standort wird nur übernommen, wenn Sie es antippen — für Orts- und Termin-Codes.";

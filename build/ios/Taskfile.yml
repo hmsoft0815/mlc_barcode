@@ -123,6 +123,9 @@ tasks:
       - mkdir -p "{{.BIN_DIR}}/{{.APP_NAME}}.app"
       - cp "{{.BIN_DIR}}/{{.APP_NAME | lower}}" "{{.BIN_DIR}}/{{.APP_NAME}}.app/"
       - cp build/ios/Info.plist "{{.BIN_DIR}}/{{.APP_NAME}}.app/"
+      # Permission texts per language (de/en): must be in the bundle before
+      # it is signed.
+      - cp -R build/ios/lproj/*.lproj "{{.BIN_DIR}}/{{.APP_NAME}}.app/"
       - |
         # Embed the provisioning profile for device builds when provided
         if [ "{{.IOS_PLATFORM}}" = "device" ] && [ -n "{{.PROVISIONING_PROFILE}}" ]; then

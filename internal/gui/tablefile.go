@@ -23,9 +23,9 @@ type TableFile struct {
 // means the user cancelled.
 func (a *BarcodeApp) PickTableFile() (TableFile, error) {
 	dialog := application.Get().Dialog.OpenFile()
-	dialog.SetMessage("Text- oder CSV-Datei auswählen")
-	dialog.AddFilter("Text & CSV Dateien (*.txt, *.csv)", "*.txt;*.csv")
-	dialog.AddFilter("Alle Dateien (*.*)", "*.*")
+	dialog.SetMessage(tr("tableTitle"))
+	dialog.AddFilter(tr("filterTable"), "*.txt;*.csv")
+	dialog.AddFilter(tr("filterAll"), "*.*")
 
 	path, err := dialog.PromptForSingleSelection()
 	if err != nil || path == "" {

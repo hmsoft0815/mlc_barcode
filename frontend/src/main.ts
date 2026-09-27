@@ -6,7 +6,14 @@ import { mount } from 'svelte';
 import App from './App.svelte';
 import MobileApp from './lib/mobile/MobileApp.svelte';
 import { openLink } from './lib/mobile/native';
-import { Platform } from '../bindings/github.com/mlcmcp/mlc_barcode/internal/gui/barcodeapp';
+import { Platform, SetLanguage } from '../bindings/github.com/mlcmcp/mlc_barcode/internal/gui/barcodeapp';
+import { lang } from './lib/i18n/lang';
+
+// The Go side words its native dialogs and a few messages itself.
+lang.subscribe((l) => {
+  document.documentElement.lang = l;
+  SetLanguage(l).catch(() => {});
+});
 
 // External links belong in the system browser. Inside Wails a target=_blank
 // link would open a second app window instead.

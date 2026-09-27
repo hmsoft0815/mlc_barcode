@@ -31,10 +31,19 @@
         <integer>1</integer>
         <integer>2</integer>
     </array>
+    <!-- Permission texts: English base here; the device language picks
+         lproj/<lang>.lproj/InfoPlist.strings (German and English). -->
+    <key>CFBundleDevelopmentRegion</key>
+    <string>en</string>
+    <key>CFBundleLocalizations</key>
+    <array>
+        <string>de</string>
+        <string>en</string>
+    </array>
     <key>NSLocationWhenInUseUsageDescription</key>
-    <string>Der Standort wird nur übernommen, wenn Sie es antippen — für Orts- und Termin-Codes.</string>
+    <string>Your location is only taken when you tap for it — for place and event codes.</string>
     <key>NSCameraUsageDescription</key>
-    <string>Die Kamera wird zum Scannen von Barcodes und QR-Codes verwendet.</string>
+    <string>The camera is used to scan barcodes and QR codes.</string>
     <key>UISupportedInterfaceOrientations</key>
     <array>
         <string>UIInterfaceOrientationPortrait</string>

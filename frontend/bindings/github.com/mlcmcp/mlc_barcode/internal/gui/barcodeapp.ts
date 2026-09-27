@@ -178,6 +178,14 @@ export function SaveSingleFile(req: $models.SaveSingleFileRequest): $Cancellable
 }
 
 /**
+ * SetLanguage tells the Go side the UI language ("de" or "en") for the
+ * native dialogs and the messages it words itself.
+ */
+export function SetLanguage(lang: string): $CancellablePromise<void> {
+    return $Call.ByID(2906272871, lang);
+}
+
+/**
  * SetTorch switches the camera light. It reports false where there is none.
  */
 export function SetTorch(on: boolean): $CancellablePromise<boolean> {
