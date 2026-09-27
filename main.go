@@ -68,7 +68,14 @@ func main() {
 		MinWidth:        minWidth,
 		MinHeight:       minHeight,
 		DevToolsEnabled: isDebugBuild(),
-		KeyBindings:     devtoolsKeyBindings(),
+		// Camera (scan view) and location ("use my position") for our own
+		// page without the webview asking on every start; WebView2 and
+		// WebKitGTK apply this, iOS gets camera_grant_ios.go.
+		Permissions: map[application.PermissionType]application.Permission{
+			application.PermissionCamera:      application.PermissionAllow,
+			application.PermissionGeolocation: application.PermissionAllow,
+		},
+		KeyBindings: devtoolsKeyBindings(),
 		Linux: application.LinuxWindow{
 			Icon: appIcon,
 		},
@@ -81,6 +88,7 @@ func main() {
 		URL:              url,
 	})
 
+	installCameraGrant()
 	if err := wailsApp.Run(); err != nil {
 		log.Fatal(err)
 	}
