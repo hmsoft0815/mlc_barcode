@@ -180,6 +180,17 @@ a second, and only when nothing else was read. A camera frame
 (`DecodeOptions.Live`, GUI `DecodeCameraFrame`) gets the 12 most likely
 guesses of the largest candidate; the next frame follows anyway.
 
+**Shape switch.** In the mobile scan view the user can say what the code
+sits on (`DecodeOptions.Surface`, left of the camera image): *auto*,
+*flat pack* (skips the bottle search), *bottle* — the code about half as
+wide as the bottle — or *tube* — the code wraps far around. In the image
+a code of width q times the bottle's covers s = 2·asin(q) of the
+circumference: q = ½ gives 60°, q ≈ ¾ about 100° (`surfaceSpan`). With a
+known curvature a camera frame tries every turn and tilt of it (15
+guesses) and reads what the full search of a still photo reads; without
+the hint a turned DataMatrix at 60° is missed in a frame
+(`TestDecodeSurfaceHint`).
+
 2D reader sets get the grey image as gozxing's planar luminance source
 (`binaryBitmap`) instead of the generic per-pixel conversion; the 1D
 readers keep the generic one, which can rotate for vertical codes.
@@ -212,7 +223,8 @@ as files.
 - **Live camera** (`getUserMedia`, rear camera preferred): one frame
   every 300 ms (`SCAN_INTERVAL_MS`), the next only after the decoder
   answered, so a slow device never builds a queue. Frames go through
-  `DecodeCameraFrame` (shorter bottle search, see above). Frames are sent as
+  `DecodeCameraFrame` (shorter bottle search, see above) together with
+  the shape switch (auto / flat / bottle / tube), remembered per device. Frames are sent as
   JPEG with at most 1600 px on the long side (`FRAME_MAX_SIDE`).
 - **Guide frame:** every other frame only the area inside the drawn
   guide frame (18 % inset, `GUIDE_INSET`, must match `.camera-frame`) is

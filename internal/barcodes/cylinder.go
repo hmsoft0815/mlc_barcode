@@ -45,15 +45,43 @@ var cylinderGuesses = func() []cylinderGuess {
 	return g
 }()
 
-func decodeCurved(img *image.Gray, fr frame, live bool) []Decoded {
-	budget := guessesPerCandidate
-	if live {
+// surfaceSpan is the curvature behind a Surface hint: q = ½ of the
+// bottle's width gives 2·asin(½) = 60°; a code wrapping a thin tube about
+// 100° (q ≈ ¾).
+var surfaceSpan = map[Surface]float64{SurfaceBottle: 60, SurfaceTube: 100}
+
+// surfaceGuesses are the turns and tilts of one known curvature, in the
+// order of cylinderGuesses.
+func surfaceGuesses(span float64) []cylinderGuess {
+	var g []cylinderGuess
+	for _, turn := range []float64{0, 20, -20, 35, -35} {
+		for _, tilt := range []float64{15, 0, -15} {
+			g = append(g, cylinderGuess{span, turn, tilt})
+		}
+	}
+	return g
+}
+
+func decodeCurved(img *image.Gray, fr frame, opts DecodeOptions) []Decoded {
+	guesses, budget := cylinderGuesses, guessesPerCandidate
+	if opts.Live {
 		budget = guessesPerCandidateLive
+	}
+	switch opts.Surface {
+	case SurfaceFlat:
+		return nil
+	case SurfaceBottle, SurfaceTube:
+		// The user knows the curvature: every turn and tilt of that one,
+		// which a camera frame can afford in full.
+		guesses = surfaceGuesses(surfaceSpan[opts.Surface])
+		if opts.Live {
+			budget = []int{len(guesses)}
+		}
 	}
 	boxes := matrixCandidates(img)
 	for i, box := range boxes[:min(len(boxes), len(budget))] {
 		win := box.Inset(-(max(box.Dx(), box.Dy())/3 + 8)).Intersect(img.Rect)
-		for _, g := range cylinderGuesses[:min(len(cylinderGuesses), budget[i])] {
+		for _, g := range guesses[:min(len(guesses), budget[i])] {
 			c := fitCylinder(box, win, g)
 			flat := c.unwrap(img)
 			if flat == nil {

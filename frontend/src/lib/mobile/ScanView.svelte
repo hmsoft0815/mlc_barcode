@@ -10,12 +10,53 @@
   import CodeResult from './CodeResult.svelte';
   import { addScan } from './history';
   import { haptic } from './native';
+  import SurfaceIcon from './SurfaceIcon.svelte';
+  import type { UIKey } from '../i18n/ui';
 
   export let active = false;
 
   let video: HTMLVideoElement;
   let frameEl: HTMLDivElement;
-  let scanner = new CameraScanner(onHit, coverGuide(() => frameEl?.getBoundingClientRect() ?? null), onAttempt);
+  // What the code sits on: narrows the decoder's search for codes on
+  // bottles and tubes (the user sees the curvature, the decoder guesses it).
+  type Surface = 'auto' | 'flat' | 'bottle' | 'tube';
+  const SURFACES: { id: Surface; label: UIKey }[] = [
+    { id: 'auto', label: 'surfaceAuto' },
+    { id: 'flat', label: 'surfaceFlat' },
+    { id: 'bottle', label: 'surfaceBottle' },
+    { id: 'tube', label: 'surfaceTube' },
+  ];
+  const SURFACE_KEY = 'mlc_surface';
+  let surface: Surface = (() => {
+    try {
+      const v = localStorage.getItem(SURFACE_KEY);
+      return SURFACES.some((x) => x.id === v) ? (v as Surface) : 'auto';
+    } catch {
+      return 'auto';
+    }
+  })();
+  let surfaceHint = '';
+  let surfaceHintTimer: ReturnType<typeof setTimeout> | undefined;
+
+  function setSurface(s: Surface) {
+    surface = s;
+    haptic('selection');
+    try {
+      localStorage.setItem(SURFACE_KEY, s);
+    } catch {
+      // not remembered; still used for this session
+    }
+    surfaceHint = $t(SURFACES.find((x) => x.id === s)!.label);
+    clearTimeout(surfaceHintTimer);
+    surfaceHintTimer = setTimeout(() => (surfaceHint = ''), 2200);
+  }
+
+  let scanner = new CameraScanner(
+    onHit,
+    coverGuide(() => frameEl?.getBoundingClientRect() ?? null),
+    onAttempt,
+    () => surface
+  );
   // Blinks once per frame the decoder looks at.
   let attempts = 0;
   function onAttempt() {
@@ -141,6 +182,25 @@
       {#if cameraSupported}
         <button class="btn btn-outline-light btn-sm" on:click={() => ((error = ''), start())}>{$t('retry')}</button>
       {/if}
+    </div>
+  {/if}
+
+  {#if running && codes.length === 0}
+    <div class="surfaces" role="radiogroup" aria-label={$t('surface')}>
+      {#each SURFACES as s}
+        <button
+          class="round small"
+          class:on={surface === s.id}
+          role="radio"
+          aria-checked={surface === s.id}
+          aria-label={$t(s.label)}
+          title={$t(s.label)}
+          on:click={() => setSurface(s.id)}
+        >
+          <SurfaceIcon kind={s.id} />
+        </button>
+      {/each}
+      {#if surfaceHint}<div class="surface-hint">{surfaceHint}</div>{/if}
     </div>
   {/if}
 
@@ -287,6 +347,36 @@
     background: rgba(0, 0, 0, 0.55);
     color: #fff;
     font-size: 1.2rem;
+  }
+  .surfaces {
+    position: absolute;
+    left: 0.75rem;
+    top: 50%;
+    transform: translateY(-50%);
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  .round.small {
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+  }
+  .surface-hint {
+    position: absolute;
+    left: 50px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: max-content;
+    max-width: 60vw;
+    background: rgba(0, 0, 0, 0.75);
+    color: #fff;
+    border-radius: 0.6rem;
+    padding: 0.4rem 0.7rem;
+    font-size: 0.8rem;
   }
   .round.on {
     background: var(--bs-primary);

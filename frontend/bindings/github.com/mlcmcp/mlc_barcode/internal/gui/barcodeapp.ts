@@ -24,10 +24,11 @@ export function CopyToClipboard(text: string): $CancellablePromise<boolean> {
 /**
  * DecodeCameraFrame is DecodeImage for a live camera frame: the next frame
  * follows a moment later, so the slow search for codes on bottles is cut
- * short (barcodes.DecodeOptions.Live).
+ * short (barcodes.DecodeOptions.Live). surface is the scan view's shape
+ * switch: "auto", "flat", "bottle" or "tube".
  */
-export function DecodeCameraFrame(imageBase64: string): $CancellablePromise<$models.DecodeImageResult> {
-    return $Call.ByID(2213658271, imageBase64);
+export function DecodeCameraFrame(imageBase64: string, surface: string): $CancellablePromise<$models.DecodeImageResult> {
+    return $Call.ByID(2213658271, imageBase64, surface);
 }
 
 /**

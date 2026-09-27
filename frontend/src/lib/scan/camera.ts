@@ -69,7 +69,10 @@ export class CameraScanner {
     private guide: (video: HTMLVideoElement) => Rect | null = () => null,
     // Called for every frame sent to the decoder, e.g. to show that
     // something is happening.
-    private onAttempt: () => void = () => {}
+    private onAttempt: () => void = () => {},
+    // What the code sits on ("auto", "flat", "bottle", "tube"): narrows the
+    // decoder's search for codes on curved surfaces.
+    private surface: () => string = () => 'auto'
   ) {}
 
   get running() {
@@ -182,7 +185,7 @@ export class CameraScanner {
       const dataUrl = grab(video, g ?? { x: 0, y: 0, w, h });
       this.onAttempt();
       try {
-        const result = await DecodeCameraFrame(dataUrl);
+        const result = await DecodeCameraFrame(dataUrl, this.surface());
         if (this.scanning && result.success && (result.codes?.length ?? 0) > 0) {
           this.pause();
           this.onHit({ dataUrl, result, guide: g !== null });

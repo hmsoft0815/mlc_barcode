@@ -29,6 +29,35 @@ type DecodeOptions struct {
 	// the expensive search for codes on bottles (decodeCurved) is cut to
 	// the most likely shapes of the largest candidate.
 	Live bool
+	// Surface is what the user said the code sits on (the scan view's
+	// shape switch); SurfaceAuto guesses.
+	Surface Surface
+}
+
+// Surface is a hint for the shape under the code. On a bottle the user
+// can judge how wide the code is compared with the bottle, q; the code
+// then covers s = 2·asin(q) of the circumference (q = ½ → 60°).
+type Surface int
+
+const (
+	SurfaceAuto   Surface = iota
+	SurfaceFlat           // a box or label: no search for curved codes
+	SurfaceBottle         // the code covers about half the bottle's width (60°)
+	SurfaceTube           // the code wraps far around a thin tube (about 100°)
+)
+
+// ParseSurface maps "auto", "flat", "bottle", "tube" to a Surface; anything
+// else is SurfaceAuto.
+func ParseSurface(s string) Surface {
+	switch s {
+	case "flat":
+		return SurfaceFlat
+	case "bottle":
+		return SurfaceBottle
+	case "tube":
+		return SurfaceTube
+	}
+	return SurfaceAuto
 }
 
 // Decode finds every barcode in img, all ten symbologies we generate
@@ -64,7 +93,7 @@ func DecodeWith(img image.Image, opts DecodeOptions) ([]Decoded, error) {
 	if found := decodeOnce(invert(padded), pf, allReaders); len(found) > 0 {
 		return found, nil
 	}
-	if found := decodeCurved(work, wf, opts.Live); len(found) > 0 {
+	if found := decodeCurved(work, wf, opts); len(found) > 0 {
 		return found, nil
 	}
 	if work != gray {

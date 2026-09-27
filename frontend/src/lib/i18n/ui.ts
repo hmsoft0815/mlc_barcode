@@ -26,6 +26,11 @@ const de = {
   foundOne: 'Code gefunden',
   foundMany: '{n} Codes gefunden',
   scanAgain: 'Weiter scannen',
+  surface: 'Worauf sitzt der Code?',
+  surfaceAuto: 'Automatisch',
+  surfaceFlat: 'Flache Packung',
+  surfaceBottle: 'Flasche — Code etwa halb so breit wie die Flasche',
+  surfaceTube: 'Tube — Code läuft weit um die Rundung',
 
   // result
   open: 'Öffnen',
@@ -109,6 +114,11 @@ const en: Record<UIKey, string> = {
   foundOne: 'Code found',
   foundMany: '{n} codes found',
   scanAgain: 'Scan again',
+  surface: 'What is the code on?',
+  surfaceAuto: 'Automatic',
+  surfaceFlat: 'Flat pack',
+  surfaceBottle: 'Bottle — code about half as wide as the bottle',
+  surfaceTube: 'Tube — code wraps far around',
 
   open: 'Open',
   copy: 'Copy',
