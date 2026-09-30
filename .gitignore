@@ -40,3 +40,6 @@ Thumbs.db
 
 # Windows resources, generated per build (task generate:syso:windows)
 *.syso
+
+# lokale MCP-Konfiguration (dochub-cli agent-rules)
+.mcp.json
