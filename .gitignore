@@ -43,3 +43,7 @@ Thumbs.db
 
 # lokale MCP-Konfiguration (dochub-cli agent-rules)
 .mcp.json
+
+# private Klone (dochub-cli mlcai attach) — nicht Teil dieses Repos
+/.mlcai/
+/mlcprodweb/
