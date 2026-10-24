@@ -22,6 +22,8 @@ The `mcp-barcode-server` provides a Model Context Protocol (MCP) interface for L
 
 ## Available Tools
 
+Every tool, prompt and parameter exactly as a client receives it: **[MCP reference](mcp-tools.md)** (generated from the server; `task docs:mcp`).
+
 All tools share common optional parameters for formatting:
 - `format`: `svg` (default) or `png`.
 - `width` / `height`: Optional dimensions.
@@ -108,7 +110,7 @@ Only on the current transports (stdio, Streamable HTTP `/mcp`); the legacy SSE e
 
 ## Compliance
 
-Checked with [mlc mcp-tester](https://github.com/hmsoft0815/mlc_mcptester) against spec 2026-07-28: `task test:mcp`.
+Checked with [mlc mcp-tester](https://github.com/hmsoft0815/mlc_mcptester) against spec 2026-07-28: `task test:mcp` — which also fails when [mcp-tools.md](mcp-tools.md) no longer matches the server.
 
 ## Dependency: MLC Artifact Server
 

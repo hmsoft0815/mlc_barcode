@@ -47,17 +47,17 @@ func registerWifiTools(s *mcp.Server) {
 
 func registerVCardTools(s *mcp.Server) {
 	props := getCommonProperties()
-	props["first_name"] = map[string]any{"type": "string"}
-	props["last_name"] = map[string]any{"type": "string"}
+	props["first_name"] = map[string]any{"type": "string", "description": "Given name"}
+	props["last_name"] = map[string]any{"type": "string", "description": "Family name"}
 	props["org"] = map[string]any{"type": "string", "description": "Organization"}
-	props["title"] = map[string]any{"type": "string"}
-	props["phone"] = map[string]any{"type": "string"}
-	props["email"] = map[string]any{"type": "string"}
-	props["address"] = map[string]any{"type": "string"}
-	props["city"] = map[string]any{"type": "string"}
-	props["zip"] = map[string]any{"type": "string"}
-	props["country"] = map[string]any{"type": "string"}
-	props["url"] = map[string]any{"type": "string"}
+	props["title"] = map[string]any{"type": "string", "description": "Job title, e.g. \"Head of Sales\""}
+	props["phone"] = map[string]any{"type": "string", "description": "Phone number, international format preferred (e.g. +49 89 1234567)"}
+	props["email"] = map[string]any{"type": "string", "description": "E-mail address"}
+	props["address"] = map[string]any{"type": "string", "description": "Street and house number"}
+	props["city"] = map[string]any{"type": "string", "description": "City"}
+	props["zip"] = map[string]any{"type": "string", "description": "Postal code"}
+	props["country"] = map[string]any{"type": "string", "description": "Country, e.g. Germany"}
+	props["url"] = map[string]any{"type": "string", "description": "Website, e.g. https://example.com"}
 
 	addBarcodeTool(s, &mcp.Tool{
 		Name:        "generate_vcard_qr",
@@ -90,13 +90,13 @@ func registerVCardTools(s *mcp.Server) {
 func registerVCalendarTools(s *mcp.Server) {
 	props := getCommonProperties()
 	props["summary"] = map[string]any{"type": "string", "description": "Event title"}
-	props["description"] = map[string]any{"type": "string"}
-	props["location"] = map[string]any{"type": "string"}
+	props["description"] = map[string]any{"type": "string", "description": "Details shown with the event (agenda, dial-in, notes)"}
+	props["location"] = map[string]any{"type": "string", "description": "Where it takes place, as text (address or room)"}
 	props["start_time"] = map[string]any{"type": "string", "description": "YYYYMMDDTHHMMSS(Z), or YYYYMMDD for an all-day event"}
 	props["end_time"] = map[string]any{"type": "string", "description": "YYYYMMDDTHHMMSS(Z); for an all-day event YYYYMMDD of the day after the last day"}
 	props["timezone"] = map[string]any{"type": "string", "description": "e.g. Europe/Berlin"}
-	props["latitude"] = map[string]any{"type": "number"}
-	props["longitude"] = map[string]any{"type": "number"}
+	props["latitude"] = map[string]any{"type": "number", "description": "Latitude of the venue in decimal degrees (with longitude; lets calendars show a map)"}
+	props["longitude"] = map[string]any{"type": "number", "description": "Longitude of the venue in decimal degrees (with latitude)"}
 	props["organizer"] = map[string]any{"type": "string", "description": "Who invites, as it should be shown, e.g. \"Lechner, Michael\""}
 	props["organizer_email"] = map[string]any{"type": "string", "description": "E-mail address of the organizer"}
 

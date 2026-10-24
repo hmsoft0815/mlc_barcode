@@ -457,7 +457,20 @@ tasks:
       - '{{.MCP_TESTER}} prompts get product_labels -c "{{.SERVER}}" -a ''{"items":"4006381333931;Schraube M4"}'' > /dev/null'
       - '{{.MCP_TESTER}} skills -c "{{.SERVER}}" --verify > {{.BIN_DIR}}/mcpskills.log 2>&1 || (cat {{.BIN_DIR}}/mcpskills.log; exit 1)'
       - bash tests/mcp/http-check.sh "{{.MCP_TESTER}}" "{{.SERVER}}" {{.BIN_DIR}}
+      # The tool reference must match what the server offers (task docs:mcp).
+      - '{{.MCP_TESTER}} docs -c "{{.SERVER}}" --check docs/mcp-tools.md'
       - echo "✓ MCP compliance OK"
+
+  docs:mcp:
+    desc: Regenerate docs/mcp-tools.md — the MCP tool, prompt and resource reference, read from the server by mcp-tester
+    vars:
+      MCP_TESTER:
+        sh: test -x ../mlc_mcptester/bin/mcp-tester && echo ../mlc_mcptester/bin/mcp-tester || command -v mcp-tester
+      SERVER: "{{.BIN_DIR}}/{{.SERVER_BINARY}}-mcptest"
+    cmds:
+      - mkdir -p {{.BIN_DIR}}
+      - go build -ldflags "{{.LDFLAGS}}" -o {{.SERVER}} ./cmd/mcp-server
+      - '{{.MCP_TESTER}} docs -c "{{.SERVER}}" -o docs/mcp-tools.md'
 
   test:scan:
     desc: Scan test — generate every symbology with the CLI and decode it with zxing-cpp
