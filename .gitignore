@@ -19,6 +19,7 @@ frontend/dist/
 !showcase/assets/*.svg
 !build/appicon.png
 !build/darwin/*.png
+!docs/mcp-tools-logo.png
 !build/android/app/src/main/res/mipmap-*/*.png
 
 # Reports

@@ -22,7 +22,7 @@ The `mcp-barcode-server` provides a Model Context Protocol (MCP) interface for L
 
 ## Available Tools
 
-Every tool, prompt and parameter exactly as a client receives it: **[MCP reference](mcp-tools.md)** (generated from the server; `task docs:mcp`).
+Every tool, prompt and parameter exactly as a client receives it: **[MCP reference](mcp-tools.md)** ([PDF](mcp-tools.pdf); generated from the server with `task docs:mcp`).
 
 All tools share common optional parameters for formatting:
 - `format`: `svg` (default) or `png`.
