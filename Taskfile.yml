@@ -5,6 +5,7 @@ includes:
   darwin: ./build/darwin/Taskfile.yml
   windows: ./build/windows/Taskfile.yml
   linux: ./build/linux/Taskfile.yml
+  android: ./build/android/Taskfile.yml
 
 vars:
   APP_NAME: mlc-barcode
@@ -606,6 +607,22 @@ tasks:
       - cp {{.BIN_DIR}}/{{.GUI_BINARY}}-windows-amd64-ipad.exe {{.DROPZONE}}/{{.GUI_BINARY}}-{{.VERSION}}-windows-amd64-ipad.exe
       - ls -lh {{.DROPZONE}}/{{.GUI_BINARY}}-{{.VERSION}}-*
 
+  dropzone:android:
+    desc: "Android test APK (arm64 devices + x86_64 emulator) and the Android Studio project → {{.DROPZONE}}, version in the file name"
+    # Debug-signed: installs on any device or emulator for testing, not for
+    # the Play Store. The project zip carries the prebuilt Go libraries, so
+    # Android Studio on Windows can open, run and debug it without the NDK.
+    deps: [android:package:fat]
+    cmds:
+      - mkdir -p {{.DROPZONE}}
+      - cp {{.BIN_DIR}}/{{.APP_NAME}}.apk {{.DROPZONE}}/{{.APP_NAME}}-{{.VERSION}}-android.apk
+      - |
+        rm -f {{.DROPZONE}}/{{.APP_NAME}}-{{.VERSION}}-android-studio.zip
+        # build/android plus VERSION beside build/ — app/build.gradle reads ../../VERSION.
+        zip -qr {{.DROPZONE}}/{{.APP_NAME}}-{{.VERSION}}-android-studio.zip build/android VERSION \
+          -x 'build/android/.gradle/*' 'build/android/app/build/*' 'build/android/build/*' 'build/android/local.properties' 'build/android/gen/*' 'build/android/overlay.json'
+      - ls -lh {{.DROPZONE}}/{{.APP_NAME}}-{{.VERSION}}-android*
+
   dev:deploy:
     desc: "Alias for deploy:dropzone"
     cmds:
@@ -616,10 +633,18 @@ tasks:
     # build:macos:remote gehoert dazu: die Produktseite verlinkt das .dmg, also
     # muss es mit hoch. Ist der Mac aus, soll deploy laut scheitern statt einen
     # toten Link zu veroeffentlichen.
-    deps: [build:all, build:macos:remote]
+    #
+    # Die Android-APK geht als mlc-barcode-android.apk mit (Link auf der
+    # Produktseite). Sie muss mit dem eigenen Schluessel signiert sein: eine
+    # debug-signierte APK laesst sich spaeter nicht per Update ersetzen.
+    deps: [build:all, build:macos:remote, android:package:fat]
+    preconditions:
+      - sh: '[ -n "$ANDROID_KEYSTORE_FILE" ] && [ -f "$ANDROID_KEYSTORE_FILE" ]'
+        msg: "ANDROID_KEYSTORE_FILE fehlt — die APK wuerde debug-signiert veroeffentlicht (siehe build/android/Taskfile.yml, assemble:apk:release)"
     cmds:
       - |
         set -e
+        cp {{.BIN_DIR}}/{{.APP_NAME}}.apk {{.BIN_DIR}}/{{.APP_NAME}}-android.apk
         ssh -o BatchMode=yes {{.VPS_HOST}} "mkdir -p {{.VPS_DIR}}"
         rsync -az --timeout=30 -e 'ssh -o BatchMode=yes -o ConnectTimeout=10' \
           {{.BIN_DIR}}/{{.CLI_BINARY}}-linux-amd64 \
@@ -637,5 +662,6 @@ tasks:
           {{.BIN_DIR}}/mlc-barcode-{{.VERSION}}-macos-arm64.tar.gz \
           {{.BIN_DIR}}/mlc-barcode-{{.VERSION}}-macos-amd64.tar.gz \
           {{.BIN_DIR}}/mlc-barcode-{{.VERSION}}.dmg \
+          {{.BIN_DIR}}/{{.APP_NAME}}-android.apk \
           {{.VPS_HOST}}:{{.VPS_DIR}}/
         echo "✓ https://mlcgo.eu/downloads/mlc-barcode/"

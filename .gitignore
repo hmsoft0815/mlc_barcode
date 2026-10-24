@@ -19,6 +19,7 @@ frontend/dist/
 !showcase/assets/*.svg
 !build/appicon.png
 !build/darwin/*.png
+!build/android/app/src/main/res/mipmap-*/*.png
 
 # Reports
 reports/
@@ -38,6 +39,15 @@ go.work.sum
 .DS_Store
 Thumbs.db
 
+# Android: Go library and overlay, generated per build (task android:build)
+build/android/app/src/main/jniLibs/
+build/android/overlay.json
+build/android/gen/
+build/android/app/build/
+build/android/.gradle/
+build/android/build/
+build/android/local.properties
+
 # Windows resources, generated per build (task generate:syso:windows)
 *.syso
 
@@ -47,3 +57,6 @@ Thumbs.db
 # private Klone (dochub-cli mlcai attach) — nicht Teil dieses Repos
 /.mlcai/
 /mlcprodweb/
+
+# Task checksum cache
+.task/

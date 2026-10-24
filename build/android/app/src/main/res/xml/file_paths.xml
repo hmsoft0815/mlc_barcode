@@ -3,4 +3,6 @@
     <!-- Camera captures are written here and shared with the camera app via the
          FileProvider. -->
     <cache-path name="captures" path="captures/" />
+    <!-- Created codes shared as pictures (MlcNative.shareImage). -->
+    <cache-path name="shared" path="shared/" />
 </paths>

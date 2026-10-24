@@ -22,6 +22,10 @@ import android.provider.MediaStore;
 import android.provider.OpenableColumns;
 import android.util.Base64;
 import android.util.Log;
+import android.view.View;
+import android.webkit.GeolocationPermissions;
+import android.webkit.PermissionRequest;
+import android.webkit.WebChromeClient;
 import android.webkit.WebResourceRequest;
 import android.webkit.WebResourceResponse;
 import android.webkit.WebSettings;
@@ -31,6 +35,11 @@ import android.webkit.WebViewClient;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.FileProvider;
+import androidx.core.graphics.Insets;
+import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowCompat;
+import androidx.core.view.WindowInsetsCompat;
+import androidx.core.view.WindowInsetsControllerCompat;
 import androidx.webkit.WebViewAssetLoader;
 
 import org.json.JSONObject;
@@ -71,6 +80,16 @@ public class MainActivity extends AppCompatActivity {
     private File pendingCaptureFile;
     private boolean pendingCaptureIsVideo;
 
+    // getUserMedia (scan view) and navigator.geolocation in the page: the
+    // WebView denies both unless a WebChromeClient grants them, and it may
+    // only grant what the app itself holds — so ask for the runtime
+    // permission first and answer the page afterwards.
+    private static final int WEB_CAMERA_PERMISSION_REQUEST = 7020;
+    private static final int WEB_LOCATION_PERMISSION_REQUEST = 7021;
+    private PermissionRequest pendingWebPermission;
+    private GeolocationPermissions.Callback pendingGeoCallback;
+    private String pendingGeoOrigin;
+
     // System-event sources (battery/power, screen lock, network). Registered in
     // onCreate, torn down in onDestroy. Each forwards a "system:*" event to JS
     // via the bridge.
@@ -84,6 +103,7 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        applySystemBarInsets();
 
         // Initialize the native Go library
         bridge = new WailsBridge(this);
@@ -94,6 +114,29 @@ public class MainActivity extends AppCompatActivity {
 
         // Load the application
         loadApplication();
+    }
+
+    /**
+     * Keep the page clear of the status bar, navigation bar, display cutout
+     * and keyboard. From targetSdk 35 Android draws the app edge to edge and
+     * ignores statusBarColor, and the WebView reports 0 for
+     * env(safe-area-inset-*) — the headings ended up under the status bar.
+     * Padding the container instead lets the dark window background show
+     * behind the bars, with light icons on it.
+     */
+    private void applySystemBarInsets() {
+        View container = findViewById(R.id.main_container);
+        ViewCompat.setOnApplyWindowInsetsListener(container, (v, insets) -> {
+            Insets bars = insets.getInsets(
+                    WindowInsetsCompat.Type.systemBars() | WindowInsetsCompat.Type.displayCutout());
+            Insets ime = insets.getInsets(WindowInsetsCompat.Type.ime());
+            v.setPadding(bars.left, bars.top, bars.right, Math.max(bars.bottom, ime.bottom));
+            return WindowInsetsCompat.CONSUMED;
+        });
+        WindowInsetsControllerCompat bars =
+                WindowCompat.getInsetsController(getWindow(), getWindow().getDecorView());
+        bars.setAppearanceLightStatusBars(false);
+        bars.setAppearanceLightNavigationBars(false);
     }
 
     @SuppressLint("SetJavaScriptEnabled")
@@ -195,8 +238,59 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+        webView.setWebChromeClient(new WebChromeClient() {
+            @Override
+            public void onPermissionRequest(final PermissionRequest request) {
+                // Only our own page, and only the camera.
+                Uri origin = request.getOrigin();
+                boolean ours = origin != null && WAILS_HOST.equals(origin.getHost());
+                boolean wantsCamera = false;
+                for (String r : request.getResources()) {
+                    if (PermissionRequest.RESOURCE_VIDEO_CAPTURE.equals(r)) wantsCamera = true;
+                }
+                if (!ours || !wantsCamera) {
+                    request.deny();
+                    return;
+                }
+                if (checkSelfPermission("android.permission.CAMERA") == PackageManager.PERMISSION_GRANTED) {
+                    request.grant(new String[]{PermissionRequest.RESOURCE_VIDEO_CAPTURE});
+                    return;
+                }
+                if (pendingWebPermission != null) pendingWebPermission.deny();
+                pendingWebPermission = request;
+                requestPermissions(new String[]{"android.permission.CAMERA"}, WEB_CAMERA_PERMISSION_REQUEST);
+            }
+
+            @Override
+            public void onPermissionRequestCanceled(PermissionRequest request) {
+                if (request == pendingWebPermission) pendingWebPermission = null;
+            }
+
+            @Override
+            public void onGeolocationPermissionsShowPrompt(String origin, GeolocationPermissions.Callback callback) {
+                Uri uri = origin != null ? Uri.parse(origin) : null;
+                if (uri == null || !WAILS_HOST.equals(uri.getHost())) {
+                    callback.invoke(origin, false, false);
+                    return;
+                }
+                if (checkSelfPermission("android.permission.ACCESS_FINE_LOCATION") == PackageManager.PERMISSION_GRANTED
+                        || checkSelfPermission("android.permission.ACCESS_COARSE_LOCATION") == PackageManager.PERMISSION_GRANTED) {
+                    callback.invoke(origin, true, false);
+                    return;
+                }
+                if (pendingGeoCallback != null) pendingGeoCallback.invoke(pendingGeoOrigin, false, false);
+                pendingGeoCallback = callback;
+                pendingGeoOrigin = origin;
+                requestPermissions(new String[]{
+                        "android.permission.ACCESS_FINE_LOCATION",
+                        "android.permission.ACCESS_COARSE_LOCATION"}, WEB_LOCATION_PERMISSION_REQUEST);
+            }
+        });
+
         // Add JavaScript interface for Go communication
         webView.addJavascriptInterface(new WailsJSBridge(bridge, webView), "wails");
+        // Save and share created codes as pictures (see MlcNative).
+        webView.addJavascriptInterface(new MlcNative(this), "mlcNative");
     }
 
     private void loadApplication() {
@@ -240,6 +334,28 @@ public class MainActivity extends AppCompatActivity {
     @Override
     public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode == WEB_CAMERA_PERMISSION_REQUEST) {
+            PermissionRequest request = pendingWebPermission;
+            pendingWebPermission = null;
+            if (request != null) {
+                if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    request.grant(new String[]{PermissionRequest.RESOURCE_VIDEO_CAPTURE});
+                } else {
+                    request.deny();
+                }
+            }
+            return;
+        }
+        if (requestCode == WEB_LOCATION_PERMISSION_REQUEST) {
+            GeolocationPermissions.Callback callback = pendingGeoCallback;
+            pendingGeoCallback = null;
+            if (callback != null) {
+                boolean granted = false;
+                for (int g : grantResults) granted |= g == PackageManager.PERMISSION_GRANTED;
+                callback.invoke(pendingGeoOrigin, granted, false);
+            }
+            return;
+        }
         if (requestCode == CAMERA_PERMISSION_REQUEST) {
             if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                 launchCameraCapture(pendingCaptureIsVideo);

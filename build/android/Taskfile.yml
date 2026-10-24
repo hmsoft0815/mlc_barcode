@@ -4,7 +4,7 @@ includes:
   common: ../Taskfile.yml
 
 vars:
-  APP_ID: '{{.APP_ID | default "com.wails.app"}}'
+  APP_ID: '{{.APP_ID | default "eu.mlcgo.mlcbarcode"}}'
   MIN_SDK: '21'
   TARGET_SDK: '35'
   # The emulator runs the host architecture; physical devices are arm64
@@ -40,19 +40,19 @@ tasks:
     deps:
       - task: common:go:mod:tidy
       - task: generate:android:overlay
-      - task: common:build:frontend
-        vars:
-          BUILD_FLAGS:
-            ref: .BUILD_FLAGS
-          PRODUCTION:
-            ref: .PRODUCTION
+      # The project's own frontend build (root Taskfile): committed bindings,
+      # pnpm, and the check that dist/index.html exists.
+      - task: :build:frontend
     cmds:
       - echo "Building Android app {{.APP_NAME}}..."
       - task: compile:go:shared
         vars:
           ARCH: '{{.ARCH | default .HOST_ARCH}}'
+          # Without it compile:go:shared falls back to its debug flags and the
+          # "release" APK carries an unstripped debug library.
+          PRODUCTION: '{{.PRODUCTION | default "false"}}'
     vars:
-      BUILD_FLAGS: '{{if eq .PRODUCTION "true"}}-tags production,android -trimpath -buildvcs=false -ldflags="-w -s"{{else}}-tags android,debug -buildvcs=false -gcflags=all="-l"{{end}}'
+      BUILD_FLAGS: '{{if eq .PRODUCTION "true"}}-tags production,android -trimpath -buildvcs=false -ldflags="-w -s {{.LDFLAGS}}"{{else}}-tags android,debug -buildvcs=false -gcflags=all="-l" -ldflags="{{.LDFLAGS}}"{{end}}'
     env:
       PRODUCTION: '{{.PRODUCTION | default "false"}}'
 
@@ -76,6 +76,7 @@ tasks:
         case "$(uname -s)" in
           Darwin) HOST_TAG="darwin-x86_64" ;;
           Linux)  HOST_TAG="linux-x86_64" ;;
+          MINGW*|MSYS*|CYGWIN*) HOST_TAG="windows-x86_64" ;;  # Git Bash on Windows
           *)      echo "Unsupported host OS"; exit 1 ;;
         esac
 
@@ -110,7 +111,7 @@ tasks:
         go build -buildmode=c-shared -overlay build/android/overlay.json {{.BUILD_FLAGS}} \
           -o build/android/app/src/main/jniLibs/$JNI_DIR/libwails.so
     vars:
-      BUILD_FLAGS: '{{if eq .PRODUCTION "true"}}-tags production,android -trimpath -buildvcs=false -ldflags="-w -s"{{else}}-tags android,debug -buildvcs=false -gcflags=all="-l"{{end}}'
+      BUILD_FLAGS: '{{if eq .PRODUCTION "true"}}-tags production,android -trimpath -buildvcs=false -ldflags="-w -s {{.LDFLAGS}}"{{else}}-tags android,debug -buildvcs=false -gcflags=all="-l" -ldflags="{{.LDFLAGS}}"{{end}}'
 
   compile:go:all-archs:
     summary: Compile Go code for all Android architectures (fat APK)

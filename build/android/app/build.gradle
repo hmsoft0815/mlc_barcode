@@ -2,7 +2,14 @@ plugins {
     id 'com.android.application'
 }
 
+// Version from the repository's VERSION file, like the desktop builds.
+// versionCode must grow with every release: 1.7.21 -> 10721.
+def appVersion = rootProject.file('../../VERSION').text.trim()
+def (vMajor, vMinor, vPatch) = appVersion.tokenize('.').collect { it as int }
+
 android {
+    // The Java package stays com.wails.app (the Go side calls into it by that
+    // name); the installed app is identified by applicationId.
     namespace 'com.wails.app'
     compileSdk 35
 
@@ -11,11 +18,11 @@ android {
     }
 
     defaultConfig {
-        applicationId "com.wails.app"
+        applicationId "eu.mlcgo.mlcbarcode"
         minSdk 21
         targetSdk 35
-        versionCode 1
-        versionName "1.0"
+        versionCode vMajor * 10000 + vMinor * 100 + vPatch
+        versionName appVersion
 
         // Configure supported ABIs
         ndk {
