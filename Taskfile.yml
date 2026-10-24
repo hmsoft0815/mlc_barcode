@@ -1,5 +1,11 @@
 version: '3'
 
+# Android release signing and toolchain (ANDROID_KEYSTORE_*, ANDROID_HOME,
+# JAVA_HOME) — outside the repo, only on the build machine; ignored where
+# the file does not exist. Without it APKs are debug-signed and deploy
+# refuses to publish one.
+dotenv: ['{{.HOME}}/.android-keys/mlc-barcode-release.env']
+
 includes:
   common: ./build/Taskfile.yml
   darwin: ./build/darwin/Taskfile.yml
