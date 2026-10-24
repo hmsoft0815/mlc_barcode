@@ -11,6 +11,10 @@ import { UI_TEXT } from '../i18n/ui';
 export const SCAN_INTERVAL_MS = 300;
 export const FRAME_MAX_SIDE = 1600;
 
+// A transparent poster for the camera <video>: without one the Android
+// WebView shows its large default video icon until the first frame.
+export const NO_POSTER = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
+
 export const cameraSupported = typeof navigator !== 'undefined' && !!navigator.mediaDevices?.getUserMedia;
 
 export type Rect = { x: number; y: number; w: number; h: number };

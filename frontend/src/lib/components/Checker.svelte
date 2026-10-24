@@ -9,7 +9,7 @@
   import { t } from '../i18n/text/checker';
   import CodeDetails from './CodeDetails.svelte';
   import PznLookup from './PznLookup.svelte';
-  import { CameraScanner, cameraErrorText, cameraSupported, grab, insetGuide, FRAME_MAX_SIDE, type ScanHit } from '../scan/camera';
+  import { CameraScanner, cameraErrorText, cameraSupported, grab, insetGuide, FRAME_MAX_SIDE, NO_POSTER, type ScanHit } from '../scan/camera';
 
   // Tabs stay mounted; paste (Ctrl+V) is only taken while this one is shown.
   export let active = false;
@@ -211,7 +211,7 @@
             {#if cameraOn}
               <div class="camera">
                 <!-- svelte-ignore a11y-media-has-caption -->
-                <video bind:this={video} class:mirrored={scanner.facingUser} autoplay playsinline muted disablepictureinpicture></video>
+                <video bind:this={video} class:mirrored={scanner.facingUser} poster={NO_POSTER} autoplay playsinline muted disablepictureinpicture></video>
                 <div class="camera-frame" aria-hidden="true"></div>
               </div>
               <div class="small text-body-secondary mt-2">

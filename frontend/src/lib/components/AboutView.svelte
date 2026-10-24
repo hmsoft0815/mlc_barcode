@@ -55,6 +55,11 @@ ${$t('mcpComment2')}
           <i class="bi bi-globe me-1"></i> {$t('productPage')}
         </a>
       </div>
+      <p class="small text-body-secondary mt-3 mb-0">
+        {$t('sponsoredBy')}
+        <a href="https://www.hmsoftware.com" target="_blank" rel="noreferrer" class="text-decoration-none">H&amp;M Software-Netzwerktechnik-GmbH</a>
+        (www.hmsoftware.com)
+      </p>
     </div>
   </div>
 

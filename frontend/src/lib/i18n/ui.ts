@@ -96,19 +96,24 @@ const de = {
   tapToClose: 'Antippen zum Schließen',
   copyContent: 'Inhalt kopieren',
   contentCopied: 'Inhalt kopiert',
+  saveImage: 'Als Bild speichern',
+  imageSaved: 'Bild gespeichert',
+  imageSavedGallery: 'Gespeichert in Bilder › MLC Barcode',
+  imageSaveFailed: 'Speichern nicht möglich — bitte über „Teilen“',
   contentCopiedNoShare: 'Inhalt kopiert (Teilen nicht verfügbar)',
 
   // about
   aboutText:
     'Barcodes und QR-Codes scannen und erzeugen — Arzneimittel mit Verfallsdatum, GiroCodes, WLAN, Kontakte, Tickets und Pakete. Alles wird auf diesem Gerät gelesen, nichts wird hochgeladen.',
   productPage: 'Produktseite auf mlcgo.eu',
+  sponsoredBy: 'Gesponsert von',
   sourceCode: 'Quellcode auf GitHub',
   desktopUI: 'Desktop-Oberfläche verwenden',
   language: 'Sprache',
-  license: 'Lizenz',
+  openSourceLicenses: 'Open-Source-Lizenzen',
   licenseSummary:
     '© 2026 Michael Lechner. Open Source unter der MIT-Lizenz mit Namensnennung: frei nutzbar, auch kommerziell, solange MLC Barcode als Quelle genannt wird.',
-  licenseText: 'Lizenztext',
+  licenseText: 'Lizenz von MLC Barcode',
   thirdParty: 'Verwendete Open-Source-Komponenten',
 };
 
@@ -202,18 +207,23 @@ const en: Record<UIKey, string> = {
   tapToClose: 'Tap to close',
   copyContent: 'Copy content',
   contentCopied: 'Content copied',
+  saveImage: 'Save as image',
+  imageSaved: 'Image saved',
+  imageSavedGallery: 'Saved to Pictures › MLC Barcode',
+  imageSaveFailed: 'Could not save — please use “Share”',
   contentCopiedNoShare: 'Content copied (sharing not available)',
 
   aboutText:
     'Scan and create barcodes and QR codes — medicines with their expiry date, GiroCodes, Wi-Fi, contacts, tickets and parcels. Everything is read on this device; nothing is uploaded.',
   productPage: 'Product page on mlcgo.eu',
+  sponsoredBy: 'Sponsored by',
   sourceCode: 'Source code on GitHub',
   desktopUI: 'Use the desktop interface',
   language: 'Language',
-  license: 'License',
+  openSourceLicenses: 'Open-source licenses',
   licenseSummary:
     '© 2026 Michael Lechner. Open source under the MIT license with attribution: free to use, also commercially, as long as MLC Barcode is credited.',
-  licenseText: 'License text',
+  licenseText: 'MLC Barcode license',
   thirdParty: 'Open-source components used',
 };
 

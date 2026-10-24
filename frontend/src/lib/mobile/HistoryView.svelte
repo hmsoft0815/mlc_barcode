@@ -6,6 +6,7 @@
   import { lang, t } from '../i18n/lang';
   import type { Lang } from '../i18n/errors';
   import CodeResult from './CodeResult.svelte';
+  import PageHeader from './PageHeader.svelte';
 
   let open = '';
   let confirmClear = false;
@@ -35,23 +36,22 @@
   }
 </script>
 
-<div class="page">
-  <div class="d-flex justify-content-between align-items-center mb-3">
-    <h5 class="mb-0">{$t('historyTitle')}</h5>
-    {#if $history.length > 0}
-      {#if confirmClear}
-        <div class="d-flex gap-2">
-          <button class="btn btn-sm btn-danger" on:click={() => ((confirmClear = false), clearHistory())}>{$t('clearAll')}</button>
-          <button class="btn btn-sm btn-outline-secondary" on:click={() => (confirmClear = false)}>{$t('cancel')}</button>
-        </div>
-      {:else}
-        <button class="btn btn-sm btn-outline-secondary" on:click={() => (confirmClear = true)}>
-          <i class="bi bi-trash me-1"></i> {$t('clear')}
-        </button>
-      {/if}
+<PageHeader title={$t('historyTitle')} icon="bi-clock-history">
+  {#if $history.length > 0}
+    {#if confirmClear}
+      <div class="d-flex gap-2">
+        <button class="btn btn-sm btn-danger" on:click={() => ((confirmClear = false), clearHistory())}>{$t('clearAll')}</button>
+        <button class="btn btn-sm btn-outline-secondary" on:click={() => (confirmClear = false)}>{$t('cancel')}</button>
+      </div>
+    {:else}
+      <button class="btn btn-sm btn-outline-secondary" on:click={() => (confirmClear = true)}>
+        <i class="bi bi-trash me-1"></i> {$t('clear')}
+      </button>
     {/if}
-  </div>
+  {/if}
+</PageHeader>
 
+<div class="page">
   {#if $history.length === 0}
     <div class="text-center text-body-secondary py-5">
       <i class="bi bi-clock-history fs-1 d-block mb-2 opacity-50"></i>

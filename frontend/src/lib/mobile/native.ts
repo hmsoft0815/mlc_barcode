@@ -5,9 +5,18 @@ import {
   CopyToClipboard,
   Haptic,
   OpenExternal,
+  SaveSingleFile,
   ShareImage,
   ShareText,
 } from '../../../bindings/github.com/mlcmcp/mlc_barcode/internal/gui/barcodeapp';
+
+// The Android app's own bridge (MlcNative.java): save to the gallery and
+// share as a picture, which the Wails bridge does not do on Android.
+interface MlcNative {
+  saveImage(pngBase64: string, name: string): boolean;
+  shareImage(pngBase64: string, name: string): boolean;
+}
+const mlcNative = (window as unknown as { mlcNative?: MlcNative }).mlcNative;
 
 export async function openLink(url: string) {
   if (await OpenExternal(url).catch(() => false)) return;
@@ -34,7 +43,25 @@ export async function shareText(text: string): Promise<'shared' | 'copied'> {
   return 'copied';
 }
 
+// Where saveImage can put a picture without the share sheet: the Android
+// gallery, or a save dialog on the desktop. On iOS the share sheet has
+// "Save Image" itself, so the UI offers sharing there.
+export function canSaveImage(desktop: boolean): boolean {
+  return !!mlcNative || desktop;
+}
+
+export async function saveImage(pngDataUrl: string, name: string): Promise<'saved' | 'cancelled' | 'failed'> {
+  if (mlcNative) return mlcNative.saveImage(pngDataUrl, name) ? 'saved' : 'failed';
+  try {
+    const path = await SaveSingleFile({ defaultName: `${name}.png`, format: 'png', content: pngDataUrl });
+    return path ? 'saved' : 'cancelled';
+  } catch {
+    return 'failed';
+  }
+}
+
 export async function shareImage(pngDataUrl: string, name: string, text: string): Promise<'shared' | 'copied'> {
+  if (mlcNative?.shareImage(pngDataUrl, name)) return 'shared';
   if (await ShareImage(pngDataUrl, name).catch(() => false)) return 'shared';
   try {
     const blob = await (await fetch(pngDataUrl)).blob();

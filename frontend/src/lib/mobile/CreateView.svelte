@@ -1,7 +1,8 @@
 <script lang="ts">
   // Creating on the phone: the few codes one shows or sends to someone —
   // a link, the Wi-Fi, one's contact, a GiroCode, an event, a place.
-  // Shared, not saved. Contact, event and place start from "My details".
+  // Saved as a picture or shared. Contact, event and place start from "My
+  // details".
   import {
     FormatEPC,
     FormatEvent,
@@ -14,9 +15,13 @@
   import { profile, organizerName, profileCoords } from '../profile';
   import { deviceTimeZone, icalDate, icalDateTime, nextFullHour, shiftLocal, toLocalInput, DAY_MS, HOUR_MS } from '../datetime';
   import { formatError } from '../i18n/errors';
-  import { copyText, haptic, shareImage } from './native';
+  import { canSaveImage, copyText, haptic, saveImage, shareImage } from './native';
   import { lang, t } from '../i18n/lang';
   import type { UIKey } from '../i18n/ui';
+  import PageHeader from './PageHeader.svelte';
+
+  export let desktop = false; // the mobile UI on a desktop OS (test build)
+  const canSave = canSaveImage(desktop);
 
   type Kind = 'link' | 'wifi' | 'contact' | 'giro' | 'event' | 'place';
   const KINDS: { id: Kind; label: UIKey; icon: string }[] = [
@@ -165,9 +170,22 @@
     }
   }
 
+  function imageName(): string {
+    return { link: 'link', wifi: `wlan-${wifi.ssid}`, contact: 'kontakt', giro: 'girocode', event: 'termin', place: 'ort' }[kind];
+  }
+
   async function share() {
-    const name = { link: 'link', wifi: `wlan-${wifi.ssid}`, contact: 'kontakt', giro: 'girocode', event: 'termin', place: 'ort' }[kind];
-    if ((await shareImage(png, name, data)) === 'copied') flash($t('contentCopiedNoShare'));
+    if ((await shareImage(png, imageName(), data)) === 'copied') flash($t('contentCopiedNoShare'));
+  }
+
+  async function save() {
+    const r = await saveImage(png, imageName());
+    if (r === 'saved') {
+      haptic('success');
+      flash($t(desktop ? 'imageSaved' : 'imageSavedGallery'));
+    } else if (r === 'failed') {
+      flash($t('imageSaveFailed'));
+    }
   }
 
   async function copy() {
@@ -181,8 +199,9 @@
   }
 </script>
 
+<PageHeader title={$t('createTitle')} icon="bi-qr-code" />
+
 <div class="page">
-  <h5 class="mb-3">{$t('createTitle')}</h5>
 
   <div class="kinds mb-3">
     {#each KINDS as k}
@@ -280,7 +299,13 @@
       </button>
       <div class="small text-body-secondary mt-1">{$t('tapToEnlarge')}</div>
       <div class="d-flex gap-2 justify-content-center mt-3 flex-wrap">
-        <button class="btn btn-primary" on:click={share}><i class="bi bi-share me-1"></i> {$t('share')}</button>
+        {#if canSave}
+          <button class="btn btn-primary" on:click={save}><i class="bi bi-download me-1"></i> {$t('saveImage')}</button>
+          <button class="btn btn-outline-secondary" on:click={share}><i class="bi bi-share me-1"></i> {$t('share')}</button>
+        {:else}
+          <!-- iOS: the share sheet shares the picture and offers "Save Image" -->
+          <button class="btn btn-primary" on:click={share}><i class="bi bi-share me-1"></i> {$t('share')}</button>
+        {/if}
         <button class="btn btn-outline-secondary" on:click={copy}><i class="bi bi-clipboard me-1"></i> {$t('copyContent')}</button>
       </div>
       {#if feedback}<div class="small text-success mt-2">{feedback}</div>{/if}

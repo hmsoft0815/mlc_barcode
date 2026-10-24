@@ -230,6 +230,8 @@ ISO standards are not free; these open sources document the algorithms for check
 ## License
 
 Copyright (c) 2026 Michael Lechner.
+Sponsored by [H&M Software-Netzwerktechnik-GmbH](https://www.hmsoftware.com) (www.hmsoftware.com).
+
 Licensed under the MIT License with an attribution clause — free to use, modify and
 redistribute, also commercially, as long as products using it credit "Michael Lechner"
 visibly (docs, About screen or similar). A commercial licence without attribution is

@@ -45,7 +45,7 @@
          switch; it stops the camera itself while hidden. -->
     <div class="view" hidden={tab !== 'scan'}><ScanView active={tab === 'scan'} /></div>
     {#if tab === 'history'}<HistoryView />{/if}
-    {#if tab === 'create'}<CreateView />{/if}
+    {#if tab === 'create'}<CreateView {desktop} />{/if}
     {#if tab === 'about'}<AboutView {appVersion} {desktop} {onDesktopUI} />{/if}
   </main>
 
@@ -75,6 +75,16 @@
     flex: 1;
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
+  }
+  /* Touch scrolling needs no bars; the Android WebView would draw them
+     (light, beside the title bar). */
+  main,
+  main :global(*) {
+    scrollbar-width: none;
+  }
+  main::-webkit-scrollbar,
+  main :global(*)::-webkit-scrollbar {
+    display: none;
   }
   main.full {
     overflow: hidden;

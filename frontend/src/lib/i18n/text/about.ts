@@ -8,6 +8,7 @@ const de = {
   version: 'Version {v}',
   githubRepo: 'GitHub Repository',
   productPage: 'Produktseite (mlcgo.eu)',
+  sponsoredBy: 'Gesponsert von',
 
   symbologiesTitle: 'Unterstützte Symbologien & Formate',
   colType: 'Typ',
@@ -88,6 +89,7 @@ const en: Record<keyof typeof de, string> = {
   version: 'Version {v}',
   githubRepo: 'GitHub repository',
   productPage: 'Product page (mlcgo.eu)',
+  sponsoredBy: 'Sponsored by',
 
   symbologiesTitle: 'Supported symbologies & formats',
   colType: 'Type',

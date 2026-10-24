@@ -4,7 +4,7 @@
   import { onDestroy, tick } from 'svelte';
   import { DecodeImage, SetTorch } from '../../../bindings/github.com/mlcmcp/mlc_barcode/internal/gui/barcodeapp';
   import type { DecodedCode } from '../../../bindings/github.com/mlcmcp/mlc_barcode/internal/gui/models';
-  import { CameraScanner, cameraErrorText, cameraSupported, coverGuide, type ScanHit } from '../scan/camera';
+  import { CameraScanner, cameraErrorText, cameraSupported, coverGuide, NO_POSTER, type ScanHit } from '../scan/camera';
   import { lang, t } from '../i18n/lang';
   import { formatError } from '../i18n/errors';
   import CodeResult from './CodeResult.svelte';
@@ -202,7 +202,7 @@
 
 <div class="scan">
   <!-- svelte-ignore a11y-media-has-caption -->
-  <video bind:this={video} class:mirrored={scanner.facingUser} autoplay playsinline muted disablepictureinpicture></video>
+  <video bind:this={video} class:mirrored={scanner.facingUser} poster={NO_POSTER} autoplay playsinline muted disablepictureinpicture></video>
 
   {#if running && codes.length === 0}
     <div class="frame {family}" bind:this={frameEl} aria-hidden="true">

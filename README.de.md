@@ -227,6 +227,8 @@ Da ISO-Normen kostenpflichtig sind, bieten die folgenden freien Dokumentationen 
 ## Lizenz
 
 Copyright (c) 2026 Michael Lechner.
+Gesponsert von [H&M Software-Netzwerktechnik-GmbH](https://www.hmsoftware.com) (www.hmsoftware.com).
+
 Lizenziert unter der MIT-Lizenz mit Namensnennungsklausel — frei nutzbar, veränderbar und
 weitergebbar, auch kommerziell, solange Produkte, die es verwenden, "Michael Lechner" sichtbar
 nennen (Dokumentation, Info-Dialog o. ä.). Eine kommerzielle Lizenz ohne Namensnennung gibt es
