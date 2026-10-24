@@ -27,6 +27,15 @@ Unicode            true
 SetCompressor      /SOLID lzma
 SetCompressorDictSize 32
 
+; Version info on the setup exe itself (Explorer → Properties → Details)
+VIProductVersion   "${APP_VERSION}.0"
+VIAddVersionKey /LANG=0 "ProductName"     "MLC Barcode"
+VIAddVersionKey /LANG=0 "FileDescription" "MLC Barcode Setup"
+VIAddVersionKey /LANG=0 "CompanyName"     "Michael Lechner"
+VIAddVersionKey /LANG=0 "FileVersion"     "${APP_VERSION}"
+VIAddVersionKey /LANG=0 "ProductVersion"  "${APP_VERSION}"
+VIAddVersionKey /LANG=0 "LegalCopyright"  "Michael Lechner"
+
 ; ─── MUI2 ─────────────────────────────────────────────────────────────────────
 
 !include "MUI2.nsh"
@@ -65,6 +74,36 @@ LangString LAUNCH_APP         ${LANG_GERMAN}         "MLC Barcode starten"
 LangString UNINSTALL_CONFIRM  ${LANG_ENGLISH}        "Remove MLC Barcode and all its components?"
 LangString UNINSTALL_CONFIRM  ${LANG_GERMAN}         "MLC Barcode und alle Komponenten entfernen?"
 
+LangString APP_RUNNING        ${LANG_ENGLISH}        "MLC Barcode is still running. Close it, then click Retry."
+LangString APP_RUNNING        ${LANG_GERMAN}         "MLC Barcode läuft noch. Bitte schließen und dann auf Wiederholen klicken."
+
+; ─── Checks ───────────────────────────────────────────────────────────────────
+
+; A running mlc-barcode.exe cannot be overwritten or deleted: ask to close it.
+!macro CheckAppRunning
+  check_running:
+    nsExec::ExecToStack 'cmd /c tasklist /FI "IMAGENAME eq mlc-barcode.exe" /NH | find /I "mlc-barcode.exe"'
+    Pop $0
+    Pop $1
+    ${If} $0 == 0
+      MessageBox MB_RETRYCANCEL|MB_ICONEXCLAMATION "$(APP_RUNNING)" /SD IDCANCEL IDRETRY check_running
+      Abort
+    ${EndIf}
+!macroend
+
+Function .onInit
+  ; 64-bit app: registry and shortcuts for all users, not WOW6432Node.
+  SetRegView 64
+  SetShellVarContext all
+  !insertmacro CheckAppRunning
+FunctionEnd
+
+Function un.onInit
+  SetRegView 64
+  SetShellVarContext all
+  !insertmacro CheckAppRunning
+FunctionEnd
+
 ; ─── Installation Section ─────────────────────────────────────────────────────
 
 Section "MainSection" SEC01
@@ -78,6 +117,13 @@ Section "MainSection" SEC01
   File "build/windows/icon.ico"
   File "/oname=LICENSE.txt" "LICENSE"
   File "THIRD_PARTY_NOTICES.txt"
+
+  ; Up to 1.7.21 the keys were written to the 32-bit view (WOW6432Node);
+  ; drop them so "Apps" does not list MLC Barcode twice.
+  SetRegView 32
+  DeleteRegKey HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\MLC Barcode"
+  DeleteRegKey HKLM "Software\MLC Barcode"
+  SetRegView 64
 
   ; Create uninstaller
   WriteUninstaller "$INSTDIR\Uninstall.exe"
@@ -97,6 +143,14 @@ Section "MainSection" SEC01
     "NoModify" 1
   WriteRegDWORD HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\MLC Barcode" \
     "NoRepair" 1
+  WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\MLC Barcode" \
+    "InstallLocation" "$INSTDIR"
+  WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\MLC Barcode" \
+    "URLInfoAbout" "https://mlcgo.eu/products/mlc-barcode/"
+  ${GetSize} "$INSTDIR" "/S=0K" $0 $1 $2
+  WriteRegDWORD HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\MLC Barcode" \
+    "EstimatedSize" $0
+  WriteRegStr HKLM "Software\MLC Barcode" "InstallDir" "$INSTDIR"
 
   ; Start Menu Shortcuts
   CreateDirectory "$SMPROGRAMS\MLC Barcode"
