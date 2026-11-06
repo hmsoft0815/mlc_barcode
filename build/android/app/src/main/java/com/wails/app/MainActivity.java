@@ -23,9 +23,12 @@ import android.provider.OpenableColumns;
 import android.util.Base64;
 import android.util.Log;
 import android.view.View;
+import android.webkit.ConsoleMessage;
 import android.webkit.GeolocationPermissions;
 import android.webkit.PermissionRequest;
+import android.webkit.ValueCallback;
 import android.webkit.WebChromeClient;
+import android.webkit.WebChromeClient.FileChooserParams;
 import android.webkit.WebResourceRequest;
 import android.webkit.WebResourceResponse;
 import android.webkit.WebSettings;
@@ -65,6 +68,7 @@ public class MainActivity extends AppCompatActivity {
     private static final int FILE_PICKER_REQUEST = 7001;
 
     private WebView webView;
+    private Uri devServer;
     private WailsBridge bridge;
     // Battery: system-event receivers are registered only while the activity is
     // in the foreground (onStart) and torn down in onStop, so background battery/
@@ -77,6 +81,11 @@ public class MainActivity extends AppCompatActivity {
     private static final int PHOTO_CAPTURE_REQUEST = 7002;
     private static final int VIDEO_CAPTURE_REQUEST = 7003;
     private static final int CAMERA_PERMISSION_REQUEST = 7010;
+
+    // In-flight callback for an HTML <input type="file"> chooser opened by the
+    // WebView's WebChromeClient (null when idle).
+    private static final int WEBVIEW_FILE_CHOOSER_REQUEST = 7004;
+    private ValueCallback<Uri[]> webViewFileChooserCallback;
     private File pendingCaptureFile;
     private boolean pendingCaptureIsVideo;
 
@@ -104,6 +113,9 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         applySystemBarInsets();
+
+        String devURL = WailsBridge.devServerURL(this);
+        if (devURL != null) devServer = Uri.parse(devURL);
 
         // Initialize the native Go library
         bridge = new WailsBridge(this);
@@ -172,7 +184,9 @@ public class MainActivity extends AppCompatActivity {
             public WebResourceResponse shouldInterceptRequest(WebView view, WebResourceRequest request) {
                 // Handle wails.localhost requests
                 if (request.getUrl().getHost() != null &&
-                        request.getUrl().getHost().equals(WAILS_HOST)) {
+                        (request.getUrl().getHost().equals(WAILS_HOST) ||
+                         (devServer != null && request.getUrl().getScheme().equals(devServer.getScheme()) &&
+                          request.getUrl().getAuthority().equals(devServer.getAuthority())))) {
 
                     // For wails API calls (runtime, capabilities, etc.) pass the
                     // full URL including the query string, because
@@ -194,11 +208,25 @@ public class MainActivity extends AppCompatActivity {
                             headers.put("Cache-Control", "no-cache");
                             headers.put("Content-Type", "application/json");
 
+                            // Detect error envelopes: if the body starts with
+                            // {"ok":false, return HTTP 500 so the fallback
+                            // transport's fetch() rejects the promise.
+                            int status = 200;
+                            String reason = "OK";
+                            if (data.length > 12) {
+                                String prefix = new String(data, 0, Math.min(data.length, 20),
+                                        java.nio.charset.StandardCharsets.UTF_8);
+                                if (prefix.contains("\"ok\":false")) {
+                                    status = 500;
+                                    reason = "Internal Error";
+                                }
+                            }
+
                             return new WebResourceResponse(
                                 "application/json",
                                 "UTF-8",
-                                200,
-                                "OK",
+                                status,
+                                reason,
                                 headers,
                                 inputStream
                             );
@@ -218,6 +246,11 @@ public class MainActivity extends AppCompatActivity {
                     // support so <video> can seek/stream a clip of any length.
                     if (path != null && path.startsWith("/__capture__/")) {
                         return serveCaptureFile(path.substring("/__capture__/".length()), request);
+                    }
+
+                    // Vite serves its own HTTP headers and WebSocket endpoint.
+                    if (devServer != null && !request.getUrl().getHost().equals(WAILS_HOST)) {
+                        return super.shouldInterceptRequest(view, request);
                     }
 
                     // For regular assets, use the asset loader
@@ -285,6 +318,38 @@ public class MainActivity extends AppCompatActivity {
                         "android.permission.ACCESS_FINE_LOCATION",
                         "android.permission.ACCESS_COARSE_LOCATION"}, WEB_LOCATION_PERMISSION_REQUEST);
             }
+
+            // From the Wails 3.1 template: <input type="file"> needs
+            // onShowFileChooser, and console messages go to logcat in DEBUG.
+            @Override
+            public boolean onConsoleMessage(ConsoleMessage msg) {
+                if (DEBUG) {
+                    Log.d(TAG, "[WebView] " + msg.messageLevel() + ": " + msg.message()
+                            + " (" + msg.sourceId() + ":" + msg.lineNumber() + ")");
+                }
+                return true;
+            }
+
+            @Override
+            public boolean onShowFileChooser(WebView view,
+                                             ValueCallback<Uri[]> filePathCallback,
+                                             FileChooserParams fileChooserParams) {
+                // Cancel any previous, still-pending chooser before starting a new one.
+                if (webViewFileChooserCallback != null) {
+                    webViewFileChooserCallback.onReceiveValue(null);
+                }
+                webViewFileChooserCallback = filePathCallback;
+
+                Intent intent = fileChooserParams.createIntent();
+                try {
+                    startActivityForResult(intent, WEBVIEW_FILE_CHOOSER_REQUEST);
+                } catch (android.content.ActivityNotFoundException e) {
+                    webViewFileChooserCallback = null;
+                    filePathCallback.onReceiveValue(null);
+                    return false;
+                }
+                return true;
+            }
         });
 
         // Add JavaScript interface for Go communication
@@ -294,7 +359,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void loadApplication() {
-        String url = WAILS_SCHEME + "://" + WAILS_HOST + "/";
+        String url = devServer != null ? devServer.toString() + "/" : WAILS_SCHEME + "://" + WAILS_HOST + "/";
         if (DEBUG) Log.d(TAG, "Loading URL: " + url);
         webView.loadUrl(url);
     }
@@ -567,6 +632,41 @@ public class MainActivity extends AppCompatActivity {
             handleCaptureResult(resultCode, data);
             return;
         }
+        if (requestCode == WEBVIEW_FILE_CHOOSER_REQUEST) {
+            if (webViewFileChooserCallback == null) {
+                return;
+            }
+            Uri[] results = null;
+            if (resultCode == RESULT_OK && data != null) {
+                if (data.getClipData() != null) {
+                    // Multiple selection (<input type="file" multiple>) is
+                    // returned as ClipData. FileChooserParams.parseResult only
+                    // reads getData(), so it would drop all but one (and return
+                    // null when getData() is empty) — read every item explicitly.
+                    int count = data.getClipData().getItemCount();
+                    java.util.List<Uri> validated = new java.util.ArrayList<>(count);
+                    for (int i = 0; i < count; i++) {
+                        Uri uri = data.getClipData().getItemAt(i).getUri();
+                        if (isFileChooserUriSafe(uri)) validated.add(uri);
+                    }
+                    if (!validated.isEmpty()) {
+                        results = validated.toArray(new Uri[0]);
+                    }
+                } else if (data.getData() != null) {
+                    Uri uri = data.getData();
+                    if (isFileChooserUriSafe(uri)) {
+                        results = new Uri[]{ uri };
+                    }
+                }
+            }
+            if (results == null) {
+                // Fallback for pickers that report the result differently.
+                results = FileChooserParams.parseResult(resultCode, data);
+            }
+            webViewFileChooserCallback.onReceiveValue(results);
+            webViewFileChooserCallback = null;
+            return;
+        }
         if (requestCode != FILE_PICKER_REQUEST) {
             return;
         }
@@ -597,6 +697,23 @@ public class MainActivity extends AppCompatActivity {
             }
             bridge.filePickerDone(callbackID);
         }).start();
+    }
+
+    /**
+     * Validate that a file-chooser URI is safe to pass to the WebView.
+     * Rejects file:// URIs pointing at the app's own private data (a malicious
+     * third-party picker could return such URIs to exfiltrate sensitive files).
+     * Only content:// URIs (the standard document-picker output) are accepted.
+     */
+    private boolean isFileChooserUriSafe(Uri uri) {
+        if (uri == null) return false;
+        String scheme = uri.getScheme();
+        // content:// URIs are the standard, safe output of document pickers.
+        if ("content".equals(scheme)) return true;
+        // Reject file:// URIs — they can point at app-private data.
+        // Also reject anything else (null scheme, unknown schemes).
+        if (DEBUG) Log.w(TAG, "Rejected unsafe file-chooser URI: " + uri);
+        return false;
     }
 
     /**

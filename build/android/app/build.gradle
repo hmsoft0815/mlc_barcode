@@ -10,19 +10,19 @@ def (vMajor, vMinor, vPatch) = appVersion.tokenize('.').collect { it as int }
 android {
     // The Java package stays com.wails.app (the Go side calls into it by that
     // name); the installed app is identified by applicationId.
-    namespace 'com.wails.app'
-    compileSdk 35
+    namespace = 'com.wails.app'
+    compileSdk = 36
 
     buildFeatures {
         buildConfig = true
     }
 
     defaultConfig {
-        applicationId "eu.mlcgo.mlcbarcode"
-        minSdk 21
-        targetSdk 35
-        versionCode vMajor * 10000 + vMinor * 100 + vPatch
-        versionName appVersion
+        applicationId = "eu.mlcgo.mlcbarcode"
+        minSdk = 21
+        targetSdk = 36
+        versionCode = vMajor * 10000 + vMinor * 100 + vPatch
+        versionName = appVersion
 
         // Configure supported ABIs
         ndk {
@@ -39,28 +39,28 @@ android {
         // be installed for testing (not suitable for Play Store uploads).
         release {
             if (hasKeystore) {
-                storeFile file(keystoreFile)
-                storePassword System.getenv("ANDROID_KEYSTORE_PASSWORD")
-                keyAlias System.getenv("ANDROID_KEY_ALIAS")
-                keyPassword System.getenv("ANDROID_KEY_PASSWORD")
+                storeFile = file(keystoreFile)
+                storePassword = System.getenv("ANDROID_KEYSTORE_PASSWORD")
+                keyAlias = System.getenv("ANDROID_KEY_ALIAS")
+                keyPassword = System.getenv("ANDROID_KEY_PASSWORD")
             }
         }
     }
 
     buildTypes {
         release {
-            minifyEnabled false
+            minifyEnabled = false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
-            signingConfig hasKeystore ? signingConfigs.release : signingConfigs.debug
+            signingConfig = hasKeystore ? signingConfigs.release : signingConfigs.debug
         }
         debug {
-            debuggable true
+            debuggable = true
         }
     }
 
     compileOptions {
-        sourceCompatibility JavaVersion.VERSION_11
-        targetCompatibility JavaVersion.VERSION_11
+        sourceCompatibility = JavaVersion.VERSION_11
+        targetCompatibility = JavaVersion.VERSION_11
     }
 
     // Source sets configuration
