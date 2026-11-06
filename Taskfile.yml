@@ -500,7 +500,9 @@ tasks:
     cmds:
       - mkdir -p {{.BIN_DIR}}
       - go build -ldflags "{{.LDFLAGS}}" -o {{.BIN_DIR}}/barcode-scantest ./cmd/barcode
-      - test -x {{.VENV}}/bin/python || (python3 -m venv {{.VENV}} && {{.VENV}}/bin/pip install -q zxing-cpp pillow)
+      # Recreate the venv when its packages no longer import (e.g. after a
+      # system Python upgrade 3.13 → 3.14 leaves them in the old lib dir).
+      - '{{.VENV}}/bin/python -c "import zxingcpp, PIL" 2>/dev/null || (rm -rf {{.VENV}} && python3 -m venv {{.VENV}} && {{.VENV}}/bin/pip install -q zxing-cpp pillow)'
       - rm -rf {{.BIN_DIR}}/scantest
       - '{{.VENV}}/bin/python tests/scan/scan_check.py {{.BIN_DIR}}/barcode-scantest {{.BIN_DIR}}/scantest'
 
