@@ -493,6 +493,23 @@ tasks:
           echo; echo "**[Als PDF herunterladen]($PDF)** · Einrichtung und Fehlersuche: [MCP-Anleitung](../mcp/)"; echo
           echo "$BODY"; } > mlcprodweb/pages/reference/de.md
 
+  test:android:win11:
+    desc: Android smoke test in an emulator on the Win11 box — install, start, check logcat, screenshot → bin/android-emu.png
+    # Here is no KVM; the Win11 box (ssh host "win11") has the Android SDK,
+    # WHPX and its own AVD "mlcb-test" (system-images;android-36;google_apis;x86_64,
+    # no Play Store, so adb needs no on-screen confirmation). The script starts
+    # the emulator headless if it isn't running and leaves it running for the
+    # next run; stop it with WIN_STOP=1. The user's own AVDs are not touched.
+    deps: [android:package:fat]
+    vars:
+      WIN_HOST: '{{.WIN_HOST | default "win11"}}'
+    cmds:
+      - ssh -o BatchMode=yes {{.WIN_HOST}} "if not exist mlcb-test mkdir mlcb-test" 2>/dev/null
+      - scp -q tests/android/emu-test.ps1 {{.WIN_HOST}}:mlcb-test/emu-test.ps1
+      - scp -q {{.BIN_DIR}}/{{.APP_NAME}}.apk {{.WIN_HOST}}:mlcb-test/app.apk
+      - set -o pipefail; ssh -o BatchMode=yes {{.WIN_HOST}} "powershell -NoProfile -ExecutionPolicy Bypass -File mlcb-test\\emu-test.ps1{{if .WIN_STOP}} -Stop{{end}}" 2>&1 | grep -v -iE 'post-quantum|store now|openssh.com/pq'
+      - '{{if not .WIN_STOP}}scp -q {{.WIN_HOST}}:mlcb-test/screen.png {{.BIN_DIR}}/android-emu.png && scp -q {{.WIN_HOST}}:mlcb-test/logcat.txt {{.BIN_DIR}}/android-emu-logcat.txt && echo "→ {{.BIN_DIR}}/android-emu.png, {{.BIN_DIR}}/android-emu-logcat.txt"{{end}}'
+
   test:scan:
     desc: Scan test — generate every symbology with the CLI and decode it with zxing-cpp
     vars:
