@@ -494,21 +494,45 @@ tasks:
           echo "$BODY"; } > mlcprodweb/pages/reference/de.md
 
   test:android:win11:
-    desc: Android smoke test in an emulator on the Win11 box — install, start, check logcat, screenshot → bin/android-emu.png
+    desc: Android end-to-end test in an emulator on the Win11 box — the camera sees a medicine bottle, the app must read its DataMatrix → bin/android-emu.png
     # Here is no KVM; the Win11 box (ssh host "win11") has the Android SDK,
     # WHPX and its own AVD "mlcb-test" (system-images;android-36;google_apis;x86_64,
-    # no Play Store, so adb needs no on-screen confirmation). The script starts
-    # the emulator headless if it isn't running and leaves it running for the
-    # next run; stop it with WIN_STOP=1. The user's own AVDs are not touched.
+    # no Play Store, so adb needs no on-screen confirmation). The emulator's
+    # back camera shows tests/android/camera_image.py's picture of a bottle
+    # from internal/barcodes/testdata/cylinder; the test fails unless the
+    # scan result shows its PZN. The script starts the emulator headless if
+    # needed and leaves it running for the next run (WIN_STOP=1 stops it).
+    # The user's own AVDs are not touched. DOCS=1: README screenshots instead.
     deps: [android:package:fat]
     vars:
       WIN_HOST: '{{.WIN_HOST | default "win11"}}'
+      PHOTO: internal/barcodes/testdata/cylinder/datamatrix/s60-t0-v0.jpg
+      EXPECT: "12345678"
     cmds:
       - ssh -o BatchMode=yes {{.WIN_HOST}} "if not exist mlcb-test mkdir mlcb-test" 2>/dev/null
+      - test -x {{.BIN_DIR}}/.venv-scan/bin/python || (python3 -m venv {{.BIN_DIR}}/.venv-scan && {{.BIN_DIR}}/.venv-scan/bin/pip install -q zxing-cpp pillow)
+      - '{{.BIN_DIR}}/.venv-scan/bin/python tests/android/camera_image.py {{.PHOTO}} {{.BIN_DIR}}/android-camera.jpg'
       - scp -q tests/android/emu-test.ps1 {{.WIN_HOST}}:mlcb-test/emu-test.ps1
+      - scp -q {{.BIN_DIR}}/android-camera.jpg {{.WIN_HOST}}:mlcb-test/camera.jpg
       - scp -q {{.BIN_DIR}}/{{.APP_NAME}}.apk {{.WIN_HOST}}:mlcb-test/app.apk
-      - set -o pipefail; ssh -o BatchMode=yes {{.WIN_HOST}} "powershell -NoProfile -ExecutionPolicy Bypass -File mlcb-test\\emu-test.ps1{{if .WIN_STOP}} -Stop{{end}}" 2>&1 | grep -v -iE 'post-quantum|store now|openssh.com/pq'
+      - >-
+        set -o pipefail; ssh -o BatchMode=yes {{.WIN_HOST}}
+        "powershell -NoProfile -ExecutionPolicy Bypass -File mlcb-test\\emu-test.ps1
+        {{if .WIN_STOP}}-Stop{{else}}-CameraImage C:\\Users\\%USERNAME%\\mlcb-test\\camera.jpg -ExpectText {{.EXPECT}}{{if .DOCS}} -Docs{{end}}{{end}}"
+        2>&1 | grep -v -iE 'post-quantum|store now|openssh.com/pq'
       - '{{if not .WIN_STOP}}scp -q {{.WIN_HOST}}:mlcb-test/screen.png {{.BIN_DIR}}/android-emu.png && scp -q {{.WIN_HOST}}:mlcb-test/logcat.txt {{.BIN_DIR}}/android-emu-logcat.txt && echo "→ {{.BIN_DIR}}/android-emu.png, {{.BIN_DIR}}/android-emu-logcat.txt"{{end}}'
+      - '{{if .DOCS}}mkdir -p assets/screenshots && scp -q "{{.WIN_HOST}}:mlcb-test/docs/*.png" assets/screenshots/{{end}}'
+      # Half size (540 px wide) with a reduced palette keeps the README light.
+      - >-
+        {{if .DOCS}}{{.BIN_DIR}}/.venv-scan/bin/python -c "import glob; from PIL import Image;
+        [Image.open(f).convert('RGB').resize((540, 1200), Image.LANCZOS).quantize(128).save(f, optimize=True)
+        for f in glob.glob('assets/screenshots/android-*.png')]" && du -ch assets/screenshots/android-*.png | tail -1{{end}}
+
+  docs:screenshots:android:
+    desc: README screenshots of the Android app (en + de) from the emulator on the Win11 box → assets/screenshots/
+    cmds:
+      - task: test:android:win11
+        vars: { DOCS: "1" }
 
   test:scan:
     desc: Scan test — generate every symbology with the CLI and decode it with zxing-cpp

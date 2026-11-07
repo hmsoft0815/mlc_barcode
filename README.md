@@ -61,6 +61,16 @@ ART-1002
 - MCP Server integration for LLMs (provides the `generate_barcode` tool).
 - **Optional Artifact connection**: Generated barcodes can be sent directly to the `mlcartifact` service.
 
+## Mobile apps (Android, iPhone, iPad)
+
+The same app runs on phones and tablets with an interface of its own: scan with the camera, keep a history on the device, create codes and save or share them as images. A medicine pack (securPharm DataMatrix) shows its PZN, expiry date, batch and serial number, with the check digits verified. Codes are read on the device; nothing is uploaded. The Android app is available as an APK on the [product page](https://mlcgo.eu/products/mlc-barcode/); iPhone and iPad follow in the App Store.
+
+<p>
+<img src="assets/screenshots/android-en-scan.png" alt="Scan result of a medicine pack" width="200"> <img src="assets/screenshots/android-en-history.png" alt="History" width="200"> <img src="assets/screenshots/android-en-create.png" alt="Create a QR code" width="200"> <img src="assets/screenshots/android-en-about.png" alt="About and language" width="200">
+</p>
+
+<sub>Android emulator; the camera sees a test photo of a bottle (`task docs:screenshots:android`).</sub>
+
 ## Installation
 
 Make sure you have Go installed.
@@ -177,6 +187,8 @@ task test:mcp
 - `task test`: Run unit tests.
 - `task test:mcp`: MCP compliance check with mlc mcp-tester.
 - `task test:scan`: every generated symbology is read back by an independent reader (zxing-cpp).
+- `task test:android:win11`: Android end-to-end test in an emulator on a Windows machine over SSH — the emulated camera sees a medicine bottle and the app must read it (see `tests/android/`).
+- `task docs:screenshots:android`: the app screenshots above, English and German.
 
 ### Test data for the reader
 

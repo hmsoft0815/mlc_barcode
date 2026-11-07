@@ -213,7 +213,7 @@
 
   <form on:submit|preventDefault={create} class="mb-3">
     {#if kind === 'link'}
-      <textarea class="form-control" rows="3" placeholder={$t('linkPlaceholder')} bind:value={text}></textarea>
+      <textarea class="form-control" rows="3" placeholder={$t('linkPlaceholder')} bind:value={text} autocapitalize="off"></textarea>
     {:else if kind === 'wifi'}
       <input class="form-control mb-2" placeholder={$t('ssid')} bind:value={wifi.ssid} autocapitalize="off" />
       <input class="form-control mb-2" placeholder={$t('password')} bind:value={wifi.password} autocapitalize="off" autocomplete="off" />
