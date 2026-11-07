@@ -70,7 +70,11 @@ Dieselbe App läuft auf Smartphone und Tablet mit eigener Oberfläche: mit der K
 <img src="assets/screenshots/android-de-scan.png" alt="Scan-Ergebnis einer Arzneimittelpackung" width="200"> <img src="assets/screenshots/android-de-history.png" alt="Verlauf" width="200"> <img src="assets/screenshots/android-de-create.png" alt="QR-Code erzeugen" width="200"> <img src="assets/screenshots/android-de-about.png" alt="Über und Sprache" width="200">
 </p>
 
-<sub>Android-Emulator; die Kamera sieht ein Testfoto einer Flasche (`task docs:screenshots:android`).</sub>
+<p>
+<img src="assets/screenshots/ipad-de-history.png" alt="Verlauf auf dem iPad" width="270"> <img src="assets/screenshots/ipad-de-create.png" alt="QR-Code erzeugen auf dem iPad" width="270"> <img src="assets/screenshots/ipad-de-about.png" alt="Über und Sprache auf dem iPad" width="270">
+</p>
+
+<sub>Oben: Android-Emulator, die Kamera sieht ein Testfoto einer Flasche (`task docs:screenshots:android`). Unten: iPad-Simulator (`task docs:screenshots:ios`) — dessen Kamera lässt sich kein Bild unterschieben, deshalb fehlen hier seine Scan-Bilder.</sub>
 
 ## Installation
 
@@ -186,6 +190,7 @@ task test:mcp
 - `task test:scan`: Jede erzeugte Symbologie wird von einem unabhängigen Leser (zxing-cpp) gegengelesen.
 - `task test:android:win11`: Android-End-to-End-Test im Emulator auf einem Windows-Rechner per SSH — die emulierte Kamera sieht eine Arzneimittelflasche, die App muss sie lesen (siehe `tests/android/`).
 - `task docs:screenshots:android`: die App-Bilder oben, auf Deutsch und Englisch.
+- `task docs:screenshots:ios`: die iPad-Bilder — ein UI-Test (`tests/ios`, XCUITest) im Simulator auf einem Mac per SSH.
 
 ### Testdaten für den Leser
 
