@@ -6,10 +6,52 @@
   export let onOpenProfile: () => void = () => {};
   import { lang, setLang } from '../i18n/lang';
   import { t } from '../i18n/text/shell';
+  import { System } from '@wailsio/runtime';
+  import { onMount, tick } from 'svelte';
+
+  // The macOS window draws its close/minimise/zoom buttons over the top left
+  // of the page (TitleBarHiddenInset); leave them room there.
+  const macInset = System.IsMac();
+
+  type Tab = typeof activeTab;
+  const tabs: { id: Tab; icon: string; label: 'tabSingle' | 'tabBatch' | 'tabPrint' | 'tabCheck' | 'tabHelp' }[] = [
+    { id: 'single', icon: 'upc-scan', label: 'tabSingle' },
+    { id: 'batch', icon: 'collection', label: 'tabBatch' },
+    { id: 'print', icon: 'printer', label: 'tabPrint' },
+    { id: 'check', icon: 'qr-code-scan', label: 'tabCheck' },
+    { id: 'about', icon: 'info-circle', label: 'tabHelp' },
+  ];
+
+  // When the labels do not fit in one row, the tabs show only their icons
+  // and name themselves in a tooltip. The width they need is measured with
+  // the labels shown, again whenever the language changes.
+  let bar: HTMLElement;
+  let compact = false;
+  let need = 0;
+
+  function fit() {
+    if (bar) compact = bar.clientWidth < need;
+  }
+
+  async function measure() {
+    compact = false;
+    await tick();
+    if (!bar) return;
+    need = [...bar.children].reduce((w, el) => w + (el as HTMLElement).scrollWidth, 0) + 16;
+    fit();
+  }
+
+  onMount(() => {
+    const ro = new ResizeObserver(fit);
+    ro.observe(bar);
+    return () => ro.disconnect();
+  });
+
+  $: $lang, measure();
 </script>
 
-<header class="navbar navbar-expand bg-body border-bottom shadow-sm px-3 py-2 sticky-top no-print">
-  <div class="container-fluid d-flex align-items-center justify-content-between">
+<header class="navbar navbar-expand bg-body border-bottom shadow-sm px-3 py-2 sticky-top no-print" class:mac-inset={macInset}>
+  <div class="container-fluid d-flex align-items-center justify-content-between" bind:this={bar}>
     <!-- Brand -->
     <div class="d-flex align-items-center gap-2">
       <img src="/appicon.png" width="30" height="30" class="rounded shadow-sm" alt={$t('logoAlt')} />
@@ -22,45 +64,17 @@
     <!-- Right side: Navigation Tabs & Theme Toggle -->
     <div class="d-flex align-items-center gap-2">
       <nav class="nav nav-pills gap-1">
-        <button
-          class="nav-link {activeTab === 'single' ? 'active' : 'text-body-secondary'}"
-          on:click={() => (activeTab = 'single')}
-          type="button"
-        >
-          <i class="bi bi-upc-scan me-1"></i> {$t('tabSingle')}
-        </button>
-
-        <button
-          class="nav-link {activeTab === 'batch' ? 'active' : 'text-body-secondary'}"
-          on:click={() => (activeTab = 'batch')}
-          type="button"
-        >
-          <i class="bi bi-collection me-1"></i> {$t('tabBatch')}
-        </button>
-
-        <button
-          class="nav-link {activeTab === 'print' ? 'active' : 'text-body-secondary'}"
-          on:click={() => (activeTab = 'print')}
-          type="button"
-        >
-          <i class="bi bi-printer me-1"></i> {$t('tabPrint')}
-        </button>
-
-        <button
-          class="nav-link {activeTab === 'check' ? 'active' : 'text-body-secondary'}"
-          on:click={() => (activeTab = 'check')}
-          type="button"
-        >
-          <i class="bi bi-qr-code-scan me-1"></i> {$t('tabCheck')}
-        </button>
-
-        <button
-          class="nav-link {activeTab === 'about' ? 'active' : 'text-body-secondary'}"
-          on:click={() => (activeTab = 'about')}
-          type="button"
-        >
-          <i class="bi bi-info-circle me-1"></i> {$t('tabHelp')}
-        </button>
+        {#each tabs as tab (tab.id)}
+          <button
+            class="nav-link {activeTab === tab.id ? 'active' : 'text-body-secondary'}"
+            on:click={() => (activeTab = tab.id)}
+            type="button"
+            title={compact ? $t(tab.label) : undefined}
+            aria-label={compact ? $t(tab.label) : undefined}
+          >
+            <i class="bi bi-{tab.icon}" class:me-1={!compact}></i>{#if !compact}&nbsp;{$t(tab.label)}{/if}
+          </button>
+        {/each}
       </nav>
 
       <!-- Language switch (stored per device, see i18n/lang.ts) -->
@@ -107,6 +121,19 @@
 </header>
 
 <style>
+  .mac-inset {
+    padding-left: 84px !important;
+  }
+  /* one row: when it gets narrow the tabs drop their labels (see fit) */
+  .container-fluid,
+  .container-fluid > div,
+  .nav-pills {
+    flex-wrap: nowrap;
+    white-space: nowrap;
+  }
+  .mac-inset .nav-pills .nav-link {
+    padding: 0.35rem 0.55rem;
+  }
   .nav-pills .nav-link {
     font-weight: 500;
     padding: 0.35rem 0.85rem;
