@@ -774,7 +774,13 @@ tasks:
       - |
         set -e
         cp {{.BIN_DIR}}/{{.APP_NAME}}.apk {{.BIN_DIR}}/{{.APP_NAME}}-android.apk
-        cp docs/mcp-tools.pdf {{.BIN_DIR}}/mlc-barcode-mcp-reference.pdf
+        # The MCP reference goes out signed by the company (H&M PKI,
+        # T-BAR-20261112-01): invisible, pages untouched. hm-sign needs the
+        # key from mlcsecrets (mlcsecure agent); if signing fails, set -e
+        # stops the upload — never publish the unsigned PDF.
+        rm -f {{.BIN_DIR}}/mlc-barcode-mcp-reference.pdf
+        hm-sign firma docs/mcp-tools.pdf {{.BIN_DIR}}/mlc-barcode-mcp-reference.pdf
+        hm-sign protokoll --pruefen {{.BIN_DIR}}/mlc-barcode-mcp-reference.pdf
         ssh -o BatchMode=yes {{.VPS_HOST}} "mkdir -p {{.VPS_DIR}}"
         rsync -az --timeout=30 -e 'ssh -o BatchMode=yes -o ConnectTimeout=10' \
           {{.BIN_DIR}}/{{.CLI_BINARY}}-linux-amd64 \
