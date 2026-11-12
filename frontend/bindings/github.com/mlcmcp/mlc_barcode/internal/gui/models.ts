@@ -267,6 +267,16 @@ export interface GeoInput {
 }
 
 /**
+ * LibraryPhoto is one photo taken from the system photo library, ready for
+ * the same path as a picked file: a data: URL the decoder and <img> read.
+ * An empty DataURL means the user closed the picker.
+ */
+export interface LibraryPhoto {
+    "name": string;
+    "dataUrl": string;
+}
+
+/**
  * Point is a position in image pixels.
  */
 export interface Point {

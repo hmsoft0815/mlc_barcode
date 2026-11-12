@@ -5,6 +5,7 @@
   import { DecodeImage, SetTorch } from '../../../bindings/github.com/mlcmcp/mlc_barcode/internal/gui/barcodeapp';
   import type { DecodedCode } from '../../../bindings/github.com/mlcmcp/mlc_barcode/internal/gui/models';
   import { CameraScanner, cameraErrorText, cameraSupported, coverGuide, NO_POSTER, type ScanHit } from '../scan/camera';
+  import { photoLibrary, pickFromPhotos } from '../scan/photos';
   import { lang, t } from '../i18n/lang';
   import { formatError } from '../i18n/errors';
   import CodeResult from './CodeResult.svelte';
@@ -198,6 +199,15 @@
     };
     reader.readAsDataURL(file);
   }
+
+  // "From Photos" (macOS 13+): the system picker, then the gallery path.
+  async function fromPhotos() {
+    try {
+      fromGallery(await pickFromPhotos());
+    } catch (e) {
+      notice = String((e as Error)?.message ?? e);
+    }
+  }
 </script>
 
 <div class="scan">
@@ -273,6 +283,13 @@
       {/if}
       <input type="file" accept="image/*" class="d-none" on:change={(e) => fromGallery(e.currentTarget.files?.[0])} />
     </label>
+    {#await photoLibrary then available}
+      {#if available && !galleryBusy}
+        <button type="button" class="btn btn-light btn-sm rounded-pill px-3 shadow" on:click={fromPhotos}>
+          <i class="bi bi-images me-1"></i> {$t('fromPhotos')}
+        </button>
+      {/if}
+    {/await}
   </div>
 
   {#if codes.length > 0}

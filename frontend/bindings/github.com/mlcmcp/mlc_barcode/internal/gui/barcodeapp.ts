@@ -149,10 +149,27 @@ export function OpenExternal(url: string): $CancellablePromise<boolean> {
 }
 
 /**
+ * PhotoLibraryAvailable reports whether "From Photos" works here (macOS
+ * 13+). Elsewhere the frontend hides the button and keeps the file picker.
+ */
+export function PhotoLibraryAvailable(): $CancellablePromise<boolean> {
+    return $Call.ByID(441795587);
+}
+
+/**
  * PickExportFolder opens a native folder selection dialog.
  */
 export function PickExportFolder(): $CancellablePromise<string> {
     return $Call.ByID(512332088);
+}
+
+/**
+ * PickFromPhotos shows the system photo picker for one photo. It runs on
+ * the service goroutine, as photokit requires; the picker needs no
+ * permission and hands over the original file.
+ */
+export function PickFromPhotos(): $CancellablePromise<$models.LibraryPhoto> {
+    return $Call.ByID(2242783867);
 }
 
 /**

@@ -21,6 +21,7 @@ export type {
     EmailInput,
     EventInput,
     GeoInput,
+    LibraryPhoto,
     Point,
     RetailValidation,
     SMSInput,

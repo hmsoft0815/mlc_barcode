@@ -10,6 +10,7 @@
   import CodeDetails from './CodeDetails.svelte';
   import PznLookup from './PznLookup.svelte';
   import { CameraScanner, cameraErrorText, cameraSupported, grab, insetGuide, FRAME_MAX_SIDE, NO_POSTER, type ScanHit } from '../scan/camera';
+  import { photoLibrary, pickFromPhotos } from '../scan/photos';
 
   // Tabs stay mounted; paste (Ctrl+V) is only taken while this one is shown.
   export let active = false;
@@ -149,6 +150,21 @@
     reader.readAsDataURL(file);
   }
 
+  // "From Photos" (macOS 13+): the system picker, then the file path above.
+  let photosBusy = false;
+  let photosError = '';
+  async function fromPhotos() {
+    photosBusy = true;
+    photosError = '';
+    try {
+      readFile(await pickFromPhotos());
+    } catch (e) {
+      photosError = $t('photosError', { msg: String((e as Error)?.message ?? e) });
+    } finally {
+      photosBusy = false;
+    }
+  }
+
   function onDrop(e: DragEvent) {
     e.preventDefault();
     dragOver = false;
@@ -268,6 +284,18 @@
                 on:change={(e) => readFile(e.currentTarget.files?.[0])}
               />
             </label>
+            {#await photoLibrary then available}
+              {#if available}
+                <button type="button" class="btn btn-outline-primary btn-sm" disabled={photosBusy} on:click={fromPhotos}>
+                  {#if photosBusy}
+                    <span class="spinner-border spinner-border-sm me-1"></span>
+                  {:else}
+                    <i class="bi bi-images me-1"></i>
+                  {/if}
+                  {$t('fromPhotos')}
+                </button>
+              {/if}
+            {/await}
             {#if cameraSupported}
               {#if cameraOn}
                 {#if scanner.cameras.length > 1}
@@ -294,6 +322,11 @@
               </button>
             {/if}
           </div>
+          {#if photosError}
+            <div class="alert alert-warning small py-2 mt-2 mb-0">
+              <i class="bi bi-images me-1"></i> {photosError}
+            </div>
+          {/if}
           {#if cameraError}
             <div class="alert alert-warning small mt-2 mb-0">
               <i class="bi bi-camera-video-off me-1"></i> {cameraError}
