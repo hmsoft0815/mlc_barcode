@@ -24,6 +24,24 @@
             <string>12.0.0</string>
         <key>NSHighResolutionCapable</key>
             <string>true</string>
+        <key>CFBundleDevelopmentRegion</key>
+            <string>en</string>
+        <key>CFBundleLocalizations</key>
+            <array>
+                <string>en</string>
+                <string>de</string>
+            </array>
+        <!-- Without these texts macOS refuses the webcam to the web view
+             (scan view, checker) and the Photos library in the open panel
+             of "pick a photo" without ever asking. German: lproj/de. -->
+        <key>NSCameraUsageDescription</key>
+            <string>The camera is used to scan barcodes and QR codes.</string>
+        <key>NSPhotoLibraryUsageDescription</key>
+            <string>Photos you pick are read to find barcodes and QR codes in them.</string>
+        <key>NSLocationUsageDescription</key>
+            <string>Your location is only taken when you ask for it — for place and event codes.</string>
+        <key>NSLocationWhenInUseUsageDescription</key>
+            <string>Your location is only taken when you ask for it — for place and event codes.</string>
         <key>NSHumanReadableCopyright</key>
             <string>Copyright © 2026 Michael Lechner</string>
     </dict>

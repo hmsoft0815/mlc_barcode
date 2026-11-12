@@ -1,0 +1,5 @@
+/* Texte der macOS-Berechtigungsdialoge (Deutsch). Englisch: ../en.lproj */
+"NSCameraUsageDescription" = "Die Kamera wird zum Scannen von Barcodes und QR-Codes verwendet.";
+"NSPhotoLibraryUsageDescription" = "Ausgewählte Fotos werden nach Barcodes und QR-Codes durchsucht.";
+"NSLocationUsageDescription" = "Der Standort wird nur übernommen, wenn Sie es anfordern — für Orts- und Termin-Codes.";
+"NSLocationWhenInUseUsageDescription" = "Der Standort wird nur übernommen, wenn Sie es anfordern — für Orts- und Termin-Codes.";

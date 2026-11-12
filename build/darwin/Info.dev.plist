@@ -23,6 +23,12 @@
             <string>12.0.0</string>
         <key>NSHighResolutionCapable</key>
             <string>true</string>
+        <key>NSCameraUsageDescription</key>
+            <string>The camera is used to scan barcodes and QR codes.</string>
+        <key>NSPhotoLibraryUsageDescription</key>
+            <string>Photos you pick are read to find barcodes and QR codes in them.</string>
+        <key>NSLocationUsageDescription</key>
+            <string>Your location is only taken when you ask for it — for place and event codes.</string>
         <key>NSHumanReadableCopyright</key>
             <string>© 2026, My Company</string>
         <key>NSAppTransportSecurity</key>

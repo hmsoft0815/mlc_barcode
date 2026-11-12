@@ -1,0 +1,5 @@
+/* Texts of the macOS permission dialogs (English). German: ../de.lproj */
+"NSCameraUsageDescription" = "The camera is used to scan barcodes and QR codes.";
+"NSPhotoLibraryUsageDescription" = "Photos you pick are read to find barcodes and QR codes in them.";
+"NSLocationUsageDescription" = "Your location is only taken when you ask for it — for place and event codes.";
+"NSLocationWhenInUseUsageDescription" = "Your location is only taken when you ask for it — for place and event codes.";

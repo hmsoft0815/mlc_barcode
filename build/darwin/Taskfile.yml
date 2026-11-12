@@ -168,6 +168,8 @@ tasks:
       - mkdir -p "{{.BIN_DIR}}/{{.APP_NAME}}.app/Contents/MacOS"
       - mkdir -p "{{.BIN_DIR}}/{{.APP_NAME}}.app/Contents/Resources"
       - cp build/darwin/icons.icns "{{.BIN_DIR}}/{{.APP_NAME}}.app/Contents/Resources"
+      # Localized permission texts (camera, Photos, location).
+      - cp -R build/darwin/lproj/de.lproj build/darwin/lproj/en.lproj "{{.BIN_DIR}}/{{.APP_NAME}}.app/Contents/Resources/"
       - |
         if [ -f build/darwin/Assets.car ]; then
           cp build/darwin/Assets.car "{{.BIN_DIR}}/{{.APP_NAME}}.app/Contents/Resources"
@@ -197,6 +199,8 @@ tasks:
       - mkdir -p "{{.BIN_DIR}}/{{.APP_NAME}}.dev.app/Contents/MacOS"
       - mkdir -p "{{.BIN_DIR}}/{{.APP_NAME}}.dev.app/Contents/Resources"
       - cp build/darwin/icons.icns "{{.BIN_DIR}}/{{.APP_NAME}}.dev.app/Contents/Resources"
+      # Localized permission texts (camera, Photos, location).
+      - cp -R build/darwin/lproj/de.lproj build/darwin/lproj/en.lproj "{{.BIN_DIR}}/{{.APP_NAME}}.dev.app/Contents/Resources/"
       - |
         if [ -f build/darwin/Assets.car ]; then
           cp build/darwin/Assets.car "{{.BIN_DIR}}/{{.APP_NAME}}.dev.app/Contents/Resources"
